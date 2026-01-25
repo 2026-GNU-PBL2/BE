@@ -23,9 +23,9 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build and Test with Gradle
-        run: ./gradlew clean build
         env:
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        run: ./gradlew clean build
 
       - name: Publish Test Report
         if: failure()
