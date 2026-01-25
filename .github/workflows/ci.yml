@@ -24,7 +24,7 @@ jobs:
 
       - name: Build and Test with Gradle
         env:
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }} //wtf
         run: ./gradlew clean build
 
       - name: Publish Test Report
