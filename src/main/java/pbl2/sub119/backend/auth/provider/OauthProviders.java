@@ -1,10 +1,9 @@
-package pbl2.sub119.backend.auth.provider.impl;
+package pbl2.sub119.backend.auth.provider;
 
 import org.springframework.stereotype.Component;
-import pbl2.sub119.backend.auth.enumerate.SocialProvider;
+import pbl2.sub119.backend.auth.enumerated.SocialProvider;
 import pbl2.sub119.backend.common.exception.AuthException;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
