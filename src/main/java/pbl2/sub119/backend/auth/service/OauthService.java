@@ -15,7 +15,7 @@ import pbl2.sub119.backend.auth.jwt.JwtProvider;
 import pbl2.sub119.backend.auth.mapper.OauthUserMapper;
 import pbl2.sub119.backend.auth.provider.OauthProvider;
 import pbl2.sub119.backend.auth.provider.OauthProviders;
-import pbl2.sub119.backend.auth.provider.userinfo.OauthUserInfo;
+import pbl2.sub119.backend.auth.userinfo.OauthUserInfo;
 import pbl2.sub119.backend.common.enumerated.UserRole;
 import pbl2.sub119.backend.common.exception.AuthException;
 
@@ -34,9 +34,18 @@ public class OauthService {
 
     @Transactional
     public AuthTokenDto login(final OauthLoginRequest request) {
+        /*log.info("=== OAUTH LOGIN START ===");
+        log.info("socialProvider: {}", request.socialProvider());
+        log.info("code: '{}'", request.code());*/
+
         final OauthProvider provider = oauthProviders.getProvider(request.socialProvider());
         final String accessToken = provider.getAccessToken(request.code());
         final OauthUserInfo userInfo = provider.getUserInfo(accessToken);
+        log.info("kakaoUserInfo raw = {}", userInfo);
+        log.info("kakao id = {}", userInfo.getSocialId());
+        log.info("kakao email = {}", userInfo.getEmail());
+        log.info("kakao name = {}", userInfo.getName());
+
 
         final OauthUser user = findOrCreateUser(provider.getProvider(), userInfo);
 

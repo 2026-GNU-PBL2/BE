@@ -12,11 +12,25 @@ spring:
 
   sql:
     init:
-      mode:
-        schema-locations: classpath:auth/schema.sql
+      mode: always
+      schema-locations: classpath:mapper/auth/schema.sql
+
+
 
 mybatis:
   mapper-locations: classpath*:mapper/**/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-token-expiration-millis: 3600000
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID}
+    redirect-uri: http://localhost:3000/auth/kakao/callback
+    token-uri: https://kauth.kakao.com/oauth/token
+    user-info-uri: https://kapi.kakao.com/v2/user/me
+    secret: ${KAKAO_CLIENT_SECRET}

@@ -1,4 +1,4 @@
-package pbl2.sub119.backend.auth.provider.userinfo;
+package pbl2.sub119.backend.auth.userinfo;
 
 import org.springframework.stereotype.Component;
 

@@ -39,7 +39,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
-                        "/auth/**",
+                        "/mapper/auth/**",
                         "/h2-console/**",    // H2 콘솔 제외
                         "/swagger-ui/**",    // Swagger UI 제외
                         "/v3/api-docs/**",   // OpenAPI Spec 제외
