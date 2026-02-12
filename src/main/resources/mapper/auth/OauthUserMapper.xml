@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.auth.mapper.OauthUserMapper">
+
+    <resultMap id="OauthUserEntityMap" type="pbl2.sub119.backend.auth.entity.OauthUserEntity">
+        <id property="id" column="id"/>
+        <result property="userRole" column="user_role"/>
+
+        <association property="oauthInfo" javaType="pbl2.sub119.backend.auth.entity.OauthInfo">
+            <result property="email" column="email"/>
+            <result property="name" column="name"/>
+            <result property="socialId" column="social_id"/>
+            <result property="socialProvider" column="social_provider"/>
+        </association>
+    </resultMap>
+
+    <select id="findByProviderAndSocialId" resultMap="OauthUserEntityMap">
+        SELECT
+            id,
+            user_role,
+            email,
+            name,
+            social_id,
+            social_provider
+        FROM oauth_user
+        WHERE social_provider = #{socialProvider}
+            AND social_id = #{socialId}
+        LIMIT 1
+    </select>
+
+    <select id="existsByProviderAndSocialId" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM oauth_user
+            WHERE social_provider = #{socialProvider}
+            AND social_id = #{socialId}
+        )
+    </select>
+
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM oauth_user
+            WHERE id = #{id}
+        )
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO oauth_user
+        (user_role, email, name, social_id, social_provider)
+        VALUES
+        (#{userRole},
+        #{oauthInfo.email},
+        #{oauthInfo.name},
+        #{oauthInfo.socialId},
+        #{oauthInfo.socialProvider})
+    </insert>
+
+</mapper>

@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE}
+    active: local
   application:
     name: subSave
   servlet:
@@ -23,3 +23,11 @@ management:
       base-path: /actuator
       exposure:
         include: health, info
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID}
+    redirect-uri: http://localhost:3000/auth/kakao/callback
+    token-uri: https://kauth.kakao.com/oauth/token
+    user-info-uri: https://kapi.kakao.com/v2/user/me
+    secret: ${KAKAO_CLIENT_SECRET}

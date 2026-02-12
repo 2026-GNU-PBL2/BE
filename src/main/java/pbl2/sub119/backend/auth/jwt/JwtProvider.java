@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import pbl2.sub119.backend.auth.constant.JwtConstants;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 
 import java.util.Date;
 
@@ -15,7 +16,7 @@ import java.util.Date;
 public class JwtProvider {
     private final JwtProperties jwtProperties;
 
-    public String createAccessToken(final Long userId, final String email, final String role) {
+    public String createAccessToken(final Long userId, final String email, final UserRole role) {
         final Date now = new Date();
         final Date expiredDate = new Date(now.getTime() + jwtProperties.getAccessTokenExpirationMillis());
 
