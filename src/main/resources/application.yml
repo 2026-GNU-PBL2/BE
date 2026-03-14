@@ -23,3 +23,10 @@ management:
       base-path: /actuator
       exposure:
         include: health, info
+
+kftc:
+  client-id: ${KFTC_CLIENT_ID}
+  client-secret: ${KFTC_CLIENT_SECRET}
+  redirect-url: ${KFTC_REDIRECT_URL}
+  use-org-code: ${KFTC_USE_ORG_CODE}
+  base-url: ${KFTC_BASE_URL:https://testapi.openbanking.or.kr}

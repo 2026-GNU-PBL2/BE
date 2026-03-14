@@ -26,6 +26,9 @@ jobs:
         env:
           SPRING_PROFILES_ACTIVE: local
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          KFTC_CLIENT_ID: ${{ secrets.KFTC_CLIENT_ID }}
+          KFTC_CLIENT_SECRET: ${{ secrets.KFTC_CLIENT_SECRET }}
+          KFTC_REDIRECT_URL: ${{ secrets.KFTC_REDIRECT_URL }}
         run: ./gradlew clean build
 
       - name: Publish Test Report
