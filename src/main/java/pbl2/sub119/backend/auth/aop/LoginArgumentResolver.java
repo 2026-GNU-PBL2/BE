@@ -10,6 +10,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import pbl2.sub119.backend.auth.constant.JwtConstants;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.exception.AuthException;
 
@@ -24,13 +25,15 @@ public class LoginArgumentResolver implements HandlerMethodArgumentResolver {
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
-                                  NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
+    public Object resolveArgument(MethodParameter parameter,
+                                  ModelAndViewContainer mavContainer,
+                                  NativeWebRequest webRequest,
+                                  WebDataBinderFactory binderFactory) {
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
         Long userId = (Long) request.getAttribute(JwtConstants.REQUEST_ATTR_USER_ID);
         String email = (String) request.getAttribute(JwtConstants.REQUEST_ATTR_EMAIL);
-        String role = (String) request.getAttribute(JwtConstants.REQUEST_ATTR_USER_ROLE);
+        UserRole role = (UserRole) request.getAttribute(JwtConstants.REQUEST_ATTR_USER_ROLE);
 
         if (userId == null) {
             throw new AuthException(ErrorCode.AUTH_USER_NOT_FOUND);
