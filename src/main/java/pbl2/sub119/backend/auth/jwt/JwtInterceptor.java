@@ -12,6 +12,7 @@ import pbl2.sub119.backend.common.exception.AuthException;
 @Component
 @RequiredArgsConstructor
 public class JwtInterceptor implements HandlerInterceptor {
+
     private final JwtResolver jwtResolver;
 
     @Override

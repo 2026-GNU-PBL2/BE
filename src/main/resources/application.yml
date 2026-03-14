@@ -30,11 +30,3 @@ kftc:
   redirect-url: ${KFTC_REDIRECT_URL}
   use-org-code: ${KFTC_USE_ORG_CODE}
   base-url: ${KFTC_BASE_URL:https://testapi.openbanking.or.kr}
-
-oauth:
-  kakao:
-    client-id: ${KAKAO_CLIENT_ID}
-    redirect-uri: http://localhost:3000/auth/kakao/callback
-    token-uri: https://kauth.kakao.com/oauth/token
-    user-info-uri: https://kapi.kakao.com/v2/user/me
-    secret: ${KAKAO_CLIENT_SECRET}
