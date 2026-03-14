@@ -15,10 +15,9 @@ public class BankController {
 
     private final BankService bankService;
 
-    // KFTC 인증 후 콜백되는 엔드포인트f
     @GetMapping("/callback")
     public String callback(@RequestParam String code, @RequestParam String scope) {
-        // 실제로는 세션이나 토큰에서 userId를 가져와야 합니다.
+        // User 붙으면 변경 (03.14)
         bankService.registerAccount(1L, code);
         return "계좌 등록 성공!";
     }

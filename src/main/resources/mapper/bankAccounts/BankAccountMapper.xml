@@ -56,4 +56,18 @@
         WHERE id = #{id} AND user_id = #{userId}
     </delete>
 
+    <update id="updateBankAccount"
+            parameterType="pbl2.sub119.backend.bankaccounts.entity.BankAccount">
+        UPDATE bank_accounts
+        SET
+            access_token = #{accessToken},
+            refresh_token = #{refreshToken},
+            bank_name = #{bankName},
+            account_alias = #{accountAlias},
+            account_num_masked = #{accountNumMasked},
+            balance_amt = COALESCE(#{balanceAmt}, 0)
+        WHERE user_id = #{userId}
+          AND fintech_use_num = #{fintechUseNum}
+    </update>
+
 </mapper>

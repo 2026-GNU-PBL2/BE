@@ -18,4 +18,6 @@ public interface BankMapper {
     boolean existsByUserIdAndFintechUseNum(@Param("userId") Long userId, @Param("fintechUseNum") String fintechUseNum);
 
     int deleteByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    void updateBankAccount(BankAccount bankAccount);
 }
