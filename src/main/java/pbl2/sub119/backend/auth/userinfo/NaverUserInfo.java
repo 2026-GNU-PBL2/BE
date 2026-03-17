@@ -7,6 +7,9 @@ public class NaverUserInfo implements OauthUserInfo{
     private final NaverUserInfoResponse naverResponse;
 
     public NaverUserInfo(NaverUserInfoResponse naverUserInfoResponse) {
+        if (naverUserInfoResponse == null) {
+            throw new IllegalArgumentException("NaverUserInfoResponse cannot be null");
+        }
         this.naverResponse = naverUserInfoResponse;
     }
 

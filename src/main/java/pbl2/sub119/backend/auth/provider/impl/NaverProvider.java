@@ -51,7 +51,7 @@ public class NaverProvider implements OauthProvider {
     @Override
     public String getAccessToken(String code) {
         final MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
-        data.add(GRANT_TYPE_KEY, "authorization_code");
+        data.add(GRANT_TYPE_KEY, GRANT_TYPE);
         data.add(CLIENT_ID_KEY, clientId);
         data.add(CLIENT_SECRET_KEY, clientSecret);
         data.add(REDIRECT_URI_KEY, redirectUri);
