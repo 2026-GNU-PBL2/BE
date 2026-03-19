@@ -34,17 +34,17 @@ public class OauthService {
 
     @Transactional
     public AuthTokenDto login(final OauthLoginRequest request) {
-        /*log.info("=== OAUTH LOGIN START ===");
+        log.info("=== OAUTH LOGIN START ===");
         log.info("socialProvider: {}", request.socialProvider());
-        log.info("code: '{}'", request.code());*/
+        log.info("code: '{}'", request.code());
 
         final OauthProvider provider = oauthProviders.getProvider(request.socialProvider());
         final String accessToken = provider.getAccessToken(request.code());
         final OauthUserInfo userInfo = provider.getUserInfo(accessToken);
-        log.info("kakaoUserInfo raw = {}", userInfo);
-        log.info("kakao id = {}", userInfo.getSocialId());
-        log.info("kakao email = {}", userInfo.getEmail());
-        log.info("kakao name = {}", userInfo.getName());
+        log.info("Info raw = {}", userInfo);
+        log.info("id = {}", userInfo.getSocialId());
+        log.info("email = {}", userInfo.getEmail());
+        log.info("name = {}", userInfo.getName());
 
 
         final OauthUser user = findOrCreateUser(provider.getProvider(), userInfo);
