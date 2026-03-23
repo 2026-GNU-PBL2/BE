@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.subproduct.mapper.SubProductMapper">
+
+    <resultMap id="SubProductMap" type="pbl2.sub119.backend.subproduct.entity.SubProduct">
+        <id     property="id"             column="id"/>
+        <result property="serviceName"    column="service_name"/>
+        <result property="description"    column="description"/>
+        <result property="thumbnailUrl"   column="thumbnail_url"/>
+        <result property="operationType"  column="operation_type"/>
+        <result property="maxMemberCount" column="max_member_count"/>
+        <result property="basePrice"      column="base_price"/>
+        <result property="pricePerMember" column="price_per_member"/>
+        <result property="status"         column="status"/>
+        <result property="createdAt"      column="created_at"/>
+        <result property="updatedAt"      column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="SubProductMap">
+        SELECT id, service_name, description, thumbnail_url,
+               operation_type, max_member_count,
+               base_price, price_per_member,
+               status, created_at, updated_at
+        FROM sub_product
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="SubProductMap">
+        SELECT id, service_name, description, thumbnail_url,
+               operation_type, max_member_count,
+               base_price, price_per_member,
+               status, created_at, updated_at
+        FROM sub_product
+        WHERE id = #{id}
+            LIMIT 1
+    </select>
+
+    <select id="existsByServiceName" resultType="boolean">
+        SELECT CASE WHEN COUNT(1) > 0 THEN TRUE ELSE FALSE END
+        FROM sub_product
+        WHERE service_name = #{serviceName}
+    </select>
+
+    <select id="existsByServiceNameExcludeId" resultType="boolean">
+        SELECT CASE WHEN COUNT(1) > 0 THEN TRUE ELSE FALSE END
+        FROM sub_product
+        WHERE service_name = #{serviceName}
+          AND id != #{id}
+    </select>
+
+    <insert id="save" parameterType="pbl2.sub119.backend.subproduct.entity.SubProduct">
+        INSERT INTO sub_product (
+            id, service_name, description, thumbnail_url,
+            operation_type, max_member_count,
+            base_price, price_per_member,
+            status, created_at, updated_at
+        ) VALUES (
+                     #{id}, #{serviceName}, #{description}, #{thumbnailUrl},
+                     #{operationType}, #{maxMemberCount},
+                     #{basePrice}, #{pricePerMember},
+                     'ACTIVE', NOW(), NOW()
+                 )
+    </insert>
+
+    <!-- operation_type은 등록 후 변경 불가 → UPDATE 제외 -->
+    <update id="update" parameterType="pbl2.sub119.backend.subproduct.entity.SubProduct">
+        UPDATE sub_product
+        SET service_name     = #{serviceName},
+            description      = #{description},
+            thumbnail_url    = #{thumbnailUrl},
+            max_member_count = #{maxMemberCount},
+            base_price       = #{basePrice},
+            price_per_member = #{pricePerMember},
+            updated_at       = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>
