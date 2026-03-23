@@ -2,6 +2,7 @@ package pbl2.sub119.backend.subproduct.controller.docs;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,6 +13,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
+import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 
 import java.util.List;
 
@@ -49,7 +51,7 @@ public interface SubProductAdminDocs {
                     @ApiResponse(
                             responseCode = "200",
                             description = "조회 성공",
-                            content = @Content(schema = @Schema(implementation = SubProductResponse.class))
+                            content = @Content(array = @ArraySchema(schema = @Schema(implementation = SubProductResponse.class)))
                     ),
                     @ApiResponse(
                             responseCode = "403",
@@ -138,6 +140,6 @@ public interface SubProductAdminDocs {
             @Parameter(hidden = true) @Auth Accessor accessor,
             @Parameter(description = "상품 ID", required = true) @PathVariable String id,
             @Parameter(description = "상품 수정 정보", required = true)
-            @RequestBody SubProductRequest request
+            @RequestBody SubProductUpdateRequest request
     );
 }

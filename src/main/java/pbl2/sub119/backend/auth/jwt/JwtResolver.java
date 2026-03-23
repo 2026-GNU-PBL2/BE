@@ -23,9 +23,10 @@ public class JwtResolver {
 
     public boolean isValid(String token) {
         try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
+            Claims claims = parseClaims(token);
+            if (claims.get(USER_ID, Long.class) == null) return false;
+            return claims.get(USER_ROLE, String.class) != null;
+        } catch (AuthException | IllegalArgumentException e) {
             return false;
         }
     }

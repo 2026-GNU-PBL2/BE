@@ -13,6 +13,7 @@ import pbl2.sub119.backend.common.exception.AuthException;
 import pbl2.sub119.backend.subproduct.controller.docs.SubProductAdminDocs;
 import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
+import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
 
 import java.util.List;
@@ -64,7 +65,7 @@ public class SubProductAdminController implements SubProductAdminDocs {
     public ResponseEntity<SubProductResponse> updateProduct(
             @Auth final Accessor accessor,
             @PathVariable String id,
-            @Valid @RequestBody SubProductRequest request) {
+            @Valid @RequestBody SubProductUpdateRequest request) {
         validateAdmin(accessor);
         return ResponseEntity.ok(subProductService.updateProduct(id, request));
     }

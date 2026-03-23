@@ -27,8 +27,7 @@ public enum ErrorCode {
     //sub_product
     // SubProduct
     SUB_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT001", "존재하지 않는 상품입니다."),
-    SUB_PRODUCT_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "PRODUCT002", "이미 등록된 서비스명입니다."),
-    SUB_PRODUCT_FORBIDDEN(HttpStatus.FORBIDDEN, "PRODUCT003", "상품 관리 권한이 없습니다.");
+    SUB_PRODUCT_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "PRODUCT002", "이미 등록된 서비스명입니다.");
     private final HttpStatus status;
     private final String code;
     private final String message;

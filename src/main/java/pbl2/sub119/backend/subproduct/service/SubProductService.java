@@ -9,6 +9,7 @@ import pbl2.sub119.backend.common.exception.BusinessException;
 import pbl2.sub119.backend.common.exception.NotFoundException;
 import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
+import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 import pbl2.sub119.backend.subproduct.entity.SubProduct;
 import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
 
@@ -66,7 +67,7 @@ public class SubProductService {
     }
 
     @Transactional
-    public SubProductResponse updateProduct(String id, SubProductRequest request) {
+    public SubProductResponse updateProduct(String id, SubProductUpdateRequest request) {
         log.info("구독 상품 수정 시작. id={}", id);
 
         SubProduct existing = subProductMapper.findById(id)

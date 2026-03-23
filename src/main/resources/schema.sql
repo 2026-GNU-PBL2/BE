@@ -27,12 +27,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_bank_accounts_user_fintech
 CREATE TABLE IF NOT EXISTS sub_product (
                                            id               VARCHAR(36)     NOT NULL,
     service_name     VARCHAR(100)    NOT NULL,
-    description      TEXT            NULL            COMMENT '상품 소개',
-    thumbnail_url    VARCHAR(500)    NULL            COMMENT '썸네일 이미지 URL',
-    operation_type   VARCHAR(20)     NOT NULL        COMMENT 'INVITE_CODE | ACCOUNT_SHARE',
+    description      TEXT            NULL,
+    thumbnail_url    VARCHAR(500)    NULL,
+    operation_type   VARCHAR(20)     NOT NULL,
     max_member_count INT             NOT NULL,
-    base_price       BIGINT          NOT NULL        COMMENT '서비스 전체 구독료',
-    price_per_member BIGINT          NOT NULL        COMMENT '파티원 1인당 결제 금액',
+    base_price       BIGINT          NOT NULL,
+    price_per_member BIGINT          NOT NULL,
     status           VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE',
     created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -44,17 +44,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_sub_product_service_name
 
 -- oauth
 CREATE TABLE oauth_user (
-                            id BIGINT NOT NULL AUTO_INCREMENT,
-                            user_role VARCHAR(30) NOT NULL,
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    user_role VARCHAR(30) NOT NULL,
 
-                            email VARCHAR(255) NULL,
-                            name VARCHAR(100) NULL,
-                            social_id VARCHAR(255) NOT NULL,
-                            social_provider VARCHAR(30) NOT NULL,
+    email VARCHAR(255) NULL,
+    name VARCHAR(100) NULL,
+    social_id VARCHAR(255) NOT NULL,
+    social_provider VARCHAR(30) NOT NULL,
 
-                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-                            PRIMARY KEY (id),
-                            UNIQUE KEY uk_oauth_user_social_id (social_provider, social_id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_oauth_user_social_id (social_provider, social_id)
 );
