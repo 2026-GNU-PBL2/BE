@@ -2,6 +2,7 @@ package pbl2.sub119.backend.common.error;
 
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -21,7 +22,12 @@ import static pbl2.sub119.backend.common.error.ErrorCode.MESSAGE_BODY_UNREADABLE
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
+    // 동시 요청 시 중복 저장 500 문제
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    protected ResponseEntity<ErrorResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.error("DataIntegrityViolationException", e);
+        return createErrorResponseEntity(ErrorCode.SUB_PRODUCT_DUPLICATE_NAME, e.getMessage());
+    }
     // 지원하지 않는 HTTP method 호출할 경우 발생하는 예외 처리
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     protected ResponseEntity<ErrorResponse<Void>> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException e) {

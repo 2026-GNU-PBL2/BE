@@ -23,8 +23,11 @@ public enum ErrorCode {
     AUTH_FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH005", "접근 권한이 없습니다."),
     OAUTH_TOKEN_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "AUTH4006", "소셜 로그인 중 액세스 토큰 요청에 실패했습니다."),
     IS_NOT_VALID_SOCIAL(HttpStatus.BAD_REQUEST, "AUTH001", "지원하지 않는 플랫폼 입니다"), OAUTH_USERINFO_RESPONSE_EMPTY(HttpStatus.BAD_REQUEST, "AUTH4007",
-            "소셜 로그인 중 사용자 정보 응답이 비어 있습니다.");
-
+            "소셜 로그인 중 사용자 정보 응답이 비어 있습니다."),
+    //sub_product
+    // SubProduct
+    SUB_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT001", "존재하지 않는 상품입니다."),
+    SUB_PRODUCT_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "PRODUCT002", "이미 등록된 서비스명입니다.");
     private final HttpStatus status;
     private final String code;
     private final String message;
