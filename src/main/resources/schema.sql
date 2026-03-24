@@ -42,19 +42,36 @@ CREATE TABLE IF NOT EXISTS sub_product (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sub_product_service_name
     ON sub_product(service_name);
 
--- oauth
+--oauth_user (2026.03.24/khj)
 CREATE TABLE oauth_user (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    user_role VARCHAR(30) NOT NULL,
+                            id BIGINT NOT NULL AUTO_INCREMENT,
+                            social_provider VARCHAR(30) NOT NULL,
+                            social_id VARCHAR(100) NOT NULL,
+                            email VARCHAR(255) NULL,
+                            name VARCHAR(100) NULL,
+                            profile_image_url VARCHAR(500) NULL,
+                            user_role VARCHAR(20) NOT NULL,
+                            user_id BIGINT NULL,
+                            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            CONSTRAINT pk_oauth_user PRIMARY KEY (id),
+                            CONSTRAINT uq_oauth_user_provider_social UNIQUE (social_provider, social_id)
+);
 
-    email VARCHAR(255) NULL,
-    name VARCHAR(100) NULL,
-    social_id VARCHAR(255) NOT NULL,
-    social_provider VARCHAR(30) NOT NULL,
-
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_oauth_user_social_id (social_provider, social_id)
+--users (2026.03.24/khj)
+CREATE TABLE users (
+                       id BIGINT NOT NULL AUTO_INCREMENT,
+                       nickname VARCHAR(30) NULL,
+                       submate_email VARCHAR(100) NULL,
+                       phone_number VARCHAR(20) NULL,
+                       pin_hash VARCHAR(255) NULL,
+                       role VARCHAR(20) NOT NULL,
+                       status VARCHAR(30) NOT NULL,
+                       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       deleted_at DATETIME NULL,
+                       CONSTRAINT pk_users PRIMARY KEY (id),
+                       CONSTRAINT uq_users_nickname UNIQUE (nickname),
+                       CONSTRAINT uq_users_submate_email UNIQUE (submate_email),
+                       CONSTRAINT uq_users_phone_number UNIQUE (phone_number)
 );

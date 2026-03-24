@@ -3,8 +3,6 @@ package pbl2.sub119.backend.auth.entity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.apache.catalina.User;
-import pbl2.sub119.backend.common.enumerated.UserRole;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

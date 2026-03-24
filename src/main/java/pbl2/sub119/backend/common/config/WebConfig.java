@@ -8,8 +8,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import pbl2.sub119.backend.auth.aop.LoginArgumentResolver;
-import pbl2.sub119.backend.auth.jwt.JwtInterceptor;
+import pbl2.submate.backend.auth.aop.LoginArgumentResolver;
+import pbl2.submate.backend.auth.jwt.JwtInterceptor;
 
 import java.util.List;
 

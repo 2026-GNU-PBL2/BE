@@ -1,7 +1,7 @@
 package pbl2.sub119.backend.common.exception;
 
 import lombok.Getter;
-import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.submate.backend.common.error.ErrorCode;
 
 @Getter
 public class BusinessException extends RuntimeException {

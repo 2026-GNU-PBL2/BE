@@ -1,7 +1,7 @@
 package pbl2.sub119.backend.test.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import pbl2.sub119.backend.test.vo.TestVO;
+import pbl2.submate.backend.test.vo.TestVO;
 
 
 @Mapper

@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import pbl2.sub119.backend.bankaccounts.config.KftcProperties;
-import pbl2.sub119.backend.bankaccounts.dto.KftcTokenResponse;
-import pbl2.sub119.backend.bankaccounts.dto.KftcUserInfoResponse;
+import pbl2.submate.backend.bankaccounts.dto.KftcTokenResponse;
+import pbl2.submate.backend.bankaccounts.dto.KftcUserInfoResponse;
 import pbl2.sub119.backend.bankaccounts.entity.BankAccount;
 import pbl2.sub119.backend.bankaccounts.mapper.BankMapper;
 

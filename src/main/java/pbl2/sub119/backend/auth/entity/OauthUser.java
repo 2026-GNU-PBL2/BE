@@ -1,7 +1,6 @@
 package pbl2.sub119.backend.auth.entity;
 
-import pbl2.sub119.backend.auth.enumerated.SocialProvider;
-import pbl2.sub119.backend.common.enumerated.UserRole;
+import pbl2.submate.backend.auth.enumerated.SocialProvider;
 
 public interface OauthUser {
     Long getId();

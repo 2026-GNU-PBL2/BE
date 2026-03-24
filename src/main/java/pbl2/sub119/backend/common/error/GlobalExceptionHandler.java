@@ -9,15 +9,15 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import pbl2.sub119.backend.common.exception.AuthException;
-import pbl2.sub119.backend.common.exception.BusinessException;
-import pbl2.sub119.backend.common.exception.NotFoundException;
+import pbl2.submate.backend.common.exception.AuthException;
+import pbl2.submate.backend.common.exception.BusinessException;
+import pbl2.submate.backend.common.exception.NotFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static pbl2.sub119.backend.common.error.ErrorCode.INVALID_ENUM_FORMAT;
-import static pbl2.sub119.backend.common.error.ErrorCode.MESSAGE_BODY_UNREADABLE;
+import static pbl2.submate.backend.common.error.ErrorCode.INVALID_ENUM_FORMAT;
+import static pbl2.submate.backend.common.error.ErrorCode.MESSAGE_BODY_UNREADABLE;
 
 @Slf4j
 @RestControllerAdvice

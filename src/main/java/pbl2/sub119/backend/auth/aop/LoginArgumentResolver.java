@@ -8,11 +8,10 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
-import pbl2.sub119.backend.auth.constant.JwtConstants;
-import pbl2.sub119.backend.auth.entity.Accessor;
-import pbl2.sub119.backend.common.enumerated.UserRole;
-import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.common.exception.AuthException;
+import pbl2.submate.backend.auth.constant.JwtConstants;
+import pbl2.submate.backend.auth.entity.Accessor;
+import pbl2.submate.backend.common.error.ErrorCode;
+import pbl2.submate.backend.common.exception.AuthException;
 
 @Component
 @RequiredArgsConstructor

@@ -1,15 +1,15 @@
 package pbl2.sub119.backend.auth.provider;
 
 import org.springframework.stereotype.Component;
-import pbl2.sub119.backend.auth.enumerated.SocialProvider;
-import pbl2.sub119.backend.common.exception.AuthException;
+import pbl2.submate.backend.auth.enumerated.SocialProvider;
+import pbl2.submate.backend.common.exception.AuthException;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static pbl2.sub119.backend.common.error.ErrorCode.IS_NOT_VALID_SOCIAL;
+import static pbl2.submate.backend.common.error.ErrorCode.IS_NOT_VALID_SOCIAL;
 
 @Component
 public class OauthProviders {

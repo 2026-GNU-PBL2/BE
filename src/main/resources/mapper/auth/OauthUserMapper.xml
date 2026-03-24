@@ -3,13 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.auth.mapper.OauthUserMapper">
+<mapper namespace="pbl2.submate.backend.auth.mapper.OauthUserMapper">
 
-    <resultMap id="OauthUserEntityMap" type="pbl2.sub119.backend.auth.entity.OauthUserEntity">
+    <resultMap id="OauthUserEntityMap" type="pbl2.submate.backend.auth.entity.OauthUserEntity">
         <id property="id" column="id"/>
         <result property="userRole" column="user_role"/>
+        <result property="userId" column="user_id"/>
 
-        <association property="oauthInfo" javaType="pbl2.sub119.backend.auth.entity.OauthInfo">
+        <association property="oauthInfo" javaType="pbl2.submate.backend.auth.entity.OauthInfo">
             <result property="email" column="email"/>
             <result property="name" column="name"/>
             <result property="socialId" column="social_id"/>
@@ -19,32 +20,33 @@
 
     <select id="findByProviderAndSocialId" resultMap="OauthUserEntityMap">
         SELECT
-            id,
-            user_role,
-            email,
-            name,
-            social_id,
-            social_provider
+        id,
+        user_role,
+        user_id,
+        email,
+        name,
+        social_id,
+        social_provider
         FROM oauth_user
         WHERE social_provider = #{socialProvider}
-            AND social_id = #{socialId}
+        AND social_id = #{socialId}
         LIMIT 1
     </select>
 
     <select id="existsByProviderAndSocialId" resultType="boolean">
         SELECT EXISTS(
-            SELECT 1
-            FROM oauth_user
-            WHERE social_provider = #{socialProvider}
-            AND social_id = #{socialId}
+        SELECT 1
+        FROM oauth_user
+        WHERE social_provider = #{socialProvider}
+        AND social_id = #{socialId}
         )
     </select>
 
     <select id="existsById" resultType="boolean">
         SELECT EXISTS(
-            SELECT 1
-            FROM oauth_user
-            WHERE id = #{id}
+        SELECT 1
+        FROM oauth_user
+        WHERE id = #{id}
         )
     </select>
 
@@ -58,5 +60,11 @@
         #{oauthInfo.socialId},
         #{oauthInfo.socialProvider})
     </insert>
+
+    <update id="updateUserId">
+        UPDATE oauth_user
+        SET user_id = #{userId}
+        WHERE id = #{id}
+    </update>
 
 </mapper>

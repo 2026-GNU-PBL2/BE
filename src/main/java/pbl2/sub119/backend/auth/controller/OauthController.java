@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pbl2.sub119.backend.auth.dto.request.OauthLoginRequest;
 import pbl2.sub119.backend.auth.dto.response.AuthTokenDto;
-import pbl2.sub119.backend.auth.service.OauthService;
+import pbl2.submate.backend.auth.service.OauthService;
 
 @RestController
 @RequiredArgsConstructor

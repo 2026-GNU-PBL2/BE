@@ -3,7 +3,6 @@ package pbl2.sub119.backend.auth.entity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import pbl2.sub119.backend.common.enumerated.UserRole;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -11,6 +10,7 @@ public class OauthUserEntity implements OauthUser {
     private Long id;
     private OauthInfo oauthInfo;
     private UserRole userRole;
+    private Long userId;
 
     private OauthUserEntity(OauthInfo oauthInfo, UserRole userRole) {
         this.oauthInfo = oauthInfo;
@@ -19,5 +19,9 @@ public class OauthUserEntity implements OauthUser {
 
     public static OauthUserEntity createFromOAuth(OauthInfo oauthInfo, UserRole userRole) {
         return new OauthUserEntity(oauthInfo, userRole);
+    }
+
+    public void connectUser(final Long userId) {
+        this.userId = userId;
     }
 }
