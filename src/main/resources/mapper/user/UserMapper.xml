@@ -31,7 +31,7 @@
         deleted_at
     </sql>
 
-    <!-- 회원가입 여부 확인-->
+    <!-- 활성 회원 존재 여부 확인 -->
     <select id="existsById" resultType="boolean">
         SELECT EXISTS (
             SELECT 1
@@ -41,7 +41,16 @@
         )
     </select>
 
-    <!-- 최초 로그인 시 회원생성-->
+    <!-- 활성 회원 조회 -->
+    <select id="findActiveById" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE id = #{id}
+        AND deleted_at IS NULL
+    </select>
+
+    <!-- 최초 로그인 시 회원 생성 -->
     <insert id="insert"
             parameterType="pbl2.submate.backend.user.entity.UserEntity"
             useGeneratedKeys="true"
@@ -60,16 +69,16 @@
                )
     </insert>
 
-
-    <!-- user 조회-->
+    <!-- user 조회 -->
     <select id="findById" resultMap="UserResultMap">
         SELECT
         <include refid="BaseColumnList"/>
         FROM users
         WHERE id = #{id}
+            AND deleted_at IS NULL
     </select>
 
-    <!-- 닉네임 중복 체크-->
+    <!-- 닉네임 중복 체크 -->
     <select id="findByNickname" resultMap="UserResultMap">
         SELECT
         <include refid="BaseColumnList"/>
@@ -79,7 +88,7 @@
         LIMIT 1
     </select>
 
-    <!-- 전화번호 중복 체크-->
+    <!-- 전화번호 중복 체크 -->
     <select id="findByPhoneNumber" resultMap="UserResultMap">
         SELECT
         <include refid="BaseColumnList"/>
@@ -89,7 +98,7 @@
         LIMIT 1
     </select>
 
-    <!-- 이메일 중복 체크-->
+    <!-- 이메일 중복 체크 -->
     <select id="findBySubmateEmail" resultMap="UserResultMap">
         SELECT
         <include refid="BaseColumnList"/>
@@ -99,7 +108,7 @@
         LIMIT 1
     </select>
 
-    <!-- 회원가입-->
+    <!-- 회원가입 -->
     <update id="updateSignupInfo">
         UPDATE users
         SET nickname = #{nickname},
@@ -112,7 +121,7 @@
           AND deleted_at IS NULL
     </update>
 
-    <!-- 회원 수정-->
+    <!-- 회원 수정 -->
     <update id="updateUserInfo">
         UPDATE users
         SET nickname = #{nickname},
@@ -124,7 +133,7 @@
           AND deleted_at IS NULL
     </update>
 
-    <!-- 회원 탈퇴-->
+    <!-- 회원 탈퇴 -->
     <update id="withdraw">
         UPDATE users
         SET status = #{status},
@@ -132,6 +141,16 @@
             updated_at = NOW()
         WHERE id = #{id}
           AND deleted_at IS NULL
+    </update>
+
+    <!-- 탈퇴 후 재가입시 회원정보 복구-->
+    <update id="restoreForResignup">
+        UPDATE users
+        SET status = #{status},
+            deleted_at = NULL,
+            updated_at = NOW(),
+            pin_hash = NULL
+        WHERE id = #{id}
     </update>
 
 </mapper>

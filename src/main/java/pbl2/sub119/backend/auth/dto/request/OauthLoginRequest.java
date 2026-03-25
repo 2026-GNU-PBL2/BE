@@ -1,9 +1,11 @@
 package pbl2.sub119.backend.auth.dto.request;
 
-import pbl2.submate.backend.auth.enumerated.SocialProvider;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import pbl2.sub119.backend.auth.enumerated.SocialProvider;
 
 public record OauthLoginRequest(
-        String code,
-        SocialProvider socialProvider
+         @NotBlank String code,
+         @NotNull SocialProvider socialProvider
 ) {
 }

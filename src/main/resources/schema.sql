@@ -68,7 +68,7 @@ CREATE TABLE users (
                        role VARCHAR(20) NOT NULL,
                        status VARCHAR(30) NOT NULL,
                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                       updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,,
                        deleted_at DATETIME NULL,
                        CONSTRAINT pk_users PRIMARY KEY (id),
                        CONSTRAINT uq_users_nickname UNIQUE (nickname),

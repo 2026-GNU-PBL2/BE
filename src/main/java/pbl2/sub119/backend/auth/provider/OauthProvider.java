@@ -1,7 +1,7 @@
 package pbl2.sub119.backend.auth.provider;
 
-import pbl2.submate.backend.auth.enumerated.SocialProvider;
-import pbl2.submate.backend.auth.userinfo.OauthUserInfo;
+import pbl2.sub119.backend.auth.enumerated.SocialProvider;
+import pbl2.sub119.backend.auth.userinfo.OauthUserInfo;
 
 public interface OauthProvider {
 

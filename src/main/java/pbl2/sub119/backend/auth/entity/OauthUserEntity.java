@@ -22,6 +22,19 @@ public class OauthUserEntity implements OauthUser {
     }
 
     public void connectUser(final Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId must not be null");
+               }
+        if (this.userId != null && !this.userId.equals(userId)) {
+            throw new IllegalStateException("OAuth 계정은 이미 다른 사용자와 연결되어 있습니다.");
+        }
+        this.userId = userId;
+    }
+
+    public void reconnectUser(final Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId는 null일 수 없습니다.");
+        }
         this.userId = userId;
     }
 }

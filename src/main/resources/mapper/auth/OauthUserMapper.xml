@@ -65,6 +65,7 @@
         UPDATE oauth_user
         SET user_id = #{userId}
         WHERE id = #{id}
+            AND user_id IS NULL
     </update>
 
 </mapper>

@@ -20,10 +20,8 @@ public class OauthStateStore {
 
     public boolean consumeIfExists(String provider, String state) {
         String key = key(provider, state);
-        Boolean exists = redis.hasKey(key);
-        if (exists == null || !exists) return false;
-        redis.delete(key);
-        return true;
+        Boolean deleted = redis.delete(key);
+        return Boolean.TRUE.equals(deleted);
     }
 
     private String key(String provider, String state) {

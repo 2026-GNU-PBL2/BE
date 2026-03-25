@@ -11,6 +11,7 @@ import pbl2.sub119.backend.user.dto.response.UserSignUpResponse;
 import pbl2.sub119.backend.user.dto.response.UserUpdateResponse;
 import pbl2.submate.backend.user.entity.UserEntity;
 import pbl2.submate.backend.user.mapper.UserMapper;
+import pbl2.sub119.backend.user.util.PinEncoder;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +27,17 @@ public class UserService {
         final UserEntity user = findUserOrThrow(accessor.getUserId());
         validateWithdrawnUser(user);
 
+        if (user.getStatus() != UserStatus.PENDING_SIGNUP) {
+            throw new IllegalArgumentException("이미 회원가입이 완료된 회원입니다.");
+        }
+
         validateNicknameDuplication(user.getId(), request.nickname());
         validatePhoneNumberDuplication(user.getId(), request.phoneNumber());
 
         final String fullEmail = buildSubmateEmail(request.submateEmail());
         validateEmailDuplication(user.getId(), fullEmail);
 
-        final String pinHash = request.pinNumber();
+        final String pinHash = PinEncoder.encode(request.pinNumber());
 
         userMapper.updateSignupInfo(
                 user.getId(),
@@ -64,7 +69,7 @@ public class UserService {
         final String fullEmail = buildSubmateEmail(request.submateEmail());
         validateEmailDuplication(user.getId(), fullEmail);
 
-        final String pinHash = request.pinNumber();
+        final String pinHash = PinEncoder.encode(request.pinNumber());
 
         userMapper.updateUserInfo(
                 user.getId(),

@@ -9,6 +9,8 @@ public interface UserMapper {
 
     UserEntity findById(@Param("id") Long id);
 
+    UserEntity findActiveById(@Param("id") Long id);
+
     boolean existsById(@Param("id") Long id);
 
     void insert(UserEntity user);
@@ -37,6 +39,11 @@ public interface UserMapper {
     );
 
     void withdraw(
+            @Param("id") Long id,
+            @Param("status") String status
+    );
+
+    void restoreForResignup(
             @Param("id") Long id,
             @Param("status") String status
     );

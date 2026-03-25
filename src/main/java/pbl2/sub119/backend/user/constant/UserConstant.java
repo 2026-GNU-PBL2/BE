@@ -18,5 +18,5 @@ public class UserConstant {
 
     // PIN
     public static final String PIN_REQUIRED_MESSAGE = "PIN 번호는 필수입니다.";
-    public static final String PIN_PATTERN_MESSAGE = "PIN 번호는 6자리 숫자여야 합니다.";
+    public static final String PIN_PATTERN_MESSAGE = "PIN 번호는 4자리 숫자여야 합니다.";
 }

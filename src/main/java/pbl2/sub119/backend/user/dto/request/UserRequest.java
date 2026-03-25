@@ -26,10 +26,10 @@ public record UserRequest(
         @Size(min = 2, max = 30, message = UserConstant.NICKNAME_SIZE_MESSAGE)
         String nickname,
 
-        @Schema(description = "PIN 번호", example = "123456")
+        @Schema(description = "PIN 번호", example = "1234")
         @NotBlank(message = UserConstant.PIN_REQUIRED_MESSAGE)
         @Pattern(
-                regexp = "^[0-9]{6}$",
+                regexp = "^[0-9]{4}$",
                 message = UserConstant.PIN_PATTERN_MESSAGE
         )
         String pinNumber
