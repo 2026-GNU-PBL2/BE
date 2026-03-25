@@ -3,23 +3,16 @@ package pbl2.sub119.backend.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-<<<<<<< HEAD
-import pbl2.submate.backend.auth.entity.Accessor;
-=======
 import pbl2.sub119.backend.auth.entity.Accessor;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 import pbl2.sub119.backend.common.enumerated.UserStatus;
 import pbl2.sub119.backend.user.dto.request.UserRequest;
 import pbl2.sub119.backend.user.dto.response.UserResponse;
 import pbl2.sub119.backend.user.dto.response.UserSignUpResponse;
 import pbl2.sub119.backend.user.dto.response.UserUpdateResponse;
-<<<<<<< HEAD
-import pbl2.submate.backend.user.entity.UserEntity;
-import pbl2.submate.backend.user.mapper.UserMapper;
-=======
+
 import pbl2.sub119.backend.user.entity.UserEntity;
 import pbl2.sub119.backend.user.mapper.UserMapper;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
+
 import pbl2.sub119.backend.user.util.PinEncoder;
 
 @Service
