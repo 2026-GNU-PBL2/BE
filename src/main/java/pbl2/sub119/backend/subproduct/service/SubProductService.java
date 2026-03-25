@@ -14,12 +14,6 @@ import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 import pbl2.sub119.backend.subproduct.entity.SubProduct;
 import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
 
-import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
-import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
-import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
-import pbl2.sub119.backend.subproduct.entity.SubProduct;
-import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;

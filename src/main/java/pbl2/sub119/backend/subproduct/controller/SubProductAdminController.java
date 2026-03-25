@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
-<<<<<<< HEAD
+
 import pbl2.sub119.backend.common.enumerated.UserRole;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.exception.AuthException;
@@ -16,15 +16,6 @@ import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
-=======
-import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.common.exception.AuthException;
-import pbl2.submate.backend.subproduct.controller.docs.SubProductAdminDocs;
-import pbl2.submate.backend.subproduct.dto.SubProductRequest;
-import pbl2.submate.backend.subproduct.dto.SubProductResponse;
-import pbl2.submate.backend.subproduct.dto.SubProductUpdateRequest;
-import pbl2.submate.backend.subproduct.service.SubProductService;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
 import java.util.List;
 

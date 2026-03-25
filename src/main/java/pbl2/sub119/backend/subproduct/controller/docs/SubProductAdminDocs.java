@@ -16,10 +16,6 @@ import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 
-import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
-import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
-import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
-
 import java.util.List;
 
 @Tag(
