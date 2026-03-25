@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 import pbl2.sub119.backend.common.enumerated.UserStatus;
 
 import java.time.LocalDateTime;

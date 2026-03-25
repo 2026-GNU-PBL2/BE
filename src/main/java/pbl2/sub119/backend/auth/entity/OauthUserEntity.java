@@ -3,6 +3,7 @@ package pbl2.sub119.backend.auth.entity;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -27,13 +28,6 @@ public class OauthUserEntity implements OauthUser {
                }
         if (this.userId != null && !this.userId.equals(userId)) {
             throw new IllegalStateException("OAuth 계정은 이미 다른 사용자와 연결되어 있습니다.");
-        }
-        this.userId = userId;
-    }
-
-    public void reconnectUser(final Long userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("userId는 null일 수 없습니다.");
         }
         this.userId = userId;
     }

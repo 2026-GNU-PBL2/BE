@@ -28,4 +28,5 @@ public class JwtProvider {
                 .signWith(jwtProperties.getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 }
