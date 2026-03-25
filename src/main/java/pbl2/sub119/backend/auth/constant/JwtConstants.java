@@ -6,7 +6,6 @@ import lombok.experimental.UtilityClass;
 public class JwtConstants {
     // JWT Claims
     public static final String USER_ID = "user_id";
-    public static final String EMAIL = "email";
     public static final String USER_ROLE = "user_role";
     public static final String TOKEN_TYPE = "token_type";
 
@@ -17,6 +16,6 @@ public class JwtConstants {
 
     // Request Attributes
     public static final String REQUEST_ATTR_USER_ID = "userId";
-    public static final String REQUEST_ATTR_EMAIL = "email";
+    public static final String REQUEST_ATTR_SOCIAL_ID = "socialId";
     public static final String REQUEST_ATTR_USER_ROLE = "userRole";
 }

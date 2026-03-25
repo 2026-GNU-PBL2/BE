@@ -62,6 +62,7 @@ public class GoogleProvider implements OauthProvider {
         data.add(REDIRECT_URI_KEY, redirectUri);
         data.add(CLIENT_SECRET_KEY, clientSecret);
         data.add(CODE_KEY, code);
+
         return webClient.post()
                 .uri(tokenUri)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)

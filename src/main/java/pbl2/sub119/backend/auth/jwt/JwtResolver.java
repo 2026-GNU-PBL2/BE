@@ -7,6 +7,7 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import pbl2.sub119.backend.auth.constant.JwtConstants;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.exception.AuthException;
 
@@ -33,8 +34,14 @@ public class JwtResolver {
         return parseClaims(token).get(JwtConstants.USER_ID, Long.class);
     }
 
-    public String extractEmail(String token) {
+    public String extractSocialId(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public UserRole extractRole(String token) {
+        return UserRole.valueOf(
+                parseClaims(token).get(JwtConstants.USER_ROLE, String.class)
+        );
     }
 
     public boolean isValid(String token) {

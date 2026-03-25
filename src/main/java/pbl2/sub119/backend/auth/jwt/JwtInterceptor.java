@@ -25,7 +25,8 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         request.setAttribute(JwtConstants.REQUEST_ATTR_USER_ID, jwtResolver.extractUserId(token));
-        request.setAttribute(JwtConstants.REQUEST_ATTR_EMAIL, jwtResolver.extractEmail(token));
+        request.setAttribute(JwtConstants.REQUEST_ATTR_SOCIAL_ID, jwtResolver.extractSocialId(token));
+        request.setAttribute(JwtConstants.REQUEST_ATTR_USER_ROLE, jwtResolver.extractRole(token));
         return true;
     }
 

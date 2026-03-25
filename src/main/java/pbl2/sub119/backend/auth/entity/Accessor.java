@@ -10,10 +10,14 @@ import pbl2.sub119.backend.common.enumerated.UserRole;
 public class Accessor {
 
     private final Long userId;
-    private final String email;
+    private final String socialId;
     private final UserRole role;
 
-    public static Accessor user(Long userId, String email, UserRole userRole) {
-        return new Accessor(userId, email, userRole);
+    public static Accessor user(final Long userId, final String socialId, final UserRole userRole) {
+        return new Accessor(userId, socialId, userRole);
+    }
+
+    public boolean isAdmin() {
+        return role == UserRole.ADMIN;
     }
 }

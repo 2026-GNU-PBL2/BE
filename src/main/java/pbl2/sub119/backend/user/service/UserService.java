@@ -26,6 +26,7 @@ public class UserService {
 
     @Transactional
     public UserSignUpResponse signUp(final Accessor accessor, final UserRequest request) {
+
         final UserEntity user = findUserOrThrow(accessor.getUserId());
         validateWithdrawnUser(user);
 

@@ -33,13 +33,13 @@ public class LoginArgumentResolver implements HandlerMethodArgumentResolver {
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
         Long userId = (Long) request.getAttribute(JwtConstants.REQUEST_ATTR_USER_ID);
-        String email = (String) request.getAttribute(JwtConstants.REQUEST_ATTR_EMAIL);
+        String socialId = (String) request.getAttribute(JwtConstants.REQUEST_ATTR_SOCIAL_ID);
         UserRole role = (UserRole) request.getAttribute(JwtConstants.REQUEST_ATTR_USER_ROLE);
 
         if (userId == null) {
             throw new AuthException(ErrorCode.AUTH_USER_NOT_FOUND);
         }
 
-        return Accessor.user(userId, email, role);
+        return Accessor.user(userId, socialId, role);
     }
 }
