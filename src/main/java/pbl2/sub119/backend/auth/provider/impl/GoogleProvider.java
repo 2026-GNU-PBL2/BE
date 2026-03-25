@@ -10,8 +10,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import pbl2.sub119.backend.auth.dto.response.GoogleAccessTokenResponse;
 import pbl2.sub119.backend.auth.dto.response.GoogleUserInfoResponse;
-import pbl2.sub119.backend.auth.dto.response.KakaoAccessTokenResponse;
+
 import pbl2.sub119.backend.auth.enumerated.SocialProvider;
 import pbl2.sub119.backend.auth.provider.OauthProvider;
 import pbl2.sub119.backend.auth.userinfo.GoogleUserInfo;
@@ -19,10 +21,7 @@ import pbl2.sub119.backend.auth.userinfo.OauthUserInfo;
 import pbl2.sub119.backend.common.exception.AuthException;
 import reactor.core.publisher.Mono;
 
-import static pbl2.sub119.backend.auth.constant.KakaoOauthConstants.*;
-import static pbl2.sub119.backend.auth.constant.KakaoOauthConstants.CLIENT_SECRET_KEY;
-import static pbl2.sub119.backend.auth.constant.KakaoOauthConstants.CODE_KEY;
-import static pbl2.sub119.backend.auth.constant.KakaoOauthConstants.REDIRECT_URI_KEY;
+import static pbl2.sub119.backend.auth.constant.GoogleOauthConstants.*;
 import static pbl2.sub119.backend.common.error.ErrorCode.OAUTH_TOKEN_REQUEST_FAILED;
 import static pbl2.sub119.backend.common.error.ErrorCode.OAUTH_USERINFO_RESPONSE_EMPTY;
 
@@ -72,8 +71,8 @@ public class GoogleProvider implements OauthProvider {
                         HttpStatusCode::isError,
                         this::handleOauthError
                 )
-                .bodyToMono(KakaoAccessTokenResponse.class)
-                .map(KakaoAccessTokenResponse::accessToken)
+                .bodyToMono(GoogleAccessTokenResponse.class)
+                .map(GoogleAccessTokenResponse::accessToken)
                 .block();
     }
 

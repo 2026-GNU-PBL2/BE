@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.auth.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +16,7 @@ public class OauthController {
     private final OauthService oauthService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthTokenDto> login(@RequestBody final OauthLoginRequest request) {
+    public ResponseEntity<AuthTokenDto> login(@Valid @RequestBody final OauthLoginRequest request) {
         return ResponseEntity.ok(oauthService.login(request));
     }
 }

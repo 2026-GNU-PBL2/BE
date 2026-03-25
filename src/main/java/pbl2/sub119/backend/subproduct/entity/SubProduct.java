@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package pbl2.sub119.backend.subproduct.entity;
+=======
+package pbl2.submate.backend.subproduct.entity;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
 import lombok.*;
 import java.time.LocalDateTime;

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.user.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="pbl2.sub119.backend.user.entity.UserEntity">
+        <id property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="submateEmail" column="submate_email"/>
+        <result property="phoneNumber" column="phone_number"/>
+        <result property="pinHash" column="pin_hash"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deletedAt" column="deleted_at"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id,
+        nickname,
+        submate_email,
+        phone_number,
+        pin_hash,
+        role,
+        status,
+        created_at,
+        updated_at,
+        deleted_at
+    </sql>
+
+    <!-- 활성 회원 존재 여부 확인 -->
+    <select id="existsById" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM users
+            WHERE id = #{id}
+              AND deleted_at IS NULL
+        )
+    </select>
+
+    <!-- 삭제 포함 회원 조회 -->
+    <select id="findById" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE id = #{id}
+    </select>
+
+    <!-- 활성 회원 조회 -->
+    <select id="findActiveById" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE id = #{id}
+        AND deleted_at IS NULL
+    </select>
+
+    <!-- 최초 로그인 시 회원 생성 -->
+    <insert id="insert"
+            parameterType="pbl2.sub119.backend.user.entity.UserEntity"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO users (
+            role,
+            status,
+            created_at,
+            updated_at
+        )
+        VALUES (
+                   #{role},
+                   #{status},
+                   NOW(),
+                   NOW()
+               )
+    </insert>
+
+    <!-- 닉네임 중복 체크 -->
+    <select id="findByNickname" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE nickname = #{nickname}
+        AND deleted_at IS NULL
+        LIMIT 1
+    </select>
+
+    <!-- 전화번호 중복 체크 -->
+    <select id="findByPhoneNumber" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE phone_number = #{phoneNumber}
+        AND deleted_at IS NULL
+        LIMIT 1
+    </select>
+
+    <!-- 이메일 중복 체크 -->
+    <select id="findBySubmateEmail" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE submate_email = #{submateEmail}
+        AND deleted_at IS NULL
+        LIMIT 1
+    </select>
+
+    <!-- 회원가입 -->
+    <update id="updateSignupInfo">
+        UPDATE users
+        SET nickname = #{nickname},
+            submate_email = #{submateEmail},
+            phone_number = #{phoneNumber},
+            pin_hash = #{pinHash},
+            status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <!-- 회원 수정 -->
+    <update id="updateUserInfo">
+        UPDATE users
+        SET nickname = #{nickname},
+            submate_email = #{submateEmail},
+            phone_number = #{phoneNumber},
+            pin_hash = #{pinHash},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <!-- 회원 탈퇴 -->
+    <update id="withdraw">
+        UPDATE users
+        SET status = #{status},
+            nickname = NULL,
+            submate_email = NULL,
+            phone_number = NULL,
+            pin_hash = NULL,
+            deleted_at = NOW(),
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <!-- 탈퇴 후 재가입 시 회원정보 복구 -->
+    <update id="restoreForResignup">
+        UPDATE users
+        SET status = #{status},
+            deleted_at = NULL,
+            updated_at = NOW(),
+            pin_hash = NULL
+        WHERE id = #{id}
+          AND (deleted_at IS NOT NULL OR status = #{withdrawnStatus})
+    </update>
+
+</mapper>

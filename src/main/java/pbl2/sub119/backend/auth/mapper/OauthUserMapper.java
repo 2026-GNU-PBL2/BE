@@ -21,4 +21,6 @@ public interface OauthUserMapper {
     boolean existsById(@Param("id") Long id);
 
     int insert(OauthUserEntity user);
+
+    void updateUserId(@Param("id") Long id, @Param("userId") Long userId);
 }

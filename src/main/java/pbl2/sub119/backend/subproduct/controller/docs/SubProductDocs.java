@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 package pbl2.sub119.backend.subproduct.controller.docs;
+=======
+package pbl2.submate.backend.subproduct.controller.docs;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,7 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+<<<<<<< HEAD
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
+=======
+import pbl2.submate.backend.subproduct.dto.SubProductResponse;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
 import java.util.List;
 

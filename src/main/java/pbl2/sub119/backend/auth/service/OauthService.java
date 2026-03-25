@@ -8,7 +8,6 @@ import pbl2.sub119.backend.auth.dto.request.OauthLoginRequest;
 import pbl2.sub119.backend.auth.dto.response.AuthTokenDto;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.auth.entity.OauthInfo;
-import pbl2.sub119.backend.auth.entity.OauthUser;
 import pbl2.sub119.backend.auth.entity.OauthUserEntity;
 import pbl2.sub119.backend.auth.enumerated.SocialProvider;
 import pbl2.sub119.backend.auth.jwt.JwtProvider;
@@ -17,7 +16,11 @@ import pbl2.sub119.backend.auth.provider.OauthProvider;
 import pbl2.sub119.backend.auth.provider.OauthProviders;
 import pbl2.sub119.backend.auth.userinfo.OauthUserInfo;
 import pbl2.sub119.backend.common.enumerated.UserRole;
+import pbl2.sub119.backend.common.enumerated.UserStatus;
+
 import pbl2.sub119.backend.common.exception.AuthException;
+import pbl2.sub119.backend.user.entity.UserEntity;
+import pbl2.sub119.backend.user.mapper.UserMapper;
 
 import static pbl2.sub119.backend.common.error.ErrorCode.AUTH_USER_NOT_FOUND;
 
@@ -30,48 +33,43 @@ public class OauthService {
 
     private final OauthProviders oauthProviders;
     private final OauthUserMapper oauthUserMapper;
+    private final UserMapper userMapper;
     private final JwtProvider jwtProvider;
 
     @Transactional
     public AuthTokenDto login(final OauthLoginRequest request) {
-        log.info("=== OAUTH LOGIN START ===");
-        log.info("socialProvider: {}", request.socialProvider());
-        log.info("code: '{}'", request.code());
-
         final OauthProvider provider = oauthProviders.getProvider(request.socialProvider());
-        final String accessToken = provider.getAccessToken(request.code());
-        final OauthUserInfo userInfo = provider.getUserInfo(accessToken);
-        log.info("Info raw = {}", userInfo);
-        log.info("id = {}", userInfo.getSocialId());
-        log.info("email = {}", userInfo.getEmail());
-        log.info("name = {}", userInfo.getName());
+        final String oauthAccessToken = provider.getAccessToken(request.code());
+        final OauthUserInfo userInfo = provider.getUserInfo(oauthAccessToken);
 
-
-        final OauthUser user = findOrCreateUser(provider.getProvider(), userInfo);
+        final OauthUserEntity oauthUser = findOrCreateOauthUser(provider.getProvider(), userInfo);
+        final Long userId = getOrCreateServiceUser(oauthUser);
 
         return AuthTokenDto.of(
-                jwtProvider.createAccessToken(user.getId(), user.getSocialId(), user.getUserRole())
+                jwtProvider.createAccessToken(userId, oauthUser.getSocialId(), oauthUser.getUserRole())
         );
     }
 
-    public Accessor getCurrentAccessor(final Long userId, final String email, final UserRole userRole) {
-        log.debug("Getting accessor for socialId: {}, userId: {}, userRole: {}", userId, email, userRole);
+    public Accessor getCurrentAccessor(final Long userId, final String socialId, final UserRole userRole) {
+        log.debug("Getting accessor for userId: {}, socialId: {}, userRole: {}", userId, socialId, userRole);
 
-        if (!oauthUserMapper.existsById(userId)) {
+        if (!userMapper.existsById(userId)) {
             log.warn("User not found for userId: {}", userId);
             throw new AuthException(AUTH_USER_NOT_FOUND);
         }
 
-        return Accessor.user(userId, email, userRole);
+        return Accessor.user(userId, socialId, userRole);
     }
 
-    private OauthUser findOrCreateUser(final SocialProvider socialProvider, final OauthUserInfo userInfo) {
+    private OauthUserEntity findOrCreateOauthUser(final SocialProvider socialProvider, final OauthUserInfo userInfo) {
         final OauthUserEntity existing = oauthUserMapper.findByProviderAndSocialId(
                 socialProvider,
                 userInfo.getSocialId()
         );
 
         if (existing != null) {
+            log.info("Existing oauth user found. oauthUser.id={}, oauthUser.userId={}",
+                    existing.getId(), existing.getUserId());
             return existing;
         }
 
@@ -82,9 +80,39 @@ public class OauthService {
                 socialProvider
         );
 
-        final OauthUserEntity newUser = OauthUserEntity.createFromOAuth(oauthInfo, DEFAULT_USER_ROLE);
-        oauthUserMapper.insert(newUser);
+        final OauthUserEntity newOauthUser = OauthUserEntity.createFromOAuth(oauthInfo, DEFAULT_USER_ROLE);
+        oauthUserMapper.insert(newOauthUser);
 
-        return newUser;
+        log.info("New oauth user created. oauthUser.id={}", newOauthUser.getId());
+
+        return newOauthUser;
+    }
+
+    private Long getOrCreateServiceUser(final OauthUserEntity oauthUser) {
+        final Long linkedUserId = oauthUser.getUserId();
+
+        if (linkedUserId != null) {
+            final UserEntity linkedUser = userMapper.findById(linkedUserId);
+
+            if (linkedUser != null) {
+                if (linkedUser.getDeletedAt() == null) {
+                    return linkedUserId;
+                }
+
+                userMapper.restoreForResignup(
+                        linkedUserId,
+                        UserStatus.PENDING_SIGNUP.name(),
+                        UserStatus.WITHDRAWN.name()
+                );
+                return linkedUserId;
+            }
+        }
+
+        final UserEntity newUser = UserEntity.createPendingUser(DEFAULT_USER_ROLE);
+        userMapper.insert(newUser);
+        oauthUserMapper.updateUserId(oauthUser.getId(), newUser.getId());
+        oauthUser.connectUser(newUser.getId());
+
+        return newUser.getId();
     }
 }

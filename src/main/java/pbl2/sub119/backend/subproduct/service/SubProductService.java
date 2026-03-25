@@ -7,11 +7,19 @@ import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.exception.BusinessException;
 import pbl2.sub119.backend.common.exception.NotFoundException;
+<<<<<<< HEAD
 import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 import pbl2.sub119.backend.subproduct.entity.SubProduct;
 import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
+=======
+import pbl2.submate.backend.subproduct.dto.SubProductRequest;
+import pbl2.submate.backend.subproduct.dto.SubProductResponse;
+import pbl2.submate.backend.subproduct.dto.SubProductUpdateRequest;
+import pbl2.submate.backend.subproduct.entity.SubProduct;
+import pbl2.submate.backend.subproduct.mapper.SubProductMapper;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
 import java.util.List;
 import java.util.UUID;
