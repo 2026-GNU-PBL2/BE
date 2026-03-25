@@ -15,6 +15,10 @@ public final class PinEncoder {
         if (rawPin == null || encodedPin == null || encodedPin.isBlank()) {
             return false;
         }
-        return BCrypt.checkpw(rawPin, encodedPin);
+        try {
+            return BCrypt.checkpw(rawPin, encodedPin);
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 }

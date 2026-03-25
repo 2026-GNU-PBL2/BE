@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+
 package pbl2.sub119.backend.subproduct.dto;
-=======
-package pbl2.submate.backend.subproduct.dto;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
+
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
