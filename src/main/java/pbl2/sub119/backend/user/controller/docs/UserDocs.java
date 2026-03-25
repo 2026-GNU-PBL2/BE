@@ -11,13 +11,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-<<<<<<< HEAD
-import pbl2.submate.backend.auth.aop.Auth;
-import pbl2.submate.backend.auth.entity.Accessor;
-=======
+
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
+
 import pbl2.sub119.backend.user.dto.request.UserRequest;
 import pbl2.sub119.backend.user.dto.response.UserResponse;
 import pbl2.sub119.backend.user.dto.response.UserSignUpResponse;

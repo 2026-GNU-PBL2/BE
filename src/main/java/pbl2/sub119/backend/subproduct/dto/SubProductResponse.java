@@ -1,19 +1,13 @@
-<<<<<<< HEAD
-package pbl2.sub119.backend.subproduct.dto;
-=======
-package pbl2.submate.backend.subproduct.dto;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
+package pbl2.sub119.backend.subproduct.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-<<<<<<< HEAD
+
 import pbl2.sub119.backend.subproduct.entity.SubProduct;
-=======
-import pbl2.submate.backend.subproduct.entity.SubProduct;
->>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
+
 
 import java.time.LocalDateTime;
 

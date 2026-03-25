@@ -3,6 +3,7 @@ package pbl2.sub119.backend.auth.entity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
