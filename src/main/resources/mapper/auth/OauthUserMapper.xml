@@ -3,14 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.submate.backend.auth.mapper.OauthUserMapper">
+<mapper namespace="pbl2.sub119.backend.auth.mapper.OauthUserMapper">
 
-    <resultMap id="OauthUserEntityMap" type="pbl2.submate.backend.auth.entity.OauthUserEntity">
+    <resultMap id="OauthUserEntityMap" type="pbl2.sub119.backend.auth.entity.OauthUserEntity">
         <id property="id" column="id"/>
         <result property="userRole" column="user_role"/>
         <result property="userId" column="user_id"/>
 
-        <association property="oauthInfo" javaType="pbl2.submate.backend.auth.entity.OauthInfo">
+        <association property="oauthInfo" javaType="pbl2.sub119.backend.auth.entity.OauthInfo">
             <result property="email" column="email"/>
             <result property="name" column="name"/>
             <result property="socialId" column="social_id"/>

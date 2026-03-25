@@ -3,14 +3,23 @@ package pbl2.sub119.backend.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+<<<<<<< HEAD
 import pbl2.submate.backend.auth.entity.Accessor;
+=======
+import pbl2.sub119.backend.auth.entity.Accessor;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 import pbl2.sub119.backend.common.enumerated.UserStatus;
 import pbl2.sub119.backend.user.dto.request.UserRequest;
 import pbl2.sub119.backend.user.dto.response.UserResponse;
 import pbl2.sub119.backend.user.dto.response.UserSignUpResponse;
 import pbl2.sub119.backend.user.dto.response.UserUpdateResponse;
+<<<<<<< HEAD
 import pbl2.submate.backend.user.entity.UserEntity;
 import pbl2.submate.backend.user.mapper.UserMapper;
+=======
+import pbl2.sub119.backend.user.entity.UserEntity;
+import pbl2.sub119.backend.user.mapper.UserMapper;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 import pbl2.sub119.backend.user.util.PinEncoder;
 
 @Service
@@ -48,7 +57,7 @@ public class UserService {
                 UserStatus.ACTIVE.name()
         );
 
-        final UserEntity updatedUser = findUserOrThrow(user.getId());
+        final UserEntity updatedUser = findActiveUserOrThrow(user.getId());
         return UserSignUpResponse.from(updatedUser);
     }
 
@@ -62,6 +71,10 @@ public class UserService {
     public UserUpdateResponse update(final Accessor accessor, final UserRequest request) {
         final UserEntity user = findUserOrThrow(accessor.getUserId());
         validateWithdrawnUser(user);
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new IllegalArgumentException("회원가입이 완료된 회원만 수정할 수 있습니다.");
+        }
 
         validateNicknameDuplication(user.getId(), request.nickname());
         validatePhoneNumberDuplication(user.getId(), request.phoneNumber());
@@ -79,7 +92,7 @@ public class UserService {
                 pinHash
         );
 
-        final UserEntity updatedUser = findUserOrThrow(user.getId());
+        final UserEntity updatedUser = findActiveUserOrThrow(user.getId());
         return UserUpdateResponse.from(updatedUser);
     }
 
@@ -93,6 +106,16 @@ public class UserService {
 
     private UserEntity findUserOrThrow(final Long userId) {
         final UserEntity user = userMapper.findById(userId);
+
+        if (user == null) {
+            throw new IllegalArgumentException("존재하지 않는 회원입니다.");
+        }
+
+        return user;
+    }
+
+    private UserEntity findActiveUserOrThrow(final Long userId) {
+        final UserEntity user = userMapper.findActiveById(userId);
 
         if (user == null) {
             throw new IllegalArgumentException("존재하지 않는 회원입니다.");

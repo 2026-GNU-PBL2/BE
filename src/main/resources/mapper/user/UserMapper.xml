@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.submate.backend.user.mapper.UserMapper">
+<mapper namespace="pbl2.sub119.backend.user.mapper.UserMapper">
 
-    <resultMap id="UserResultMap" type="pbl2.submate.backend.user.entity.UserEntity">
+    <resultMap id="UserResultMap" type="pbl2.sub119.backend.user.entity.UserEntity">
         <id property="id" column="id"/>
         <result property="nickname" column="nickname"/>
         <result property="submateEmail" column="submate_email"/>
@@ -41,6 +41,14 @@
         )
     </select>
 
+    <!-- 삭제 포함 회원 조회 -->
+    <select id="findById" resultMap="UserResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM users
+        WHERE id = #{id}
+    </select>
+
     <!-- 활성 회원 조회 -->
     <select id="findActiveById" resultMap="UserResultMap">
         SELECT
@@ -52,7 +60,7 @@
 
     <!-- 최초 로그인 시 회원 생성 -->
     <insert id="insert"
-            parameterType="pbl2.submate.backend.user.entity.UserEntity"
+            parameterType="pbl2.sub119.backend.user.entity.UserEntity"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO users (
@@ -68,15 +76,6 @@
                    NOW()
                )
     </insert>
-
-    <!-- user 조회 -->
-    <select id="findById" resultMap="UserResultMap">
-        SELECT
-        <include refid="BaseColumnList"/>
-        FROM users
-        WHERE id = #{id}
-            AND deleted_at IS NULL
-    </select>
 
     <!-- 닉네임 중복 체크 -->
     <select id="findByNickname" resultMap="UserResultMap">
@@ -137,13 +136,17 @@
     <update id="withdraw">
         UPDATE users
         SET status = #{status},
+            nickname = NULL,
+            submate_email = NULL,
+            phone_number = NULL,
+            pin_hash = NULL,
             deleted_at = NOW(),
             updated_at = NOW()
         WHERE id = #{id}
           AND deleted_at IS NULL
     </update>
 
-    <!-- 탈퇴 후 재가입시 회원정보 복구-->
+    <!-- 탈퇴 후 재가입 시 회원정보 복구 -->
     <update id="restoreForResignup">
         UPDATE users
         SET status = #{status},
@@ -151,6 +154,7 @@
             updated_at = NOW(),
             pin_hash = NULL
         WHERE id = #{id}
+          AND (deleted_at IS NOT NULL OR status = #{withdrawnStatus})
     </update>
 
 </mapper>

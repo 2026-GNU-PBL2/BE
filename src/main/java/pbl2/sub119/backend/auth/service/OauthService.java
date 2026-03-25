@@ -15,7 +15,11 @@ import pbl2.sub119.backend.auth.mapper.OauthUserMapper;
 import pbl2.sub119.backend.auth.provider.OauthProvider;
 import pbl2.sub119.backend.auth.provider.OauthProviders;
 import pbl2.sub119.backend.auth.userinfo.OauthUserInfo;
+<<<<<<< HEAD
 import pbl2.sub119.backend.common.enumerated.UserRole;
+=======
+import pbl2.sub119.backend.common.enumerated.UserStatus;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 import pbl2.sub119.backend.common.exception.AuthException;
 import pbl2.sub119.backend.user.entity.UserEntity;
 import pbl2.sub119.backend.user.mapper.UserMapper;
@@ -97,7 +101,11 @@ public class OauthService {
                     return linkedUserId;
                 }
 
-                userMapper.restoreForResignup(linkedUserId, "PENDING_SIGNUP");
+                userMapper.restoreForResignup(
+                        linkedUserId,
+                        UserStatus.PENDING_SIGNUP.name(),
+                        UserStatus.WITHDRAWN.name()
+                );
                 return linkedUserId;
             }
         }

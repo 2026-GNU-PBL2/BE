@@ -1,6 +1,10 @@
 package pbl2.sub119.backend.auth.entity;
 
+<<<<<<< HEAD
 import pbl2.submate.backend.auth.enumerated.SocialProvider;
+=======
+import pbl2.sub119.backend.auth.enumerated.SocialProvider;
+>>>>>>> 2ee923e (fix: 소프트 삭제 및 재가입 로직 개선, merge 충돌 해결)
 
 public interface OauthUser {
     Long getId();

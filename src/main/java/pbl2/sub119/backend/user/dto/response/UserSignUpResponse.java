@@ -1,7 +1,7 @@
 package pbl2.sub119.backend.user.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import pbl2.submate.backend.user.entity.UserEntity;
+import pbl2.sub119.backend.user.entity.UserEntity;
 
 @Schema(description = "회원가입 완료 응답 DTO")
 public record UserSignUpResponse(

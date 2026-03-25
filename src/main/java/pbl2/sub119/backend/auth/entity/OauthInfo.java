@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import pbl2.submate.backend.auth.enumerated.SocialProvider;
+import pbl2.sub119.backend.auth.enumerated.SocialProvider;
 
 @Getter
 @AllArgsConstructor

@@ -3,8 +3,8 @@ package pbl2.sub119.backend.test.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import pbl2.submate.backend.test.dto.TestResponse;
-import pbl2.submate.backend.test.mapper.TestMapper;
-import pbl2.submate.backend.test.vo.TestVO;
+import pbl2.sub119.backend.test.mapper.TestMapper;
+import pbl2.sub119.backend.test.vo.TestVO;
 
 @Service
 @RequiredArgsConstructor

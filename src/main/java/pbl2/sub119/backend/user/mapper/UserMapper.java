@@ -2,7 +2,7 @@ package pbl2.sub119.backend.user.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import pbl2.submate.backend.user.entity.UserEntity;
+import pbl2.sub119.backend.user.entity.UserEntity;
 
 @Mapper
 public interface UserMapper {
@@ -45,6 +45,7 @@ public interface UserMapper {
 
     void restoreForResignup(
             @Param("id") Long id,
-            @Param("status") String status
+            @Param("status") String status,
+            @Param("withdrawnStatus") String withdrawnStatus
     );
 }

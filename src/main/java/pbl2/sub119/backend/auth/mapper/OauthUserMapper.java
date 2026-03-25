@@ -2,8 +2,8 @@ package pbl2.sub119.backend.auth.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import pbl2.submate.backend.auth.entity.OauthUserEntity;
-import pbl2.submate.backend.auth.enumerated.SocialProvider;
+import pbl2.sub119.backend.auth.entity.OauthUserEntity;
+import pbl2.sub119.backend.auth.enumerated.SocialProvider;
 
 @Mapper
 public interface OauthUserMapper {

@@ -24,7 +24,6 @@ import static pbl2.sub119.backend.auth.constant.NaverOauthConstants.*;
 import static pbl2.sub119.backend.common.error.ErrorCode.OAUTH_TOKEN_REQUEST_FAILED;
 import static pbl2.sub119.backend.common.error.ErrorCode.OAUTH_USERINFO_RESPONSE_EMPTY;
 
-
 @Component
 @RequiredArgsConstructor
 public class NaverProvider implements OauthProvider {
