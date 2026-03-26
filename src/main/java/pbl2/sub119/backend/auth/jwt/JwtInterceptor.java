@@ -4,8 +4,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import pbl2.sub119.backend.auth.annotation.AdminOnly;
 import pbl2.sub119.backend.auth.constant.JwtConstants;
+import pbl2.sub119.backend.common.enumerated.UserRole;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.exception.AuthException;
 
@@ -17,17 +20,41 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (!(handler instanceof HandlerMethod handlerMethod)) {
+            return true;
+        }
+
         String token = extractToken(request);
-        if (token == null) return true;
+
+        if (token == null) {
+            if (isAdminOnly(handlerMethod)) {
+                throw new AuthException(ErrorCode.AUTH_TOKEN_INVALID);
+            }
+            return true;
+        }
 
         if (!jwtResolver.isValid(token)) {
             throw new AuthException(ErrorCode.AUTH_TOKEN_INVALID);
         }
 
-        request.setAttribute(JwtConstants.REQUEST_ATTR_USER_ID, jwtResolver.extractUserId(token));
-        request.setAttribute(JwtConstants.REQUEST_ATTR_SOCIAL_ID, jwtResolver.extractSocialId(token));
-        request.setAttribute(JwtConstants.REQUEST_ATTR_USER_ROLE, jwtResolver.extractRole(token));
+        Long userId = jwtResolver.extractUserId(token);
+        String socialId = jwtResolver.extractSocialId(token);
+        UserRole role = jwtResolver.extractRole(token);
+
+        request.setAttribute(JwtConstants.REQUEST_ATTR_USER_ID, userId);
+        request.setAttribute(JwtConstants.REQUEST_ATTR_SOCIAL_ID, socialId);
+        request.setAttribute(JwtConstants.REQUEST_ATTR_USER_ROLE, role);
+
+        if (isAdminOnly(handlerMethod) && role != UserRole.ADMIN) {
+            throw new AuthException(ErrorCode.AUTH_FORBIDDEN);
+        }
+
         return true;
+    }
+
+    private boolean isAdminOnly(HandlerMethod handlerMethod) {
+        return handlerMethod.hasMethodAnnotation(AdminOnly.class)
+                || handlerMethod.getBeanType().isAnnotationPresent(AdminOnly.class);
     }
 
     private String extractToken(HttpServletRequest request) {

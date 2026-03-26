@@ -39,9 +39,15 @@ public class JwtResolver {
     }
 
     public UserRole extractRole(String token) {
-        return UserRole.valueOf(
-                parseClaims(token).get(JwtConstants.USER_ROLE, String.class)
-        );
+        try {
+            final String role = parseClaims(token).get(JwtConstants.USER_ROLE, String.class);
+            if (role == null) {
+                throw new AuthException(ErrorCode.AUTH_TOKEN_INVALID);
+            }
+            return UserRole.valueOf(role);
+        } catch (IllegalArgumentException e) {
+            throw new AuthException(ErrorCode.AUTH_TOKEN_INVALID);
+        }
     }
 
     public boolean isValid(String token) {
