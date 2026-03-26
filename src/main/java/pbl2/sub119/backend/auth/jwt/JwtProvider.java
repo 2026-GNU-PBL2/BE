@@ -16,17 +16,17 @@ import java.util.Date;
 public class JwtProvider {
     private final JwtProperties jwtProperties;
 
-    public String createAccessToken(final Long userId, final String email, final UserRole role) {
+    public String createAccessToken(final Long userId, final String socialId, final UserRole role) {
         final Date now = new Date();
         final Date expiredDate = new Date(now.getTime() + jwtProperties.getAccessTokenExpirationMillis());
 
         return Jwts.builder()
-                .setSubject(email) // 식별자로 이메일 사용
+                .setSubject(socialId)
                 .claim(JwtConstants.USER_ID, userId)
+                .claim(JwtConstants.USER_ROLE, role.name())
                 .setIssuedAt(now)
                 .setExpiration(expiredDate)
                 .signWith(jwtProperties.getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
-
 }
