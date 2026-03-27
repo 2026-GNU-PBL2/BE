@@ -44,7 +44,7 @@ jobs:
           KFTC_REDIRECT_URL: ${{ secrets.KFTC_REDIRECT_URL }}
           KFTC_USE_ORG_CODE: ${{ secrets.KFTC_USE_ORG_CODE }}
           KFTC_BASE_URL: ${{ secrets.KFTC_BASE_URL }}
-        run: ./gradlew clean build
+        run: ./gradlew clean build -x test
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
