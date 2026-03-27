@@ -68,7 +68,7 @@ jobs:
           script: |
             cd ~/submate || { mkdir -p ~/submate && cd ~/submate; }
 
-            docker compose down 2>/dev/null || true
+            docker-compose down 2>/dev/null || true
 
             rm -f docker-compose.yml
 
@@ -96,5 +96,5 @@ jobs:
             EOF
 
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            docker compose pull
-            docker compose up -d --remove-orphans
+            docker-compose pull
+            docker-compose up -d --remove-orphans
