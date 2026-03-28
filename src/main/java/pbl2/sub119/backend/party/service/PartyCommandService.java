@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.dto.request.PartyCreateRequest;
 import pbl2.sub119.backend.party.dto.response.PartyCreateResponse;
 import pbl2.sub119.backend.party.entity.Party;
@@ -84,14 +85,14 @@ public class PartyCommandService {
     }
 
     private void validateCreateRequest(PartyCreateRequest request) {
-        if (request.productId() == null) {
-            throw new PartyException("상품 ID는 필수입니다.");
+        if (request.productId() == null || request.productId().isBlank()) {
+            throw new PartyException(ErrorCode.PARTY_INVALID_PRODUCT_ID);
         }
         if (request.capacity() == null || request.capacity() < 2) {
-            throw new PartyException("정원은 2명 이상이어야 합니다.");
+            throw new PartyException(ErrorCode.PARTY_INVALID_CAPACITY);
         }
         if (request.pricePerMemberSnapshot() == null || request.pricePerMemberSnapshot() < 0) {
-            throw new PartyException("1인당 금액 정보가 올바르지 않습니다.");
+            throw new PartyException(ErrorCode.PARTY_INVALID_PRICE);
         }
     }
 }

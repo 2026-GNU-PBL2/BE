@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.party.dto.request.PartyCreateRequest;
 import pbl2.sub119.backend.party.dto.response.PartyCreateResponse;
 import pbl2.sub119.backend.party.entity.Party;
@@ -13,7 +14,8 @@ import pbl2.sub119.backend.party.mapper.PartyMapper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
+@Transactional
 class PartyCommandServiceTest {
 
     @Autowired

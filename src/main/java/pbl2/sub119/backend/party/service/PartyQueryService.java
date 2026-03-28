@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.dto.response.PartyDetailResponse;
 import pbl2.sub119.backend.party.dto.response.PartyListResponse;
 import pbl2.sub119.backend.party.dto.response.PartyMemberResponse;
@@ -24,7 +25,7 @@ public class PartyQueryService {
     public PartyDetailResponse getPartyDetail(Long partyId) {
         Party party = partyMapper.findById(partyId);
         if (party == null) {
-            throw new PartyException("존재하지 않는 파티입니다.");
+            throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
         }
 
         List<PartyMemberResponse> memberResponses = partyMemberMapper.findMembersByPartyId(partyId)

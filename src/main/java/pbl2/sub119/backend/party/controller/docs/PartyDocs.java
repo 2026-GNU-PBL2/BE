@@ -2,6 +2,7 @@ package pbl2.sub119.backend.party.controller.docs;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -73,7 +74,11 @@ public interface PartyDocs {
                     @ApiResponse(
                             responseCode = "200",
                             description = "파티 목록 조회 성공",
-                            content = @Content(schema = @Schema(implementation = PartyListResponse.class))
+                            content = @Content(
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = PartyListResponse.class)
+                                    )
+                            )
                     )
             }
     )

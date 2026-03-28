@@ -3,9 +3,9 @@ package pbl2.sub119.backend.party.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.concurrent.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,22 +104,28 @@ class PartyJoinConcurrencyTest {
         int threadCount = 2;
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        List<Throwable> errors = new CopyOnWriteArrayList<>();
 
         for (long userId = 101L; userId <= 102L; userId++) {
             final long currentUserId = userId;
             executorService.submit(() -> {
                 try {
+                    startLatch.await();
                     partyJoinService.joinParty(partyId, currentUserId);
-                } catch (Exception e) {
-                    // 한 명은 실패할 수 있으므로 무시
+                } catch (Throwable t) {
+                    errors.add(t);
                 } finally {
-                    latch.countDown();
+                    doneLatch.countDown();
                 }
             });
         }
 
-        latch.await();
+        startLatch.countDown();
+        assertThat(doneLatch.await(5, TimeUnit.SECONDS)).isTrue();
+        executorService.shutdown();
+        assertThat(errors).hasSize(1);
 
         // then
         Party resultParty = partyMapper.findById(partyId);
