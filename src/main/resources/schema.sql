@@ -95,6 +95,19 @@ CREATE TABLE IF NOT EXISTS sub_product (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_sub_product_service_name
     ON sub_product(service_name);
 
+
+-- received_mail (2026.03.28 / kyh )
+CREATE TABLE IF NOT EXISTS received_mail (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    sender VARCHAR(255) NULL,
+    subject VARCHAR(500) NULL,
+    body LONGTEXT NULL,
+    raw_s3_key VARCHAR(512) NULL,
+    received_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_received_mail_user_id (user_id)
+    );
 -- party (2026.03.28/khj)
 CREATE TABLE party (
                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,

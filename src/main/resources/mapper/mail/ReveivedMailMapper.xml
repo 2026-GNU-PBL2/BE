@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.mail.mapper.ReceivedMailMapper">
+
+    <resultMap id="ReceivedMailResultMap" type="pbl2.sub119.backend.mail.entity.ReceivedMail">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="sender" column="sender"/>
+        <result property="subject" column="subject"/>
+        <result property="body" column="body"/>
+        <result property="rawS3Key" column="raw_s3_key"/>
+        <result property="receivedAt" column="received_at"/>
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        id,
+        user_id,
+        sender,
+        subject,
+        body,
+        raw_s3_key,
+        received_at
+    </sql>
+
+    <select id="findByUserId" resultMap="ReceivedMailResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM received_mail
+        WHERE user_id = #{userId}
+        ORDER BY received_at DESC
+    </select>
+
+    <select id="findByIdAndUserId" resultMap="ReceivedMailResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM received_mail
+        WHERE id = #{id}
+        AND user_id = #{userId}
+        LIMIT 1
+    </select>
+
+</mapper>
