@@ -108,3 +108,51 @@ CREATE TABLE IF NOT EXISTS received_mail (
     PRIMARY KEY (id),
     INDEX idx_received_mail_user_id (user_id)
     );
+-- party (2026.03.28/khj)
+CREATE TABLE party (
+                       id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                       product_id VARCHAR(36) NOT NULL,
+                       host_user_id BIGINT NOT NULL,
+                       capacity INT NOT NULL,
+                       current_member_count INT NOT NULL,
+                       recruit_status VARCHAR(30) NOT NULL,
+                       operation_status VARCHAR(30) NOT NULL,
+                       vacancy_type VARCHAR(30) NULL,
+                       created_at DATETIME NOT NULL,
+                       updated_at DATETIME NOT NULL,
+                       terminated_at DATETIME NULL,
+                       price_per_member_snapshot INT NOT NULL
+);
+
+-- party_member (2026.03.28/khj)
+CREATE TABLE party_member (
+                              id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                              party_id BIGINT NOT NULL,
+                              user_id BIGINT NOT NULL,
+                              role VARCHAR(20) NOT NULL,
+                              status VARCHAR(30) NOT NULL,
+                              joined_at DATETIME NOT NULL,
+                              activated_at DATETIME NULL,
+                              service_start_at DATETIME NULL,
+                              service_end_at DATETIME NULL,
+                              leave_reserved_at DATETIME NULL,
+                              left_at DATETIME NULL,
+                              replaced_target_member_id BIGINT NULL,
+                              CONSTRAINT uq_party_member_party_user UNIQUE (party_id, user_id)
+);
+
+-- party_history (2026.03.28/khj)
+CREATE TABLE party_history (
+                               id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                               party_id BIGINT NOT NULL,
+                               member_id BIGINT NULL,
+                               event_type VARCHAR(50) NOT NULL,
+                               event_payload TEXT NULL,
+                               created_at DATETIME NOT NULL,
+                               created_by BIGINT NOT NULL
+);
+
+CREATE INDEX idx_party_product ON party(product_id);
+CREATE INDEX idx_party_member_party_status ON party_member(party_id, status);
+CREATE INDEX idx_party_member_user ON party_member(user_id);
+
