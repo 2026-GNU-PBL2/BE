@@ -3,6 +3,7 @@ package pbl2.sub119.backend.party.service;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.entity.Party;
@@ -23,7 +24,7 @@ public class PartyJoinService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void joinParty(Long partyId, Long userId) {
         Party party = partyMapper.findByIdForUpdate(partyId);
         if (party == null) {

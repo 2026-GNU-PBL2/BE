@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.party.mapper.MatchWaitingQueueMapper">
+
+    <resultMap id="matchWaitingQueueResultMap" type="pbl2.sub119.backend.party.entity.MatchWaitingQueue">
+        <id property="id" column="id"/>
+        <result property="productId" column="product_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="status" column="status"/>
+        <result property="requestedAt" column="requested_at"/>
+        <result property="matchedAt" column="matched_at"/>
+        <result property="canceledAt" column="canceled_at"/>
+        <result property="targetPartyId" column="target_party_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insertMatchWaitingQueue"
+            parameterType="pbl2.sub119.backend.party.entity.MatchWaitingQueue"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO match_waiting_queue (
+            product_id,
+            user_id,
+            status,
+            requested_at,
+            matched_at,
+            canceled_at,
+            target_party_id,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{productId},
+                     #{userId},
+                     #{status},
+                     #{requestedAt},
+                     #{matchedAt},
+                     #{canceledAt},
+                     #{targetPartyId},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+    <select id="findWaitingByProductIdAndUserId" resultMap="matchWaitingQueueResultMap">
+        SELECT
+            id,
+            product_id,
+            user_id,
+            status,
+            requested_at,
+            matched_at,
+            canceled_at,
+            target_party_id,
+            created_at,
+            updated_at
+        FROM match_waiting_queue
+        WHERE product_id = #{productId}
+          AND user_id = #{userId}
+          AND status = 'WAITING'
+            LIMIT 1
+    </select>
+
+    <select id="findFirstWaitingByProductId" resultMap="matchWaitingQueueResultMap">
+        SELECT
+            id,
+            product_id,
+            user_id,
+            status,
+            requested_at,
+            matched_at,
+            canceled_at,
+            target_party_id,
+            created_at,
+            updated_at
+        FROM match_waiting_queue
+        WHERE product_id = #{productId}
+          AND status = 'WAITING'
+        ORDER BY requested_at ASC, id ASC
+            LIMIT 1
+    </select>
+
+    <select id="findAllWaitingByProductId" resultMap="matchWaitingQueueResultMap">
+        SELECT
+            id,
+            product_id,
+            user_id,
+            status,
+            requested_at,
+            matched_at,
+            canceled_at,
+            target_party_id,
+            created_at,
+            updated_at
+        FROM match_waiting_queue
+        WHERE product_id = #{productId}
+          AND status = 'WAITING'
+        ORDER BY requested_at ASC, id ASC
+    </select>
+
+    <select id="findById" resultMap="matchWaitingQueueResultMap">
+        SELECT
+            id,
+            product_id,
+            user_id,
+            status,
+            requested_at,
+            matched_at,
+            canceled_at,
+            target_party_id,
+            created_at,
+            updated_at
+        FROM match_waiting_queue
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateMatched">
+        UPDATE match_waiting_queue
+        SET status = 'MATCHED',
+            matched_at = NOW(),
+            target_party_id = #{targetPartyId},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND status = 'WAITING'
+    </update>
+
+    <update id="updateCanceled">
+        UPDATE match_waiting_queue
+        SET status = 'CANCELED',
+            canceled_at = NOW(),
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND status = 'WAITING'
+    </update>
+
+    <select id="countWaitingByProductId" resultType="int">
+        SELECT COUNT(*)
+        FROM match_waiting_queue
+        WHERE product_id = #{productId}
+          AND status = 'WAITING'
+    </select>
+
+</mapper>

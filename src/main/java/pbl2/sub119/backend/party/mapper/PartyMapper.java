@@ -26,4 +26,6 @@ public interface PartyMapper {
             @Param("partyId") Long partyId,
             @Param("recruitStatus") RecruitStatus recruitStatus
     );
+
+    List<Party> findJoinablePartiesByProductId(@Param("productId") String productId);
 }
