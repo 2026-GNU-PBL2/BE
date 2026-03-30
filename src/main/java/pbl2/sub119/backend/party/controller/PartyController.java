@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -76,7 +77,7 @@ public class PartyController implements PartyDocs {
     @Override
     public ResponseEntity<Void> cancelWaiting(
             @Auth final Accessor accessor,
-            final Long waitingId
+            @PathVariable final Long waitingId
     ) {
         matchWaitingService.cancelWaiting(waitingId, accessor.getUserId());
         return ResponseEntity.ok().build();

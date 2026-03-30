@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.party.service;
 
 import java.time.LocalDateTime;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +20,16 @@ public class MatchWaitingService {
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final PartyHistoryService partyHistoryService;
 
+    private void validateUserId(Long userId) {
+        if (userId == null) {
+            throw new PartyException(ErrorCode.PARTY_INVALID_USER_ID);
+        }
+    }
+
     @Transactional
-    public MatchWaitingRegisterResponse registerWaiting(String productId, Long userId){
+    public MatchWaitingRegisterResponse registerWaiting(String productId, Long userId) {
+        validateUserId(userId);
+
         if (productId == null || productId.isBlank()) {
             throw new PartyException(ErrorCode.PARTY_INVALID_PRODUCT_ID);
         }
@@ -54,6 +63,8 @@ public class MatchWaitingService {
 
     @Transactional
     public void cancelWaiting(Long waitingId, Long userId) {
+        validateUserId(userId);
+
         MatchWaitingQueue queue = matchWaitingQueueMapper.findById(waitingId);
         if (queue == null || queue.getStatus() != MatchWaitingStatus.WAITING) {
             throw new PartyException(ErrorCode.PARTY_WAITING_NOT_FOUND);
@@ -76,6 +87,8 @@ public class MatchWaitingService {
 
     @Transactional
     public void markMatched(Long waitingId, Long targetPartyId, Long userId) {
+        validateUserId(userId);
+
         int updated = matchWaitingQueueMapper.updateMatched(waitingId, targetPartyId);
         if (updated == 0) {
             throw new PartyException(ErrorCode.PARTY_WAITING_NOT_FOUND);

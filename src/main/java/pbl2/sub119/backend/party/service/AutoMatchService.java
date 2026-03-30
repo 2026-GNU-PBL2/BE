@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.party.service;
 
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,17 +28,22 @@ public class AutoMatchService {
 
         List<Party> joinableParties = partyMapper.findJoinablePartiesByProductId(productId);
 
-        if (!joinableParties.isEmpty()) {
-            Party targetParty = joinableParties.get(0);
-            partyJoinService.joinParty(targetParty.getId(), userId);
-
-            return new JoinOrQueueResponse(
-                    true,
-                    false,
-                    targetParty.getId(),
-                    null,
-                    "즉시 참여가 완료되었습니다."
-            );
+        for (Party targetParty : joinableParties) {
+            try {
+                partyJoinService.joinParty(targetParty.getId(), userId);
+                return new JoinOrQueueResponse(
+                        true,
+                        false,
+                        targetParty.getId(),
+                        null,
+                        "즉시 참여가 완료되었습니다."
+                );
+            } catch (PartyException e) {
+                if (e.getErrorCode() == ErrorCode.PARTY_FULL) {
+                    continue; // 다음 파티 시도
+                }
+                throw e;
+            }
         }
 
         var waitingResponse = matchWaitingService.registerWaiting(productId, userId);
