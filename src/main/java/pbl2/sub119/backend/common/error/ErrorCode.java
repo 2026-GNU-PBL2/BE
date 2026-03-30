@@ -40,8 +40,11 @@ public enum ErrorCode {
     PARTY_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY004", "존재하지 않는 파티입니다."),
     PARTY_NOT_RECRUITING(HttpStatus.BAD_REQUEST, "PARTY005", "현재 모집 중인 파티가 아닙니다."),
     PARTY_ALREADY_JOINED(HttpStatus.BAD_REQUEST, "PARTY006", "이미 해당 파티에 참여 중이거나 처리 중인 사용자입니다."),
-    PARTY_FULL(HttpStatus.BAD_REQUEST, "PARTY007", "정원이 가득 찼습니다.");
-
+    PARTY_FULL(HttpStatus.BAD_REQUEST, "PARTY007", "정원이 가득 찼습니다."),
+    PARTY_WAITING_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PARTY008", "이미 해당 상품에 대한 대기열이 존재합니다."),
+    PARTY_WAITING_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY009", "대기열 정보를 찾을 수 없습니다."),
+    PARTY_ALREADY_PARTICIPATING_PRODUCT(HttpStatus.BAD_REQUEST, "PARTY010", "이미 해당 상품의 파티에 참여 중입니다."),
+    PARTY_WAITING_FORBIDDEN(HttpStatus.FORBIDDEN, "PARTY011", "해당 대기열에 대한 권한이 없습니다.");
     private final HttpStatus status;
     private final String code;
     private final String message;

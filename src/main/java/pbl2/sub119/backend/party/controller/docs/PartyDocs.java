@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.party.dto.request.MatchWaitingRegisterRequest;
 import pbl2.sub119.backend.party.dto.request.PartyCreateRequest;
 import pbl2.sub119.backend.party.dto.request.PartyJoinRequest;
+import pbl2.sub119.backend.party.dto.response.JoinOrQueueResponse;
 import pbl2.sub119.backend.party.dto.response.PartyCreateResponse;
 import pbl2.sub119.backend.party.dto.response.PartyDetailResponse;
 import pbl2.sub119.backend.party.dto.response.PartyListResponse;
@@ -106,5 +108,44 @@ public interface PartyDocs {
     ResponseEntity<Void> joinParty(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId
+    );
+
+    @Operation(
+            summary = "즉시 참여 또는 대기열 등록",
+            description = """
+                동일 상품 기준으로 즉시 참여 가능한 파티를 먼저 탐색합니다.
+                참여 가능한 파티가 있으면 즉시 참여하고,
+                없으면 상품 기준 대기열에 등록합니다.
+                """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "즉시 참여 또는 대기열 등록 성공",
+                            content = @Content(schema = @Schema(implementation = JoinOrQueueResponse.class))
+                    )
+            }
+    )
+    @PostMapping("/join-or-queue")
+    ResponseEntity<JoinOrQueueResponse> joinOrQueue(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "즉시 참여 또는 대기열 등록 요청", required = true)
+            @RequestBody MatchWaitingRegisterRequest request
+    );
+
+    @Operation(
+            summary = "대기열 취소",
+            description = "사용자가 등록한 대기열을 취소합니다.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "대기열 취소 성공"
+                    )
+            }
+    )
+    @PostMapping("/waiting/{waitingId}/cancel")
+    ResponseEntity<Void> cancelWaiting(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "대기열 ID", required = true, example = "1")
+            @PathVariable Long waitingId
     );
 }

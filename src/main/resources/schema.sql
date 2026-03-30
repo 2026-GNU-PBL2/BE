@@ -98,16 +98,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_sub_product_service_name
 
 -- received_mail (2026.03.28 / kyh )
 CREATE TABLE IF NOT EXISTS received_mail (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    user_id BIGINT NOT NULL,
-    sender VARCHAR(255) NULL,
-    subject VARCHAR(500) NULL,
-    body LONGTEXT NULL,
-    raw_s3_key VARCHAR(512) NULL,
-    received_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    INDEX idx_received_mail_user_id (user_id)
-    );
+                                             id BIGINT NOT NULL AUTO_INCREMENT,
+                                             user_id BIGINT NOT NULL,
+                                             sender VARCHAR(255),
+                                             subject VARCHAR(500),
+                                             body CLOB,
+                                             raw_s3_key VARCHAR(512),
+                                             received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                             PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_received_mail_user_id
+    ON received_mail(user_id);
+
 -- party (2026.03.28/khj)
 CREATE TABLE party (
                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -155,4 +158,24 @@ CREATE TABLE party_history (
 CREATE INDEX idx_party_product ON party(product_id);
 CREATE INDEX idx_party_member_party_status ON party_member(party_id, status);
 CREATE INDEX idx_party_member_user ON party_member(user_id);
+
+-- match_waiting_queue(2026.03.29/khj)
+CREATE TABLE match_waiting_queue (
+                                     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                     product_id VARCHAR(100) NOT NULL,
+                                     user_id BIGINT NOT NULL,
+                                     status VARCHAR(30) NOT NULL,
+                                     requested_at DATETIME NOT NULL,
+                                     matched_at DATETIME NULL,
+                                     canceled_at DATETIME NULL,
+                                     target_party_id BIGINT NULL,
+                                     created_at DATETIME NOT NULL,
+                                     updated_at DATETIME NOT NULL
+);
+
+CREATE INDEX idx_match_waiting_product_status_requested
+    ON match_waiting_queue(product_id, status, requested_at, id);
+
+CREATE INDEX idx_match_waiting_user_status
+    ON match_waiting_queue(user_id, status);
 

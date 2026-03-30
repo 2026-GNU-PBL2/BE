@@ -118,4 +118,25 @@
         WHERE id = #{partyId}
     </update>
 
+    <select id="findJoinablePartiesByProductId" resultMap="partyResultMap">
+        SELECT
+            id,
+            product_id,
+            host_user_id,
+            capacity,
+            current_member_count,
+            recruit_status,
+            operation_status,
+            vacancy_type,
+            created_at,
+            updated_at,
+            terminated_at,
+            price_per_member_snapshot
+        FROM party
+        WHERE product_id = #{productId}
+          AND recruit_status = 'RECRUITING'
+          AND current_member_count &lt; capacity
+        ORDER BY (capacity - current_member_count) ASC, created_at ASC
+    </select>
+
 </mapper>
