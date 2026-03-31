@@ -1,0 +1,3 @@
+2026-03-31 16:29:26.700301+09:00 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "TEST" already exists; SQL statement:
+CREATE TABLE test ( id BIGINT PRIMARY KEY, name VARCHAR(50), amount BIGINT ) [42101-232]

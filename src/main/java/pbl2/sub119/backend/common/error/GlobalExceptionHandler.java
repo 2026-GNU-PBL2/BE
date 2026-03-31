@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pbl2.sub119.backend.common.exception.AuthException;
 import pbl2.sub119.backend.common.exception.BusinessException;
 import pbl2.sub119.backend.common.exception.NotFoundException;
+import pbl2.sub119.backend.toss.exception.PaymentException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,6 +82,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     protected ResponseEntity<ErrorResponse<Void>> handleNotFoundException(NotFoundException e) {
         log.error("NotFoundException", e);
+        return createErrorResponseEntity(e.getErrorCode());
+    }
+    // PG
+    @ExceptionHandler(PaymentException.class)
+    protected ResponseEntity<ErrorResponse<Void>> handlePaymentException(PaymentException e) {
+        log.error("PaymentException", e);
         return createErrorResponseEntity(e.getErrorCode());
     }
 

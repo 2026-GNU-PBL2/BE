@@ -179,3 +179,19 @@ CREATE INDEX idx_match_waiting_product_status_requested
 CREATE INDEX idx_match_waiting_user_status
     ON match_waiting_queue(user_id, status);
 
+
+-- billing_key (2026.03.28 / kyh)
+CREATE TABLE IF NOT EXISTS billing_key (
+                                           id                  BIGINT          NOT NULL AUTO_INCREMENT,
+                                           user_id             BIGINT          NOT NULL,
+                                           billing_key         VARCHAR(255)    NOT NULL,
+    customer_key        VARCHAR(255)    NOT NULL,
+    provider            VARCHAR(50)     NOT NULL DEFAULT 'TOSS',
+    status              VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE',
+    card_company        VARCHAR(50)     NULL,
+    masked_card_number  VARCHAR(50)     NULL,
+    issued_at           DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expired_at          DATETIME        NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_billing_key_user_id (user_id)
+    );

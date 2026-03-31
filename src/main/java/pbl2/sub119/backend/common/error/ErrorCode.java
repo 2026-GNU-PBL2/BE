@@ -45,7 +45,15 @@ public enum ErrorCode {
     PARTY_WAITING_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY009", "대기열 정보를 찾을 수 없습니다."),
     PARTY_ALREADY_PARTICIPATING_PRODUCT(HttpStatus.BAD_REQUEST, "PARTY010", "이미 해당 상품의 파티에 참여 중입니다."),
     PARTY_WAITING_FORBIDDEN(HttpStatus.FORBIDDEN, "PARTY011", "해당 대기열에 대한 권한이 없습니다."),
-    PARTY_INVALID_USER_ID(HttpStatus.BAD_REQUEST, "PARTY012", "유효하지 않은 사용자입니다.");
+    PARTY_INVALID_USER_ID(HttpStatus.BAD_REQUEST, "PARTY012", "유효하지 않은 사용자입니다."),
+
+    // Payment
+    PAYMENT_BILLING_KEY_ISSUE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT001", "빌링키 발급에 실패했습니다."),
+    PAYMENT_BILLING_KEY_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PAYMENT002", "이미 등록된 결제 수단이 있습니다."),
+    PAYMENT_CHARGE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "자동결제 실행에 실패했습니다."),
+    PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT004", "등록된 결제 수단이 없습니다.");
+
+
     private final HttpStatus status;
     private final String code;
     private final String message;
