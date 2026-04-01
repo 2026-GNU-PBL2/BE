@@ -5,12 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pbl2.sub119.backend.auth.annotation.AdminOnly;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
-
-import pbl2.sub119.backend.common.enumerated.UserRole;
-import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.common.exception.AuthException;
 import pbl2.sub119.backend.subproduct.controller.docs.SubProductAdminDocs;
 import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
@@ -19,6 +16,8 @@ import pbl2.sub119.backend.subproduct.service.SubProductService;
 
 import java.util.List;
 
+
+@AdminOnly
 @RestController
 @RequestMapping("/api/v1/admin/products")
 @RequiredArgsConstructor
@@ -29,7 +28,6 @@ public class SubProductAdminController implements SubProductAdminDocs {
     @GetMapping
     public ResponseEntity<List<SubProductResponse>> getProducts(
             @Auth final Accessor accessor) {
-        validateAdmin(accessor);
         return ResponseEntity.ok(subProductService.getProducts());
     }
 
@@ -37,7 +35,6 @@ public class SubProductAdminController implements SubProductAdminDocs {
     public ResponseEntity<SubProductResponse> getProduct(
             @Auth final Accessor accessor,
             @PathVariable String id) {
-        validateAdmin(accessor);
         return ResponseEntity.ok(subProductService.getProduct(id));
     }
 
@@ -53,11 +50,12 @@ public class SubProductAdminController implements SubProductAdminDocs {
      *   "pricePerMember" : 4500
      * }
      */
+
+
     @PostMapping
     public ResponseEntity<SubProductResponse> createProduct(
             @Auth final Accessor accessor,
             @Valid @RequestBody SubProductRequest request) {
-        validateAdmin(accessor);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(subProductService.createProduct(request));
     }
@@ -67,13 +65,8 @@ public class SubProductAdminController implements SubProductAdminDocs {
             @Auth final Accessor accessor,
             @PathVariable String id,
             @Valid @RequestBody SubProductUpdateRequest request) {
-        validateAdmin(accessor);
         return ResponseEntity.ok(subProductService.updateProduct(id, request));
     }
 
-    private void validateAdmin(Accessor accessor) {
-        if (!UserRole.ADMIN.equals(accessor.getRole())) {
-            throw new AuthException(ErrorCode.AUTH_FORBIDDEN);
-        }
-    }
+
 }
