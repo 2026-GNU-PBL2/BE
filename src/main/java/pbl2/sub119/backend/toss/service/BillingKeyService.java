@@ -30,21 +30,20 @@ public class BillingKeyService {
         Long userId = accessor.getUserId();
         Long partyId = Long.parseLong(request.partyId());
 
-        // 중복금지
         billingKeyMapper.findByUserId(userId).ifPresent(existing -> {
             throw new PaymentException(ErrorCode.PAYMENT_BILLING_KEY_ALREADY_EXISTS);
         });
 
-
+        String customerKey = "submate-" + userId;
 
         TossBillingAuthResponse response = tossPaymentClient.issueBillingKey(
-                new TossBillingAuthRequest(request.authKey(), request.customerKey())
+                new TossBillingAuthRequest(request.authKey(), customerKey)
         );
 
         BillingKeyEntity billingKey = BillingKeyEntity.builder()
                 .userId(userId)
                 .billingKey(response.billingKey())
-                .customerKey(request.customerKey())
+                .customerKey(customerKey)
                 .provider("TOSS")
                 .status("ACTIVE")
                 .cardCompany(response.cardCompany())
@@ -52,9 +51,6 @@ public class BillingKeyService {
                 .build();
 
         billingKeyMapper.insert(billingKey);
-
-        log.info("빌링키 발급 완료. userId={}, partyId={}", userId, partyId);
-
 
         eventPublisher.publishEvent(new BillingKeyIssuedEvent(userId, partyId, response.billingKey()));
     }
