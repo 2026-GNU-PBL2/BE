@@ -58,6 +58,14 @@ public enum ErrorCode {
     PARTY_HOST_TRANSFER_INVALID_TARGET(HttpStatus.BAD_REQUEST, "PARTY020", "유효하지 않은 승계 대상입니다."),
     PARTY_HOST_TRANSFER_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PARTY021", "본인을 승계 대상으로 지정할 수 없습니다."),
     PARTY_HOST_TRANSFER_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY022", "파티장은 탈퇴 예약 전에 승계를 먼저 진행해야 합니다.");
+
+    // Payment
+    PAYMENT_BILLING_KEY_ISSUE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT001", "빌링키 발급에 실패했습니다."),
+    PAYMENT_BILLING_KEY_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PAYMENT002", "이미 등록된 결제 수단이 있습니다."),
+    PAYMENT_CHARGE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "자동결제 실행에 실패했습니다."),
+    PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT004", "등록된 결제 수단이 없습니다.");
+
+
     private final HttpStatus status;
     private final String code;
     private final String message;

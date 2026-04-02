@@ -44,3 +44,7 @@ kftc:
   redirect-url: ${KFTC_REDIRECT_URL}
   use-org-code: ${KFTC_USE_ORG_CODE}
   base-url: ${KFTC_BASE_URL:https://testapi.openbanking.or.kr}
+
+toss:
+  secret-key: ${TOSS_SECRET_KEY}
+  base-url: https://api.tosspayments.com

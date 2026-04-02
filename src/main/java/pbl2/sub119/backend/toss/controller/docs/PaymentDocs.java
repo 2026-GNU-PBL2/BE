@@ -1,0 +1,86 @@
+package pbl2.sub119.backend.toss.controller.docs;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import pbl2.sub119.backend.auth.aop.Auth;
+import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
+
+import java.util.Map;
+
+@Tag(
+        name = "Payment API",
+        description = "결제 수단 등록 및 자동결제 관련 API"
+)
+public interface PaymentDocs {
+
+    @Operation(
+            summary = "빌링용 customerKey 조회",
+            description = """
+                    현재 로그인한 사용자의 토스 자동결제용 customerKey를 조회합니다.
+                    프론트는 이 값을 사용해서 토스 SDK 결제창을 초기화합니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "customerKey 조회 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증 필요",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/billing/customer-key")
+    ResponseEntity<Map<String, String>> getCustomerKey(
+            @Parameter(hidden = true) @Auth Accessor accessor
+    );
+
+    @Operation(
+            summary = "빌링키 발급",
+            description = """
+                    프론트에서 토스 SDK 결제창으로 카드 등록을 완료한 뒤,
+                    success callback에서 전달받은 authKey와 customerKey를 받아 빌링키를 발급합니다.
+                    
+                    발급된 빌링키는 서버에 저장되며, 이후 자동결제 승인에 사용됩니다.
+                    빌링키 발급 성공 후 후속 파티 결제 준비 로직은 이벤트 기반으로 처리됩니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "빌링키 발급 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 또는 빌링키 발급 실패",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증 필요",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "이미 등록된 결제 수단 존재",
+                            content = @Content
+                    )
+            }
+    )
+    @PostMapping("/billing/authorize")
+    ResponseEntity<Void> issueBillingKey(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "빌링키 발급 요청 정보", required = true)
+            @Valid @RequestBody BillingKeyIssueRequest request
+    );
+}
