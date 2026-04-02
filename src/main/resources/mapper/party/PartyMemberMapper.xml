@@ -68,6 +68,68 @@
             LIMIT 1
     </select>
 
+    <!-- 탈퇴/승계 처리 시 해당 유저 상태 확인용 조회 -->
+    <select id="findByPartyIdAndUserIdForUpdate" resultMap="partyMemberResultMap">
+        SELECT
+            id,
+            party_id,
+            user_id,
+            role,
+            status,
+            joined_at,
+            activated_at,
+            service_start_at,
+            service_end_at,
+            leave_reserved_at,
+            left_at,
+            replaced_target_member_id
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND user_id = #{userId}
+            LIMIT 1
+        FOR UPDATE
+    </select>
+
+    <!-- 승계 수락 시 기존 HOST 조회 -->
+    <select id="findHostMemberByPartyIdForUpdate" resultMap="partyMemberResultMap">
+        SELECT
+            id,
+            party_id,
+            user_id,
+            role,
+            status,
+            joined_at,
+            activated_at,
+            service_start_at,
+            service_end_at,
+            leave_reserved_at,
+            left_at,
+            replaced_target_member_id
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role = 'HOST'
+            LIMIT 1
+        FOR UPDATE
+    </select>
+
+    <select id="findById" resultMap="partyMemberResultMap">
+        SELECT
+            id,
+            party_id,
+            user_id,
+            role,
+            status,
+            joined_at,
+            activated_at,
+            service_start_at,
+            service_end_at,
+            leave_reserved_at,
+            left_at,
+            replaced_target_member_id
+        FROM party_member
+        WHERE id = #{memberId}
+    </select>
+
     <select id="findMembersByPartyId" resultMap="partyMemberResultMap">
         SELECT
             id,
@@ -87,11 +149,96 @@
         ORDER BY id ASC
     </select>
 
+    <select id="findLeaveReservedMembers" resultMap="partyMemberResultMap">
+        SELECT
+            id,
+            party_id,
+            user_id,
+            role,
+            status,
+            joined_at,
+            activated_at,
+            service_start_at,
+            service_end_at,
+            leave_reserved_at,
+            left_at,
+            replaced_target_member_id
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND status = 'LEAVE_RESERVED'
+        ORDER BY leave_reserved_at ASC, id ASC
+    </select>
+
+    <select id="findSwitchWaitingMembers" resultMap="partyMemberResultMap">
+        SELECT
+            id,
+            party_id,
+            user_id,
+            role,
+            status,
+            joined_at,
+            activated_at,
+            service_start_at,
+            service_end_at,
+            leave_reserved_at,
+            left_at,
+            replaced_target_member_id
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND status = 'SWITCH_WAITING'
+        ORDER BY id ASC
+    </select>
+
     <select id="countOccupiedMembers" resultType="int">
         SELECT COUNT(*)
         FROM party_member
         WHERE party_id = #{partyId}
-          AND status IN ('PENDING', 'ACTIVE')
+          AND status IN ('PENDING', 'ACTIVE', 'LEAVE_RESERVED', 'SWITCH_WAITING')
     </select>
+
+    <update id="updateLeaveReserved">
+        UPDATE party_member
+        SET status = 'LEAVE_RESERVED',
+            leave_reserved_at = NOW()
+        WHERE party_id = #{partyId}
+          AND user_id = #{userId}
+          AND status = 'ACTIVE'
+    </update>
+
+    <update id="clearLeaveReserved">
+        UPDATE party_member
+        SET status = 'ACTIVE',
+            leave_reserved_at = NULL
+        WHERE party_id = #{partyId}
+          AND user_id = #{userId}
+          AND status = 'LEAVE_RESERVED'
+    </update>
+
+    <update id="updateStatus">
+        UPDATE party_member
+        SET status = #{status}
+        WHERE id = #{memberId}
+    </update>
+
+    <update id="updateStatusAndLeftAt">
+        UPDATE party_member
+        SET status = #{status},
+            left_at = NOW()
+        WHERE id = #{memberId}
+    </update>
+
+    <update id="updateStatusAndActivatedAt">
+        UPDATE party_member
+        SET status = #{status},
+            activated_at = NOW(),
+            service_start_at = NOW()
+        WHERE id = #{memberId}
+    </update>
+
+    <update id="updateRole">
+        UPDATE party_member
+        SET role = #{role}
+        WHERE id = #{memberId}
+    </update>
 
 </mapper>

@@ -66,6 +66,7 @@
         WHERE id = #{partyId}
     </select>
 
+    <!-- 참여/탈퇴/승계 처리 시 파티 상태 확인용 조회 -->
     <select id="findByIdForUpdate" resultMap="partyResultMap">
         SELECT
             id,
@@ -118,6 +119,28 @@
         WHERE id = #{partyId}
     </update>
 
+    <update id="updateOperationStatus">
+        UPDATE party
+        SET operation_status = #{operationStatus},
+            updated_at = NOW()
+        WHERE id = #{partyId}
+    </update>
+
+    <update id="updateVacancyType">
+        UPDATE party
+        SET vacancy_type = #{vacancyType},
+            updated_at = NOW()
+        WHERE id = #{partyId}
+    </update>
+
+    <!-- 승계 완료 시 파티장 변경 -->
+    <update id="updateHostUserId">
+        UPDATE party
+        SET host_user_id = #{hostUserId},
+            updated_at = NOW()
+        WHERE id = #{partyId}
+    </update>
+
     <select id="findJoinablePartiesByProductId" resultMap="partyResultMap">
         SELECT
             id,
@@ -135,6 +158,7 @@
         FROM party
         WHERE product_id = #{productId}
           AND recruit_status = 'RECRUITING'
+          AND operation_status IN ('WAITING_START', 'ACTIVE')
           AND current_member_count &lt; capacity
         ORDER BY (capacity - current_member_count) ASC, created_at ASC
     </select>

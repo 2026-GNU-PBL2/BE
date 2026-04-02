@@ -1,12 +1,13 @@
 package pbl2.sub119.backend.party.service;
 
 import java.time.LocalDateTime;
-
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.dto.response.MatchWaitingRegisterResponse;
+import pbl2.sub119.backend.party.dto.response.MatchWaitingResponse;
 import pbl2.sub119.backend.party.entity.MatchWaitingQueue;
 import pbl2.sub119.backend.party.enumerated.MatchWaitingStatus;
 import pbl2.sub119.backend.party.enumerated.PartyHistoryEventType;
@@ -39,16 +40,18 @@ public class MatchWaitingService {
             throw new PartyException(ErrorCode.PARTY_WAITING_ALREADY_EXISTS);
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         MatchWaitingQueue queue = MatchWaitingQueue.builder()
                 .productId(productId)
                 .userId(userId)
                 .status(MatchWaitingStatus.WAITING)
-                .requestedAt(LocalDateTime.now())
+                .requestedAt(now)
                 .matchedAt(null)
                 .canceledAt(null)
                 .targetPartyId(null)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
         matchWaitingQueueMapper.insertMatchWaitingQueue(queue);
@@ -101,5 +104,22 @@ public class MatchWaitingService {
                 "{\"waitingId\":" + waitingId + ",\"userId\":" + userId + "}",
                 userId
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<MatchWaitingResponse> getMyWaitingList(Long userId) {
+        validateUserId(userId);
+
+        return matchWaitingQueueMapper.findAllWaitingByUserId(userId)
+                .stream()
+                .map(queue -> new MatchWaitingResponse(
+                        queue.getId(),
+                        queue.getProductId(),
+                        queue.getUserId(),
+                        queue.getStatus(),
+                        queue.getRequestedAt(),
+                        queue.getTargetPartyId()
+                ))
+                .toList();
     }
 }

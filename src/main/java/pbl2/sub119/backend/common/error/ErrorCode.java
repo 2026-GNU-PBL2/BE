@@ -46,6 +46,18 @@ public enum ErrorCode {
     PARTY_ALREADY_PARTICIPATING_PRODUCT(HttpStatus.BAD_REQUEST, "PARTY010", "이미 해당 상품의 파티에 참여 중입니다."),
     PARTY_WAITING_FORBIDDEN(HttpStatus.FORBIDDEN, "PARTY011", "해당 대기열에 대한 권한이 없습니다."),
     PARTY_INVALID_USER_ID(HttpStatus.BAD_REQUEST, "PARTY012", "유효하지 않은 사용자입니다."),
+    PARTY_LEAVE_ALREADY_RESERVED(HttpStatus.BAD_REQUEST, "PARTY013", "이미 탈퇴 예약된 상태입니다."),
+    PARTY_LEAVE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PARTY014", "탈퇴 예약이 불가능한 상태입니다."),
+    PARTY_LEAVE_FORBIDDEN(HttpStatus.FORBIDDEN, "PARTY015", "해당 파티에 대한 권한이 없습니다."),
+
+    // Host Transfer
+    PARTY_HOST_ONLY(HttpStatus.FORBIDDEN, "PARTY016", "파티장만 수행할 수 있습니다."),
+    PARTY_HOST_TRANSFER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PARTY017", "이미 진행 중인 승계 요청이 존재합니다."),
+    PARTY_HOST_TRANSFER_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY018", "승계 요청을 찾을 수 없습니다."),
+    PARTY_HOST_TRANSFER_FORBIDDEN(HttpStatus.FORBIDDEN, "PARTY019", "승계 요청에 대한 권한이 없습니다."),
+    PARTY_HOST_TRANSFER_INVALID_TARGET(HttpStatus.BAD_REQUEST, "PARTY020", "유효하지 않은 승계 대상입니다."),
+    PARTY_HOST_TRANSFER_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "PARTY021", "본인을 승계 대상으로 지정할 수 없습니다."),
+    PARTY_HOST_TRANSFER_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY022", "파티장은 탈퇴 예약 전에 승계를 먼저 진행해야 합니다.");
 
     // Payment
     PAYMENT_BILLING_KEY_ISSUE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT001", "빌링키 발급에 실패했습니다."),

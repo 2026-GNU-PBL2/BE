@@ -101,6 +101,23 @@
         ORDER BY requested_at ASC, id ASC
     </select>
 
+    <select id="findAllWaitingByUserId" resultMap="matchWaitingQueueResultMap">
+        SELECT
+            id,
+            product_id,
+            user_id,
+            status,
+            requested_at,
+            matched_at,
+            canceled_at,
+            target_party_id,
+            created_at,
+            updated_at
+        FROM match_waiting_queue
+        WHERE user_id = #{userId}
+        ORDER BY id DESC
+    </select>
+
     <select id="findById" resultMap="matchWaitingQueueResultMap">
         SELECT
             id,

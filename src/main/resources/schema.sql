@@ -179,6 +179,31 @@ CREATE INDEX idx_match_waiting_product_status_requested
 CREATE INDEX idx_match_waiting_user_status
     ON match_waiting_queue(user_id, status);
 
+-- host_transfer_request(2026.04.01/khj)
+CREATE TABLE host_transfer_request
+(
+    id                BIGINT      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id          BIGINT      NOT NULL,
+    requester_user_id BIGINT      NOT NULL,
+    target_user_id    BIGINT      NOT NULL,
+    status            VARCHAR(30) NOT NULL,
+    requested_at      DATETIME    NOT NULL,
+    responded_at      DATETIME    NULL,
+    completed_at      DATETIME    NULL,
+    created_at        DATETIME    NOT NULL,
+    updated_at        DATETIME    NOT NULL
+);
+
+CREATE INDEX idx_host_transfer_request_party_id
+    ON host_transfer_request(party_id);
+
+CREATE INDEX idx_host_transfer_request_target_user_id
+    ON host_transfer_request(target_user_id);
+
+CREATE INDEX idx_host_transfer_request_party_status
+    ON host_transfer_request(party_id, status);
+
+
 
 -- billing_key (2026.03.28 / kyh)
 CREATE TABLE IF NOT EXISTS billing_key (

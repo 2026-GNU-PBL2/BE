@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.party.mapper.HostTransferRequestMapper">
+
+    <resultMap id="hostTransferRequestResultMap" type="pbl2.sub119.backend.party.entity.HostTransferRequest">
+        <id property="id" column="id"/>
+        <result property="partyId" column="party_id"/>
+        <result property="requesterUserId" column="requester_user_id"/>
+        <result property="targetUserId" column="target_user_id"/>
+        <result property="status" column="status"/>
+        <result property="requestedAt" column="requested_at"/>
+        <result property="respondedAt" column="responded_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 승계 요청 생성 -->
+    <insert id="insertHostTransferRequest"
+            parameterType="pbl2.sub119.backend.party.entity.HostTransferRequest"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO host_transfer_request (
+            party_id,
+            requester_user_id,
+            target_user_id,
+            status,
+            requested_at,
+            responded_at,
+            completed_at,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{partyId},
+                     #{requesterUserId},
+                     #{targetUserId},
+                     #{status},
+                     #{requestedAt},
+                     #{respondedAt},
+                     #{completedAt},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+    <!-- 승계 요청 단건 조회 -->
+    <select id="findById" resultMap="hostTransferRequestResultMap">
+        SELECT
+            id,
+            party_id,
+            requester_user_id,
+            target_user_id,
+            status,
+            requested_at,
+            responded_at,
+            completed_at,
+            created_at,
+            updated_at
+        FROM host_transfer_request
+        WHERE id = #{id}
+    </select>
+
+    <!-- 승계 수락/거절 처리 시 요청 상태 확인을 위해 조회 -->
+    <select id="findByIdForUpdate" resultMap="hostTransferRequestResultMap">
+        SELECT
+            id,
+            party_id,
+            requester_user_id,
+            target_user_id,
+            status,
+            requested_at,
+            responded_at,
+            completed_at,
+            created_at,
+            updated_at
+        FROM host_transfer_request
+        WHERE id = #{id}
+            FOR UPDATE
+    </select>
+
+    <!-- 현재 진행 중인 승계 요청 조회 -->
+    <select id="findActiveRequestByPartyId" resultMap="hostTransferRequestResultMap">
+        SELECT
+            id,
+            party_id,
+            requester_user_id,
+            target_user_id,
+            status,
+            requested_at,
+            responded_at,
+            completed_at,
+            created_at,
+            updated_at
+        FROM host_transfer_request
+        WHERE party_id = #{partyId}
+          AND status = 'REQUESTED'
+        ORDER BY id DESC
+            LIMIT 1
+    FOR UPDATE
+    </select>
+
+    <!-- 해당 파티의 모든 승계 요청 이력 조회 -->
+    <select id="findByPartyId" resultMap="hostTransferRequestResultMap">
+        SELECT
+            id,
+            party_id,
+            requester_user_id,
+            target_user_id,
+            status,
+            requested_at,
+            responded_at,
+            completed_at,
+            created_at,
+            updated_at
+        FROM host_transfer_request
+        WHERE party_id = #{partyId}
+        ORDER BY id DESC
+    </select>
+
+    <!-- 상태 변경 -->
+    <update id="updateStatus">
+        UPDATE host_transfer_request
+        SET status = #{status},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 거절 처리 및 응답 시각 기록 -->
+    <update id="updateStatusWithRespondedAt">
+        UPDATE host_transfer_request
+        SET status = #{status},
+            responded_at = NOW(),
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 승계 완료 처리 및 응답, 완료 시각 기록) -->
+    <update id="updateStatusWithCompletedAt">
+        UPDATE host_transfer_request
+        SET status = #{status},
+            responded_at = NOW(),
+            completed_at = NOW(),
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>
