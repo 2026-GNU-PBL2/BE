@@ -99,6 +99,7 @@
           AND status = 'REQUESTED'
         ORDER BY id DESC
             LIMIT 1
+    FOR UPDATE
     </select>
 
     <!-- 해당 파티의 모든 승계 요청 이력 조회 -->

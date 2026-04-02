@@ -6,10 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pbl2.sub119.backend.auth.annotation.AdminOnly;
 import pbl2.sub119.backend.party.controller.docs.PartyInternalDocs;
 import pbl2.sub119.backend.party.dto.request.PartyCycleStartEventRequest;
 import pbl2.sub119.backend.party.service.PartyCycleService;
 
+@AdminOnly
 @RestController
 @RequestMapping("/internal/v1/party")
 @RequiredArgsConstructor

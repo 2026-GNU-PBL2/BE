@@ -203,3 +203,4 @@ CREATE INDEX idx_host_transfer_request_target_user_id
 CREATE INDEX idx_host_transfer_request_party_status
     ON host_transfer_request(party_id, status);
 
+

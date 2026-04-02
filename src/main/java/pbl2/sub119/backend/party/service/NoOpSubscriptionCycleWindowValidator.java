@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.party.service;
 
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
  * 이후 Cycle Service HTTP 조회/콜백 연결 시 이 구현을 교체
  */
 @Component
-@Primary
+@Profile({"local", "test"})
 public class NoOpSubscriptionCycleWindowValidator implements SubscriptionCycleWindowValidator {
 
     @Override

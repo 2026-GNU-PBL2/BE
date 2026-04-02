@@ -111,7 +111,8 @@ public class PartyLeaveService {
         }
 
         List<PartyMember> reservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);
-        if (reservedMembers.isEmpty()) {
+        List<PartyMember> switchWaitingMembers = partyMemberMapper.findSwitchWaitingMembers(partyId);
+        if (reservedMembers.isEmpty() && switchWaitingMembers.isEmpty()) {
             partyMapper.updateVacancyType(partyId, VacancyType.NONE);
         }
 

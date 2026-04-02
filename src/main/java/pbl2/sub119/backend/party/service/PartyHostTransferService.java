@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.party.service;
 
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,7 +112,12 @@ public class PartyHostTransferService {
         PartyMember oldHostMember = partyMemberMapper.findHostMemberByPartyIdForUpdate(party.getId());
         PartyMember newHostMember = partyMemberMapper.findByPartyIdAndUserIdForUpdate(party.getId(), userId);
 
-        if (oldHostMember == null || newHostMember == null) {
+        if (oldHostMember == null
+                || newHostMember == null
+                || !party.getHostUserId().equals(request.getRequesterUserId())
+                || !oldHostMember.getUserId().equals(request.getRequesterUserId())
+                || newHostMember.getRole() != PartyRole.MEMBER
+                || newHostMember.getStatus() != PartyMemberStatus.ACTIVE) {
             throw new PartyException(ErrorCode.PARTY_HOST_TRANSFER_INVALID_TARGET);
         }
 
@@ -125,7 +131,10 @@ public class PartyHostTransferService {
         partyMapper.updateHostUserId(party.getId(), userId);
 
         // 4. 기존 HOST는 승계 완료와 동시에 탈퇴 예약 상태로 전환
-        partyMemberMapper.updateLeaveReserved(party.getId(), request.getRequesterUserId());
+        int reserved = partyMemberMapper.updateLeaveReserved(party.getId(), request.getRequesterUserId());
+        if (reserved != 1) {
+            throw new PartyException(ErrorCode.PARTY_HOST_TRANSFER_INVALID_TARGET);
+        }
 
         // 5. 파티장 결원은 해소 -> 기존 HOST가 다음 주기 탈퇴 예정이므로 MEMBER 결원 노출
         partyMapper.updateVacancyType(party.getId(), VacancyType.MEMBER);
