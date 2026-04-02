@@ -4,7 +4,9 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import pbl2.sub119.backend.party.entity.Party;
+import pbl2.sub119.backend.party.enumerated.OperationStatus;
 import pbl2.sub119.backend.party.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.enumerated.VacancyType;
 
 @Mapper
 public interface PartyMapper {
@@ -25,6 +27,21 @@ public interface PartyMapper {
     int updateRecruitStatus(
             @Param("partyId") Long partyId,
             @Param("recruitStatus") RecruitStatus recruitStatus
+    );
+
+    int updateOperationStatus(
+            @Param("partyId") Long partyId,
+            @Param("operationStatus") OperationStatus operationStatus
+    );
+
+    int updateVacancyType(
+            @Param("partyId") Long partyId,
+            @Param("vacancyType") VacancyType vacancyType
+    );
+
+    int updateHostUserId(
+            @Param("partyId") Long partyId,
+            @Param("hostUserId") Long hostUserId
     );
 
     List<Party> findJoinablePartiesByProductId(@Param("productId") String productId);

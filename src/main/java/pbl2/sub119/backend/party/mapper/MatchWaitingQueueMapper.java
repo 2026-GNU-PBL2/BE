@@ -19,6 +19,8 @@ public interface MatchWaitingQueueMapper {
 
     List<MatchWaitingQueue> findAllWaitingByProductId(@Param("productId") String productId);
 
+    List<MatchWaitingQueue> findAllWaitingByUserId(@Param("userId") Long userId);
+
     MatchWaitingQueue findById(@Param("id") Long id);
 
     int updateMatched(
