@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.payment.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
@@ -19,12 +20,13 @@ public class InitialPaymentCycleService {
 
     @Transactional
     public PartyCycle createInitialCycle(Long partyId) {
-        if (partyCycleMapper.existsPendingOrRunningCycle(
+        PartyCycle existingCycle = partyCycleMapper.findLatestPendingOrRunningCycle(
                 partyId,
                 PartyCycleStatus.PAYMENT_PENDING,
                 PartyCycleStatus.RUNNING
-        )) {
-            throw new IllegalStateException("이미 진행 중인 결제 사이클이 존재합니다. partyId=" + partyId);
+        );
+        if (existingCycle != null) {
+            return existingCycle;
         }
 
         PartyPaymentReadinessInfo info = partyPaymentReadinessService.getReadinessInfo(partyId);
@@ -43,7 +45,19 @@ public class InitialPaymentCycleService {
                 .updatedAt(now)
                 .build();
 
-        partyCycleMapper.save(partyCycle);
-        return partyCycle;
+        try {
+            partyCycleMapper.save(partyCycle);
+            return partyCycle;
+        } catch (DuplicateKeyException e) {
+            PartyCycle createdByAnotherTx = partyCycleMapper.findLatestPendingOrRunningCycle(
+                    partyId,
+                    PartyCycleStatus.PAYMENT_PENDING,
+                    PartyCycleStatus.RUNNING
+            );
+            if (createdByAnotherTx != null) {
+                return createdByAnotherTx;
+            }
+            throw e;
+        }
     }
 }

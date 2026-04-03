@@ -14,6 +14,12 @@ public interface PartyCycleMapper {
             @Param("runningStatus") PartyCycleStatus runningStatus
     );
 
+    PartyCycle findLatestPendingOrRunningCycle(
+            @Param("partyId") Long partyId,
+            @Param("pendingStatus") PartyCycleStatus pendingStatus,
+            @Param("runningStatus") PartyCycleStatus runningStatus
+    );
+
     int findNextCycleNo(@Param("partyId") Long partyId);
 
     int save(PartyCycle partyCycle);
