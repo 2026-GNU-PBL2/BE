@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.payment.mapper.PartyPaymentQueryMapper">
+
+    <resultMap id="PartyPaymentReadinessInfoMap" type="pbl2.sub119.backend.payment.dto.PartyPaymentReadinessInfo">
+        <id property="partyId" column="party_id"/>
+        <result property="capacity" column="capacity"/>
+        <result property="currentMemberCount" column="current_member_count"/>
+        <result property="pendingMemberCount" column="pending_member_count"/>
+        <result property="readyBillingMemberCount" column="ready_billing_member_count"/>
+        <result property="pricePerMemberSnapshot" column="price_per_member_snapshot"/>
+    </resultMap>
+
+    <select id="findPaymentReadinessInfo" resultMap="PartyPaymentReadinessInfoMap">
+        SELECT p.id AS party_id,
+               p.capacity,
+               p.current_member_count,
+               p.price_per_member_snapshot,
+               (
+                   SELECT COUNT(1)
+                   FROM party_member pm
+                   WHERE pm.party_id = p.id
+                     AND pm.role = #{memberRole}
+                     AND pm.status = #{pendingMemberStatus}
+               ) AS pending_member_count,
+               (
+                   SELECT COUNT(1)
+                   FROM party_member pm
+                            INNER JOIN billing_key bk ON bk.user_id = pm.user_id
+                   WHERE pm.party_id = p.id
+                     AND pm.role = #{memberRole}
+                     AND pm.status = #{pendingMemberStatus}
+                     AND bk.status = #{billingKeyStatus}
+               ) AS ready_billing_member_count
+        FROM party p
+        WHERE p.id = #{partyId}
+            LIMIT 1
+    </select>
+
+</mapper>

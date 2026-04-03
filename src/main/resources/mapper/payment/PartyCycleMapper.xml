@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.payment.mapper.PartyCycleMapper">
+
+    <select id="existsPendingOrRunningCycle" resultType="boolean">
+        SELECT CASE WHEN COUNT(1) > 0 THEN TRUE ELSE FALSE END
+        FROM party_cycle
+        WHERE party_id = #{partyId}
+          AND status IN (#{pendingStatus}, #{runningStatus})
+    </select>
+
+    <select id="findNextCycleNo" resultType="int">
+        SELECT COALESCE(MAX(cycle_no), 0) + 1
+        FROM party_cycle
+        WHERE party_id = #{partyId}
+    </select>
+
+    <insert id="save"
+            parameterType="pbl2.sub119.backend.payment.entity.PartyCycle"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO party_cycle (
+            party_id,
+            cycle_no,
+            start_at,
+            end_at,
+            billing_due_at,
+            status,
+            member_count_snapshot,
+            price_per_member_snapshot,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{partyId},
+                     #{cycleNo},
+                     #{startAt},
+                     #{endAt},
+                     #{billingDueAt},
+                     #{status},
+                     #{memberCountSnapshot},
+                     #{pricePerMemberSnapshot},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+</mapper>

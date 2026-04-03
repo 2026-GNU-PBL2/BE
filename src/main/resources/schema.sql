@@ -220,3 +220,24 @@ CREATE TABLE IF NOT EXISTS billing_key (
     PRIMARY KEY (id),
     UNIQUE KEY uk_billing_key_user_id (user_id)
     );
+
+-- party_CYLCE (2026.04.03 / kyh )
+CREATE TABLE party_cycle (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id BIGINT NOT NULL,
+    cycle_no INT NOT NULL,
+    start_at DATETIME NOT NULL,
+    end_at DATETIME NULL,
+    billing_due_at DATETIME NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    member_count_snapshot INT NOT NULL,
+    price_per_member_snapshot INT NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
+);
+
+CREATE UNIQUE INDEX uk_party_cycle_party_cycle_no
+    ON party_cycle(party_id, cycle_no);
+
+CREATE INDEX idx_party_cycle_party_status
+    ON party_cycle(party_id, status);

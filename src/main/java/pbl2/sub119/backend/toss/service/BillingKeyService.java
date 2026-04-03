@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.common.enumerated.BillingKeyStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.toss.constant.TossPaymentClient;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
@@ -45,7 +46,7 @@ public class BillingKeyService {
                 .billingKey(response.billingKey())
                 .customerKey(customerKey)
                 .provider("TOSS")
-                .status("ACTIVE")
+                .status(BillingKeyStatus.ACTIVE)
                 .cardCompany(response.cardCompany())
                 .maskedCardNumber(response.cardNumber())
                 .build();
