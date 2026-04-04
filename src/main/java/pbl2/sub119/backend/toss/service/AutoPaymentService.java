@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.common.enumerated.BillingKeyStatus;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.enumerated.OperationStatus;
@@ -19,6 +21,8 @@ import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.mapper.PaymentExecutionQueryMapper;
 import pbl2.sub119.backend.toss.client.TossPaymentClient;
 import pbl2.sub119.backend.toss.dto.request.TossBillingPaymentRequest;
+import org.springframework.context.ApplicationEventPublisher;
+import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +38,7 @@ public class AutoPaymentService {
     private final PartyMapper partyMapper;
     private final PartyHistoryService partyHistoryService;
     private final TossPaymentClient tossPaymentClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void execute(Long partyId, Long partyCycleId) {
@@ -123,6 +128,14 @@ public class AutoPaymentService {
         }
 
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                log.info("정산 이벤트 발행(afterCommit). partyId={}, partyCycleId={}", partyId, partyCycleId);
+                eventPublisher.publishEvent(new SettlementRequestedEvent(partyId, partyCycleId));
+            }
+        });
 
         log.info("자동결제 전원 성공. partyId={}, partyCycleId={}", partyId, partyCycleId);
     }
