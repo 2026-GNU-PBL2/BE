@@ -1,23 +1,23 @@
 -- test (2026.01.26 / kyh)
 CREATE TABLE test (
-                      id BIGINT PRIMARY KEY,
-                      name VARCHAR(50),
-                      amount BIGINT
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(50),
+    amount BIGINT
 );
 
 --bankAccount (2026.01.26 / kyh)
 CREATE TABLE IF NOT EXISTS bank_accounts (
-                                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                             user_id BIGINT NOT NULL,
-                                             fintech_use_num VARCHAR(24) NOT NULL,
-                                             access_token VARCHAR(1000) NOT NULL,
-                                             refresh_token VARCHAR(1000) NOT NULL,
-                                             bank_tran_id VARCHAR(20),
-                                             bank_name VARCHAR(50),
-                                             account_alias VARCHAR(100),
-                                             account_num_masked VARCHAR(20),
-                                             balance_amt BIGINT DEFAULT 0,
-                                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    fintech_use_num VARCHAR(24) NOT NULL,
+    access_token VARCHAR(1000) NOT NULL,
+    refresh_token VARCHAR(1000) NOT NULL,
+    bank_tran_id VARCHAR(20),
+    bank_name VARCHAR(50),
+    account_alias VARCHAR(100),
+    account_num_masked VARCHAR(20),
+    balance_amt BIGINT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_bank_accounts_user_fintech
@@ -25,7 +25,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_bank_accounts_user_fintech
 
 -- sub_product (2026.03.23 / kyh)
 CREATE TABLE IF NOT EXISTS sub_product (
-                                           id               VARCHAR(36)     NOT NULL,
+    id               VARCHAR(36)     NOT NULL,
     service_name     VARCHAR(100)    NOT NULL,
     description      TEXT            NULL,
     thumbnail_url    VARCHAR(500)    NULL,
@@ -161,7 +161,7 @@ CREATE INDEX idx_party_member_user ON party_member(user_id);
 
 -- match_waiting_queue(2026.03.29/khj)
 CREATE TABLE match_waiting_queue (
-                                     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                      product_id VARCHAR(100) NOT NULL,
                                      user_id BIGINT NOT NULL,
                                      status VARCHAR(30) NOT NULL,
@@ -207,9 +207,9 @@ CREATE INDEX idx_host_transfer_request_party_status
 
 -- billing_key (2026.03.28 / kyh)
 CREATE TABLE IF NOT EXISTS billing_key (
-                                           id                  BIGINT          NOT NULL AUTO_INCREMENT,
-                                           user_id             BIGINT          NOT NULL,
-                                           billing_key         VARCHAR(255)    NOT NULL,
+    id                  BIGINT          NOT NULL AUTO_INCREMENT,
+    user_id             BIGINT          NOT NULL,
+    billing_key         VARCHAR(255)    NOT NULL,
     customer_key        VARCHAR(255)    NOT NULL,
     provider            VARCHAR(50)     NOT NULL DEFAULT 'TOSS',
     status              VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE',
@@ -281,6 +281,29 @@ CREATE TABLE IF NOT EXISTS party_operation_member (
     last_reset_at DATETIME NULL,
     penalty_applied TINYINT(1) NOT NULL DEFAULT 0,
     operation_message VARCHAR(500) NULL,
+-- settlement (2026.04.04 / kyh)
+CREATE TABLE settlement (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id BIGINT NOT NULL,
+    party_cycle_id BIGINT NOT NULL,
+    host_user_id BIGINT NOT NULL,
+    member_count INT NOT NULL,
+    unit_amount INT NOT NULL,
+    total_amount BIGINT NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
+);
+
+CREATE UNIQUE INDEX uk_settlement_party_cycle
+    ON settlement(party_cycle_id);
+
+
+-- point_wallet (2026.04.04 / kyh)
+CREATE TABLE point_wallet (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    balance BIGINT NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
 );
@@ -293,3 +316,5 @@ CREATE INDEX idx_party_operation_member_party_id
 
 CREATE INDEX idx_party_operation_member_user_id
     ON party_operation_member(user_id);
+CREATE UNIQUE INDEX uk_point_wallet_user
+    ON point_wallet(user_id);
