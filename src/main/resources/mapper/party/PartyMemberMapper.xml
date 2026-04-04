@@ -134,7 +134,7 @@
         ORDER BY id ASC
     </select>
 
-    <select id="findActiveMembersByPartyId" resultMap="partyMemberResultMap">
+    <select id="findOperationTargetMembersByPartyId" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
         FROM party_member

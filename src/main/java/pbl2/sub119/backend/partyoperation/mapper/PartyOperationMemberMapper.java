@@ -30,7 +30,7 @@ public interface PartyOperationMemberMapper {
 
     int countActiveByPartyOperationId(@Param("partyOperationId") Long partyOperationId);
 
-    Integer countByPartyIdAndUserId(
+    int countByPartyIdAndUserId(
             @Param("partyId") Long partyId,
             @Param("userId") Long userId
     );

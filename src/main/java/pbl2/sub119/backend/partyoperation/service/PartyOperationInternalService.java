@@ -3,6 +3,7 @@ package pbl2.sub119.backend.partyoperation.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.party.entity.PartyMember;
@@ -40,10 +41,16 @@ public class PartyOperationInternalService {
                 .updatedAt(now)
                 .build();
 
-        partyOperationMapper.insert(operation);
+        try {
+            partyOperationMapper.insert(operation);
+        } catch (DuplicateKeyException e) {
+            // 동시 요청에서 이미 생성된 경우 멱등 처리
+            return;
+        }
+
 
         // 현재 이용중인 파티원 기준으로 운영 멤버 생성
-        final List<PartyMember> members = partyMemberMapper.findActiveMembersByPartyId(partyId);
+        final List<PartyMember> members = partyMemberMapper.findOperationTargetMembersByPartyId(partyId);
 
         for (PartyMember member : members) {
             final PartyOperationMember operationMember = PartyOperationMember.builder()

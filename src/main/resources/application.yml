@@ -17,6 +17,9 @@ jwt:
   secret-key: ${JWT_SECRET_KEY}
   access-token-expiration-millis: 3600000
 
+crypto:
+  aes-secret-key: ${CRYPTO_AES_SECRET_KEY}
+
 management:
   endpoints:
     web:

@@ -32,7 +32,7 @@ public interface PartyMemberMapper {
 
     List<PartyMember> findSwitchWaitingMembers(@Param("partyId") Long partyId);
 
-    List<PartyMember> findActiveMembersByPartyId(@Param("partyId") Long partyId);
+    List<PartyMember> findOperationTargetMembersByPartyId(@Param("partyId") Long partyId);
 
     int countOccupiedMembers(@Param("partyId") Long partyId);
 

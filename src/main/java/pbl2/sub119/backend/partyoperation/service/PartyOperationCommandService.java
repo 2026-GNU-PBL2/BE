@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.common.util.CryptoUtil;
 import pbl2.sub119.backend.party.entity.Party;
 import pbl2.sub119.backend.party.entity.PartyMember;
 import pbl2.sub119.backend.party.exception.PartyException;
@@ -32,6 +33,7 @@ public class PartyOperationCommandService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyOperationMapper partyOperationMapper;
     private final PartyOperationMemberMapper partyOperationMemberMapper;
+    private final CryptoUtil cryptoUtil;
 
     // 파티장이 운영 정보 최초 등록 또는 수정
     public PartyOperationSetupResponse setupOperation(
@@ -50,6 +52,8 @@ public class PartyOperationCommandService {
         final LocalDateTime now = LocalDateTime.now();
         final PartyOperation existingOperation = partyOperationMapper.findByPartyId(partyId);
 
+        final String encryptedPassword = encryptSharedPasswordIfNeeded(request);
+
         // 최초 등록
         if (existingOperation == null) {
             final PartyOperation partyOperation = PartyOperation.builder()
@@ -58,7 +62,7 @@ public class PartyOperationCommandService {
                     .operationStatus(OperationStatus.IN_PROGRESS)
                     .inviteValue(request.inviteValue())
                     .sharedAccountEmail(request.sharedAccountEmail())
-                    .sharedAccountPasswordEncrypted(request.sharedAccountPassword())
+                    .sharedAccountPasswordEncrypted(encryptedPassword)
                     .operationGuide(request.operationGuide())
                     .operationStartedAt(now)
                     .createdAt(now)
@@ -84,7 +88,7 @@ public class PartyOperationCommandService {
                 request.operationType(),
                 request.inviteValue(),
                 request.sharedAccountEmail(),
-                request.sharedAccountPassword(),
+                encryptedPassword,
                 request.operationGuide(),
                 OperationStatus.IN_PROGRESS,
                 now,
@@ -171,7 +175,7 @@ public class PartyOperationCommandService {
             final Long hostUserId,
             final LocalDateTime now
     ) {
-        final List<PartyMember> members = partyMemberMapper.findActiveMembersByPartyId(partyId);
+        final List<PartyMember> members = partyMemberMapper.findOperationTargetMembersByPartyId(partyId);
 
         for (PartyMember member : members) {
             final boolean isHost = member.getUserId().equals(hostUserId);
@@ -296,5 +300,14 @@ public class PartyOperationCommandService {
                 throw new PartyException(ErrorCode.PARTY_OPERATION_SHARED_PASSWORD_REQUIRED);
             }
         }
+    }
+
+    // 계정공유형일 때만 비밀번호 암호화
+    private String encryptSharedPasswordIfNeeded(final PartyOperationSetupRequest request) {
+        if (request.operationType() != OperationType.ACCOUNT_SHARED) {
+            return null;
+        }
+
+        return cryptoUtil.encrypt(request.sharedAccountPassword());
     }
 }
