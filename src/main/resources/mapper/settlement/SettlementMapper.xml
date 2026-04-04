@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.settlement.mapper.SettlementMapper">
+
+    <resultMap id="SettlementMap" type="pbl2.sub119.backend.settlement.entity.Settlement">
+        <id property="id" column="id"/>
+        <result property="partyId" column="party_id"/>
+        <result property="partyCycleId" column="party_cycle_id"/>
+        <result property="hostUserId" column="host_user_id"/>
+        <result property="memberCount" column="member_count"/>
+        <result property="unitAmount" column="unit_amount"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByPartyCycleId" resultMap="SettlementMap">
+        SELECT id,
+               party_id,
+               party_cycle_id,
+               host_user_id,
+               member_count,
+               unit_amount,
+               total_amount,
+               status,
+               created_at,
+               updated_at
+        FROM settlement
+        WHERE party_cycle_id = #{partyCycleId}
+            LIMIT 1
+    </select>
+
+    <insert id="insertSettlement"
+            parameterType="pbl2.sub119.backend.settlement.entity.Settlement"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO settlement (
+            party_id,
+            party_cycle_id,
+            host_user_id,
+            member_count,
+            unit_amount,
+            total_amount,
+            status,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{partyId},
+                     #{partyCycleId},
+                     #{hostUserId},
+                     #{memberCount},
+                     #{unitAmount},
+                     #{totalAmount},
+                     #{status},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+</mapper>

@@ -19,6 +19,8 @@ import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.mapper.PaymentExecutionQueryMapper;
 import pbl2.sub119.backend.toss.client.TossPaymentClient;
 import pbl2.sub119.backend.toss.dto.request.TossBillingPaymentRequest;
+import org.springframework.context.ApplicationEventPublisher;
+import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +36,7 @@ public class AutoPaymentService {
     private final PartyMapper partyMapper;
     private final PartyHistoryService partyHistoryService;
     private final TossPaymentClient tossPaymentClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void execute(Long partyId, Long partyCycleId) {
@@ -123,6 +126,10 @@ public class AutoPaymentService {
         }
 
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
+
+        eventPublisher.publishEvent(
+                new SettlementRequestedEvent(partyId, partyCycleId)
+        );
 
         log.info("자동결제 전원 성공. partyId={}, partyCycleId={}", partyId, partyCycleId);
     }

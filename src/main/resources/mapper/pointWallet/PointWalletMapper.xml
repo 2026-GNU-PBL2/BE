@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.pointWallet.mapper.PointWalletMapper">
+
+    <resultMap id="PointWalletMap" type="pbl2.sub119.backend.pointWallet.entity.PointWallet">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="balance" column="balance"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByUserId" resultMap="PointWalletMap">
+        SELECT id,
+               user_id,
+               balance,
+               created_at,
+               updated_at
+        FROM point_wallet
+        WHERE user_id = #{userId}
+            LIMIT 1
+    </select>
+
+    <insert id="insertPointWallet"
+            parameterType="pbl2.sub119.backend.pointWallet.entity.PointWallet"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO point_wallet (
+            user_id,
+            balance,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{userId},
+                     #{balance},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+    <update id="updateBalance">
+        UPDATE point_wallet
+        SET balance = balance + #{amount},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
