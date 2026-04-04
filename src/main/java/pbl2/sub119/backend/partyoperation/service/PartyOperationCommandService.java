@@ -115,7 +115,7 @@ public class PartyOperationCommandService {
             final Long userId,
             final Long partyId
     ) {
-        final PartyOperation operation = getOperation(partyId);
+        final PartyOperation operation = getOperationForUpdate(partyId);
 
         if (operation.getOperationStatus() == OperationStatus.ACTIVE) {
                     throw new PartyException(ErrorCode.PARTY_OPERATION_ALREADY_ACTIVE);
@@ -126,6 +126,16 @@ public class PartyOperationCommandService {
         }
 
         final PartyOperationMember member = getOperationMember(partyId, userId);
+
+        if (member.getMemberStatus() == OperationMemberStatus.ACTIVE) {
+            return new PartyOperationConfirmResponse(
+                    partyId,
+                    userId,
+                    member.getMemberStatus(),
+                    member.getConfirmedAt(),
+                    member.getActivatedAt()
+            );
+        }
         final LocalDateTime now = LocalDateTime.now();
 
         partyOperationMemberMapper.markActive(
@@ -244,7 +254,7 @@ public class PartyOperationCommandService {
             return;
         }
 
-        partyOperationMapper.updateStatus(
+        partyOperationMapper.updateStatusIfNotActive(
                 partyOperationId,
                 OperationStatus.IN_PROGRESS,
                 now
@@ -265,6 +275,17 @@ public class PartyOperationCommandService {
     // 파티 운영 정보 조회
     private PartyOperation getOperation(final Long partyId) {
         final PartyOperation operation = partyOperationMapper.findByPartyId(partyId);
+
+        if (operation == null) {
+            throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);
+        }
+
+        return operation;
+    }
+
+    // 운영 완료 처리 시 운영 상태 계산 중 다른 트랜잭션이 끼어들어 상태 덮어쓰는 문제 방지
+    private PartyOperation getOperationForUpdate(final Long partyId) {
+        final PartyOperation operation = partyOperationMapper.findByPartyIdForUpdate(partyId);
 
         if (operation == null) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);

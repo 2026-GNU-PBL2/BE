@@ -71,6 +71,8 @@ public class CryptoUtil {
 
             return new String(decrypted, StandardCharsets.UTF_8);
 
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("복호화 실패", e);
         }

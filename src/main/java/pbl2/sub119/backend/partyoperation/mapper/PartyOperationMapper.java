@@ -12,6 +12,8 @@ public interface PartyOperationMapper {
 
     PartyOperation findByPartyId(@Param("partyId") Long partyId);
 
+    PartyOperation findByPartyIdForUpdate(@Param("partyId") Long partyId);
+
     void insert(PartyOperation partyOperation);
 
     void updateSetup(
@@ -27,6 +29,12 @@ public interface PartyOperationMapper {
     );
 
     void updateStatus(
+            @Param("id") Long id,
+            @Param("operationStatus") OperationStatus operationStatus,
+            @Param("updatedAt") LocalDateTime updatedAt
+    );
+
+    void updateStatusIfNotActive(
             @Param("id") Long id,
             @Param("operationStatus") OperationStatus operationStatus,
             @Param("updatedAt") LocalDateTime updatedAt
