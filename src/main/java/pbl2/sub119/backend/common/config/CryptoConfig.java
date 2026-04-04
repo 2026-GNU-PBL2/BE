@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pbl2.sub119.backend.common.util.CryptoUtil;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class CryptoConfig {
@@ -15,12 +16,15 @@ public class CryptoConfig {
 
     @Bean
     public CryptoUtil cryptoUtil() {
-        byte[] keyBytes = secret.getBytes();
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
 
-        byte[] key = new byte[32];
-        System.arraycopy(keyBytes, 0, key, 0, Math.min(keyBytes.length, 32));
+        if (keyBytes.length != 32) {
+            throw new IllegalStateException(
+                    "AES 키는 정확히 32바이트여야 합니다. 현재: " + keyBytes.length + "바이트"
+            );
+        }
 
-        SecretKey secretKey = new SecretKeySpec(key, "AES");
+        SecretKey secretKey = new SecretKeySpec(keyBytes, "AES");
         return new CryptoUtil(secretKey);
     }
 }

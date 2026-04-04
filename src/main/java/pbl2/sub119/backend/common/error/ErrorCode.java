@@ -72,7 +72,9 @@ public enum ErrorCode {
     PARTY_OPERATION_TYPE_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY025", "운영 유형은 필수입니다."),
     PARTY_OPERATION_INVITE_VALUE_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY026", "초대형 운영은 초대값이 필요합니다."),
     PARTY_OPERATION_SHARED_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY027", "계정공유형 운영은 공유 계정 이메일이 필요합니다."),
-    PARTY_OPERATION_SHARED_PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY028", "계정공유형 운영은 공유 계정 비밀번호가 필요합니다.");
+    PARTY_OPERATION_SHARED_PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY028", "계정공유형 운영은 공유 계정 비밀번호가 필요합니다."),
+    PARTY_OPERATION_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "PARTY029", "이미 운영이 완료된 상태입니다."),
+    PARTY_OPERATION_RESET_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY030", "운영 재설정이 필요한 상태입니다.");
 
     private final HttpStatus status;
     private final String code;

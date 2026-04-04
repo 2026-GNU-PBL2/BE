@@ -112,6 +112,15 @@ public class PartyOperationCommandService {
             final Long partyId
     ) {
         final PartyOperation operation = getOperation(partyId);
+
+        if (operation.getOperationStatus() == OperationStatus.ACTIVE) {
+                    throw new PartyException(ErrorCode.PARTY_OPERATION_ALREADY_ACTIVE);
+                }
+
+        if (operation.getOperationStatus() == OperationStatus.RESET_REQUIRED) {
+                  throw new PartyException(ErrorCode.PARTY_OPERATION_RESET_REQUIRED);
+        }
+
         final PartyOperationMember member = getOperationMember(partyId, userId);
         final LocalDateTime now = LocalDateTime.now();
 
