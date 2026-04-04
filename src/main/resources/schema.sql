@@ -241,3 +241,55 @@ CREATE UNIQUE INDEX uk_party_cycle_party_cycle_no
 
 CREATE INDEX idx_party_cycle_party_status
     ON party_cycle(party_id, status);
+
+-- party_operation (2026.04.03 / khj)
+CREATE TABLE IF NOT EXISTS party_operation (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id BIGINT NOT NULL,
+    operation_type VARCHAR(30) NOT NULL,
+    operation_status VARCHAR(30) NOT NULL,
+    invite_value VARCHAR(500) NULL,
+    shared_account_email VARCHAR(255) NULL,
+    shared_account_password_encrypted VARCHAR(500) NULL,
+    operation_guide TEXT NULL,
+    operation_started_at DATETIME NULL,
+    operation_completed_at DATETIME NULL,
+    last_reset_at DATETIME NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+
+    CONSTRAINT uq_party_operation_party UNIQUE (party_id)
+);
+
+CREATE INDEX idx_party_operation_party_id
+    ON party_operation(party_id);
+
+
+-- party_operation_member (2026.04.03 / khj)
+CREATE TABLE IF NOT EXISTS party_operation_member (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_operation_id BIGINT NOT NULL,
+    party_member_id BIGINT NOT NULL,
+    party_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    member_status VARCHAR(30) NOT NULL,
+    invite_sent_at DATETIME NULL,
+    must_complete_by DATETIME NULL,
+    confirmed_at DATETIME NULL,
+    completed_at DATETIME NULL,
+    activated_at DATETIME NULL,
+    last_reset_at DATETIME NULL,
+    penalty_applied TINYINT(1) NOT NULL DEFAULT 0,
+    operation_message VARCHAR(500) NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
+);
+
+CREATE INDEX idx_party_operation_member_operation_id
+    ON party_operation_member(party_operation_id);
+
+CREATE INDEX idx_party_operation_member_party_id
+    ON party_operation_member(party_id);
+
+CREATE INDEX idx_party_operation_member_user_id
+    ON party_operation_member(user_id);
