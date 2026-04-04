@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.payment.mapper.PaymentExecutionQueryMapper">
+
+    <resultMap id="PaymentChargeTargetMap" type="pbl2.sub119.backend.payment.dto.PaymentChargeTarget">
+        <result property="partyId" column="party_id"/>
+        <result property="partyCycleId" column="party_cycle_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="billingKey" column="billing_key"/>
+        <result property="customerKey" column="customer_key"/>
+        <result property="amount" column="amount"/>
+    </resultMap>
+
+    <select id="countPendingMembers" resultType="int">
+        SELECT COUNT(1)
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role = #{memberRole}
+          AND status = #{memberStatus}
+    </select>
+
+    <select id="findChargeTargets" resultMap="PaymentChargeTargetMap">
+        SELECT pm.party_id                  AS party_id,
+               pc.id                        AS party_cycle_id,
+               pm.id                        AS member_id,
+               pm.user_id                   AS user_id,
+               bk.billing_key               AS billing_key,
+               bk.customer_key              AS customer_key,
+               pc.price_per_member_snapshot AS amount
+        FROM party_member pm
+                 INNER JOIN billing_key bk
+                            ON bk.user_id = pm.user_id
+                 INNER JOIN party_cycle pc
+                            ON pc.party_id = pm.party_id
+        WHERE pm.party_id = #{partyId}
+          AND pc.id = #{partyCycleId}
+          AND pm.role = #{memberRole}
+          AND pm.status = #{memberStatus}
+          AND bk.status = #{billingKeyStatus}
+        ORDER BY pm.id ASC
+    </select>
+
+</mapper>

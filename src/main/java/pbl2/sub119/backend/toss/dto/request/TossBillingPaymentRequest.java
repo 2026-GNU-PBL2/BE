@@ -1,0 +1,13 @@
+package pbl2.sub119.backend.toss.dto.request;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+public record TossBillingPaymentRequest(
+        @NotBlank String customerKey,
+        @NotNull @Min(1) Integer amount,
+        @NotBlank String orderId,
+        String orderName
+) {
+}

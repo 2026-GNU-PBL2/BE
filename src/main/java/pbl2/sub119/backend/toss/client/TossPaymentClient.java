@@ -1,4 +1,4 @@
-package pbl2.sub119.backend.toss.constant;
+package pbl2.sub119.backend.toss.client;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,11 +8,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.toss.constant.TossPaymentProperties;
 import pbl2.sub119.backend.toss.dto.request.TossBillingAuthRequest;
-import pbl2.sub119.backend.toss.dto.request.TossBillingChargeRequest;
+import pbl2.sub119.backend.toss.dto.request.TossBillingPaymentRequest;
 import pbl2.sub119.backend.toss.dto.response.TossBillingAuthResponse;
-import pbl2.sub119.backend.toss.dto.response.TossBillingChargeResponse;
+import pbl2.sub119.backend.toss.dto.response.TossBillingPaymentResponse;
 import pbl2.sub119.backend.toss.exception.PaymentException;
 
 import java.util.Base64;
@@ -30,10 +29,6 @@ public class TossPaymentClient {
         return "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes());
     }
 
-    /**
-     * 빌링키 발급
-     * POST /v1/billing/authorizations/issue
-     */
     public TossBillingAuthResponse issueBillingKey(TossBillingAuthRequest request) {
         log.info("토스 빌링키 발급 요청. customerKey={}", request.customerKey());
         try {
@@ -46,17 +41,18 @@ public class TossPaymentClient {
                     .bodyToMono(TossBillingAuthResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
-            log.error("토스 빌링키 발급 실패. status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("토스 빌링키 발급 실패. status={}", e.getStatusCode());
             throw new PaymentException(ErrorCode.PAYMENT_BILLING_KEY_ISSUE_FAILED);
         }
     }
 
-    /**
-     * 자동결제 실행
-     * POST /v1/billing/{billingKey}
-     */
-    public TossBillingChargeResponse charge(String billingKey, TossBillingChargeRequest request) {
-        log.info("토스 자동결제 실행. billingKey={}, amount={}", billingKey, request.amount());
+    public TossBillingPaymentResponse executeBillingPayment(
+            String billingKey,
+            TossBillingPaymentRequest request
+    ) {
+        log.info("토스 자동결제 요청. orderId={}, amount={}",
+                request.orderId(), request.amount());
+
         try {
             return webClient.post()
                     .uri(tossPaymentProperties.getBaseUrl() + "/v1/billing/" + billingKey)
@@ -64,12 +60,11 @@ public class TossPaymentClient {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
-                    .bodyToMono(TossBillingChargeResponse.class)
+                    .bodyToMono(TossBillingPaymentResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
-            log.error("토스 자동결제 실패. billingKey={}, status={}, body={}",
-                    billingKey, e.getStatusCode(), e.getResponseBodyAsString());
-            throw new PaymentException(ErrorCode.PAYMENT_CHARGE_FAILED);
+            log.error("토스 자동결제 실패. status={}", e.getStatusCode());
+            throw new PaymentException(ErrorCode.PAYMENT_BILLING_EXECUTION_FAILED);
         }
     }
 }

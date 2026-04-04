@@ -20,7 +20,15 @@ public interface PartyCycleMapper {
             @Param("runningStatus") PartyCycleStatus runningStatus
     );
 
+    PartyCycle findById(@Param("partyCycleId") Long partyCycleId);
+
     int findNextCycleNo(@Param("partyId") Long partyId);
+
+    int compareAndUpdateStatus(
+            @Param("partyCycleId") Long partyCycleId,
+            @Param("expectedStatus") PartyCycleStatus expectedStatus,
+            @Param("newStatus") PartyCycleStatus newStatus
+    );
 
     int save(PartyCycle partyCycle);
 }

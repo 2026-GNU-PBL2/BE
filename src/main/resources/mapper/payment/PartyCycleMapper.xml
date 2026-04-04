@@ -44,11 +44,36 @@
             LIMIT 1
     </select>
 
+    <select id="findById" resultMap="PartyCycleMap">
+        SELECT id,
+               party_id,
+               cycle_no,
+               start_at,
+               end_at,
+               billing_due_at,
+               status,
+               member_count_snapshot,
+               price_per_member_snapshot,
+               created_at,
+               updated_at
+        FROM party_cycle
+        WHERE id = #{partyCycleId}
+            LIMIT 1
+    </select>
+
     <select id="findNextCycleNo" resultType="int">
         SELECT COALESCE(MAX(cycle_no), 0) + 1
         FROM party_cycle
         WHERE party_id = #{partyId}
     </select>
+
+    <update id="compareAndUpdateStatus">
+        UPDATE party_cycle
+        SET status = #{newStatus},
+            updated_at = NOW()
+        WHERE id = #{partyCycleId}
+          AND status = #{expectedStatus}
+    </update>
 
     <insert id="save"
             parameterType="pbl2.sub119.backend.payment.entity.PartyCycle"
