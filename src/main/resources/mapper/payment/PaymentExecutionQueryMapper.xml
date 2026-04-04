@@ -14,14 +14,22 @@
         <result property="amount" column="amount"/>
     </resultMap>
 
+    <select id="countPendingMembers" resultType="int">
+        SELECT COUNT(1)
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role = #{memberRole}
+          AND status = #{memberStatus}
+    </select>
+
     <select id="findChargeTargets" resultMap="PaymentChargeTargetMap">
-        SELECT pm.party_id                        AS party_id,
-               pc.id                              AS party_cycle_id,
-               pm.id                              AS member_id,
-               pm.user_id                         AS user_id,
-               bk.billing_key                     AS billing_key,
-               bk.customer_key                    AS customer_key,
-               pc.price_per_member_snapshot       AS amount
+        SELECT pm.party_id                  AS party_id,
+               pc.id                        AS party_cycle_id,
+               pm.id                        AS member_id,
+               pm.user_id                   AS user_id,
+               bk.billing_key               AS billing_key,
+               bk.customer_key              AS customer_key,
+               pc.price_per_member_snapshot AS amount
         FROM party_member pm
                  INNER JOIN billing_key bk
                             ON bk.user_id = pm.user_id

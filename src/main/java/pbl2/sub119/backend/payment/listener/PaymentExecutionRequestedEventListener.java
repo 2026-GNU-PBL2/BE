@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
-import pbl2.sub119.backend.payment.service.AutoPaymentService;
+import pbl2.sub119.backend.toss.service.AutoPaymentService;
 
 @Slf4j
 @Component

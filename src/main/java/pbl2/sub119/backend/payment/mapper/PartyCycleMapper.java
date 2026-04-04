@@ -24,9 +24,10 @@ public interface PartyCycleMapper {
 
     int findNextCycleNo(@Param("partyId") Long partyId);
 
-    int updateStatus(
+    int compareAndUpdateStatus(
             @Param("partyCycleId") Long partyCycleId,
-            @Param("status") PartyCycleStatus status
+            @Param("expectedStatus") PartyCycleStatus expectedStatus,
+            @Param("newStatus") PartyCycleStatus newStatus
     );
 
     int save(PartyCycle partyCycle);

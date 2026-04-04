@@ -12,6 +12,12 @@ import java.util.List;
 @Mapper
 public interface PaymentExecutionQueryMapper {
 
+    int countPendingMembers(
+            @Param("partyId") Long partyId,
+            @Param("memberRole") PartyRole memberRole,
+            @Param("memberStatus") PartyMemberStatus memberStatus
+    );
+
     List<PaymentChargeTarget> findChargeTargets(
             @Param("partyId") Long partyId,
             @Param("partyCycleId") Long partyCycleId,

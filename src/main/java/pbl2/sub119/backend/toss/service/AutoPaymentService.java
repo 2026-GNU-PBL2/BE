@@ -1,4 +1,4 @@
-package pbl2.sub119.backend.payment.service;
+package pbl2.sub119.backend.toss.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,11 +42,23 @@ public class AutoPaymentService {
             return;
         }
 
-        if (cycle.getStatus() != PartyCycleStatus.PAYMENT_PENDING) {
+        int claimed = partyCycleMapper.compareAndUpdateStatus(
+                partyCycleId,
+                PartyCycleStatus.PAYMENT_PENDING,
+                PartyCycleStatus.PROCESSING
+        );
+        if (claimed != 1) {
+            log.info("자동결제 선점 실패 또는 이미 처리 중. partyId={}, partyCycleId={}", partyId, partyCycleId);
             return;
         }
 
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
+
+        int expectedPendingCount = paymentExecutionQueryMapper.countPendingMembers(
+                partyId,
+                PartyRole.MEMBER,
+                PartyMemberStatus.PENDING
+        );
 
         List<PaymentChargeTarget> targets = paymentExecutionQueryMapper.findChargeTargets(
                 partyId,
@@ -56,17 +68,8 @@ public class AutoPaymentService {
                 BillingKeyStatus.ACTIVE
         );
 
-        if (targets.isEmpty()) {
-            partyCycleMapper.updateStatus(partyCycleId, PartyCycleStatus.FAILED);
-            partyMapper.updateOperationStatus(partyId, OperationStatus.WAITING_START);
-
-            partyHistoryService.saveHistory(
-                    partyId,
-                    null,
-                    PartyHistoryEventType.PAYMENT_EXECUTION_FAILED,
-                    "{\"reason\":\"NO_CHARGE_TARGET\"}",
-                    0L
-            );
+        if (expectedPendingCount == 0 || targets.size() != expectedPendingCount) {
+            failCycle(partyId, partyCycleId, null, 0L, "INVALID_CHARGE_TARGET_COUNT");
             return;
         }
 
@@ -81,43 +84,74 @@ public class AutoPaymentService {
                                 "Submate 파티 이용료"
                         )
                 );
-            } catch (Exception e) {
-                log.error("자동결제 실패. partyId={}, partyCycleId={}, memberId={}, userId={}",
-                        partyId, partyCycleId, target.getMemberId(), target.getUserId(), e);
 
-                partyCycleMapper.updateStatus(partyCycleId, PartyCycleStatus.FAILED);
-                partyMapper.updateOperationStatus(partyId, OperationStatus.WAITING_START);
+                partyMemberMapper.updateStatusAndActivatedAt(
+                        target.getMemberId(),
+                        PartyMemberStatus.ACTIVE
+                );
 
                 partyHistoryService.saveHistory(
                         partyId,
                         target.getMemberId(),
-                        PartyHistoryEventType.PAYMENT_EXECUTION_FAILED,
-                        "{\"userId\":" + target.getUserId() + ",\"reason\":\"PAYMENT_API_FAILED\"}",
+                        PartyHistoryEventType.PAYMENT_EXECUTION_SUCCEEDED,
+                        "{\"userId\":" + target.getUserId() + "}",
                         target.getUserId()
+                );
+
+            } catch (Exception e) {
+                log.error("자동결제 실패. partyId={}, partyCycleId={}, memberId={}, userId={}",
+                        partyId, partyCycleId, target.getMemberId(), target.getUserId(), e);
+
+                failCycle(
+                        partyId,
+                        partyCycleId,
+                        target.getMemberId(),
+                        target.getUserId(),
+                        "PAYMENT_API_FAILED"
                 );
                 return;
             }
         }
 
-        for (PaymentChargeTarget target : targets) {
-            partyMemberMapper.updateStatusAndActivatedAt(
-                    target.getMemberId(),
-                    PartyMemberStatus.ACTIVE
-            );
-
-            partyHistoryService.saveHistory(
-                    partyId,
-                    target.getMemberId(),
-                    PartyHistoryEventType.PAYMENT_EXECUTION_SUCCEEDED,
-                    "{\"userId\":" + target.getUserId() + "}",
-                    target.getUserId()
-            );
+        int updated = partyCycleMapper.compareAndUpdateStatus(
+                partyCycleId,
+                PartyCycleStatus.PROCESSING,
+                PartyCycleStatus.RUNNING
+        );
+        if (updated != 1) {
+            throw new IllegalStateException("party_cycle RUNNING 상태 전이 실패. partyCycleId=" + partyCycleId);
         }
 
-        partyCycleMapper.updateStatus(partyCycleId, PartyCycleStatus.RUNNING);
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
 
         log.info("자동결제 전원 성공. partyId={}, partyCycleId={}", partyId, partyCycleId);
+    }
+
+    private void failCycle(
+            Long partyId,
+            Long partyCycleId,
+            Long memberId,
+            Long createdBy,
+            String reason
+    ) {
+        int updated = partyCycleMapper.compareAndUpdateStatus(
+                partyCycleId,
+                PartyCycleStatus.PROCESSING,
+                PartyCycleStatus.FAILED
+        );
+        if (updated != 1) {
+            throw new IllegalStateException("party_cycle FAILED 상태 전이 실패. partyCycleId=" + partyCycleId);
+        }
+
+        partyMapper.updateOperationStatus(partyId, OperationStatus.WAITING_START);
+
+        partyHistoryService.saveHistory(
+                partyId,
+                memberId,
+                PartyHistoryEventType.PAYMENT_EXECUTION_FAILED,
+                "{\"reason\":\"" + reason + "\"}",
+                createdBy
+        );
     }
 
     private String createOrderId(PaymentChargeTarget target) {
