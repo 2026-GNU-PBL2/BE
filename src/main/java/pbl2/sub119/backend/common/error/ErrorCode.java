@@ -63,7 +63,8 @@ public enum ErrorCode {
     PAYMENT_BILLING_KEY_ISSUE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT001", "빌링키 발급에 실패했습니다."),
     PAYMENT_BILLING_KEY_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PAYMENT002", "이미 등록된 결제 수단이 있습니다."),
     PAYMENT_CHARGE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "자동결제 실행에 실패했습니다."),
-    PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT004", "등록된 결제 수단이 없습니다.");
+    PAYMENT_BILLING_EXECUTION_FAILED(HttpStatus.BAD_REQUEST,"PAYMENT_004","자동결제 실행에 실패했습니다."),
+    PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "등록된 결제 수단이 없습니다.");
 
 
     private final HttpStatus status;

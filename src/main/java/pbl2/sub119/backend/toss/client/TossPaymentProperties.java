@@ -1,4 +1,4 @@
-package pbl2.sub119.backend.toss.constant;
+package pbl2.sub119.backend.toss.client;
 
 import lombok.Getter;
 import lombok.Setter;
