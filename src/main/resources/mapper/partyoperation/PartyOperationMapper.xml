@@ -96,6 +96,7 @@
             shared_account_password_encrypted = #{sharedAccountPasswordEncrypted},
             operation_guide = #{operationGuide},
             operation_started_at = #{operationStartedAt},
+            operation_completed_at = NULL,
             updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>

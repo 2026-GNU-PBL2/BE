@@ -53,6 +53,10 @@ public class PartyOperationCommandService {
         final PartyOperation existingOperation = partyOperationMapper.findByPartyId(partyId);
 
         final String encryptedPassword = encryptSharedPasswordIfNeeded(request);
+        final String normalizedInviteValue =
+                request.operationType() == OperationType.INVITE_LINK ? request.inviteValue() : null;
+        final String normalizedSharedEmail =
+                request.operationType() == OperationType.ACCOUNT_SHARED ? request.sharedAccountEmail() : null;
 
         // 최초 등록
         if (existingOperation == null) {
@@ -60,8 +64,8 @@ public class PartyOperationCommandService {
                     .partyId(partyId)
                     .operationType(request.operationType())
                     .operationStatus(OperationStatus.IN_PROGRESS)
-                    .inviteValue(request.inviteValue())
-                    .sharedAccountEmail(request.sharedAccountEmail())
+                    .inviteValue(normalizedInviteValue)
+                    .sharedAccountEmail(normalizedSharedEmail)
                     .sharedAccountPasswordEncrypted(encryptedPassword)
                     .operationGuide(request.operationGuide())
                     .operationStartedAt(now)
@@ -86,8 +90,8 @@ public class PartyOperationCommandService {
         partyOperationMapper.updateSetup(
                 existingOperation.getId(),
                 request.operationType(),
-                request.inviteValue(),
-                request.sharedAccountEmail(),
+                normalizedInviteValue,
+                normalizedSharedEmail,
                 encryptedPassword,
                 request.operationGuide(),
                 OperationStatus.IN_PROGRESS,

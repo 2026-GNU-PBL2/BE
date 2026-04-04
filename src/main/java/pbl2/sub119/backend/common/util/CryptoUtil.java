@@ -50,6 +50,10 @@ public class CryptoUtil {
         try {
             byte[] decoded = Base64.getDecoder().decode(encryptedText);
 
+            if (decoded.length <= IV_LENGTH) {
+                throw new IllegalArgumentException("유효하지 않은 암호문 형식입니다.");
+            }
+
             byte[] iv = new byte[IV_LENGTH];
             byte[] cipherText = new byte[decoded.length - IV_LENGTH];
 
