@@ -18,7 +18,12 @@ public class SettlementRequestedEventListener {
     public void handle(SettlementRequestedEvent event) {
         log.info("정산 처리 시작. partyId={}, partyCycleId={}",
                 event.partyId(), event.partyCycleId());
-
-        settlementService.process(event.partyId(), event.partyCycleId());
+        log.info("정산 이벤트 발행. partyId={}, partyCycleId={}", event.partyId(), event.partyCycleId());
+        try {
+            settlementService.process(event.partyId(), event.partyCycleId());
+        } catch (Exception e) {
+            log.error("정산 처리 실패. partyId={}, partyCycleId={}",
+                    event.partyId(), event.partyCycleId(), e);
+        }
     }
 }

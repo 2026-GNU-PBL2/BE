@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.common.enumerated.BillingKeyStatus;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.enumerated.OperationStatus;
@@ -127,9 +129,13 @@ public class AutoPaymentService {
 
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
 
-        eventPublisher.publishEvent(
-                new SettlementRequestedEvent(partyId, partyCycleId)
-        );
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                log.info("정산 이벤트 발행(afterCommit). partyId={}, partyCycleId={}", partyId, partyCycleId);
+                eventPublisher.publishEvent(new SettlementRequestedEvent(partyId, partyCycleId));
+            }
+        });
 
         log.info("자동결제 전원 성공. partyId={}, partyCycleId={}", partyId, partyCycleId);
     }
