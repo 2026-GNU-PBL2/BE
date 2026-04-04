@@ -64,8 +64,17 @@ public enum ErrorCode {
     PAYMENT_BILLING_KEY_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PAYMENT002", "이미 등록된 결제 수단이 있습니다."),
     PAYMENT_CHARGE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "자동결제 실행에 실패했습니다."),
     PAYMENT_BILLING_EXECUTION_FAILED(HttpStatus.BAD_REQUEST,"PAYMENT_004","자동결제 실행에 실패했습니다."),
-    PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "등록된 결제 수단이 없습니다.");
+    PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "등록된 결제 수단이 없습니다."),
 
+    // Party Operation
+    PARTY_OPERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY023", "파티 운영 정보가 존재하지 않습니다."),
+    PARTY_OPERATION_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY024", "운영 대상 멤버가 아닙니다."),
+    PARTY_OPERATION_TYPE_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY025", "운영 유형은 필수입니다."),
+    PARTY_OPERATION_INVITE_VALUE_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY026", "초대형 운영은 초대값이 필요합니다."),
+    PARTY_OPERATION_SHARED_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY027", "계정공유형 운영은 공유 계정 이메일이 필요합니다."),
+    PARTY_OPERATION_SHARED_PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY028", "계정공유형 운영은 공유 계정 비밀번호가 필요합니다."),
+    PARTY_OPERATION_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "PARTY029", "이미 운영이 완료된 상태입니다."),
+    PARTY_OPERATION_RESET_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY030", "운영 재설정이 필요한 상태입니다.");
 
     private final HttpStatus status;
     private final String code;
