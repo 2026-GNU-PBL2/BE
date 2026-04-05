@@ -280,6 +280,9 @@ CREATE TABLE IF NOT EXISTS party_operation_member
     operation_message  VARCHAR(500) NULL
 );
 
+CREATE UNIQUE INDEX uk_party_operation_member_operation_member
+    ON party_operation_member(party_operation_id, party_member_id);
+
 -- settlement (2026.04.04 / kyh)
 CREATE TABLE settlement (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
