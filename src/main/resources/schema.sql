@@ -277,7 +277,9 @@ CREATE TABLE IF NOT EXISTS party_operation_member
     activated_at       DATETIME     NULL,
     last_reset_at      DATETIME     NULL,
     penalty_applied    TINYINT(1)   NOT NULL DEFAULT 0,
-    operation_message  VARCHAR(500) NULL
+    operation_message  VARCHAR(500) NULL,
+    created_at         DATETIME     NOT NULL,
+    updated_at         DATETIME     NOT NULL
 );
 
 CREATE UNIQUE INDEX uk_party_operation_member_operation_member
