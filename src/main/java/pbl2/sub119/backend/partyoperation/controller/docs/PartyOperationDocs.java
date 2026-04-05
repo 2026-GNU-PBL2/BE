@@ -18,10 +18,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.partyoperation.dto.request.PartyOperationResetRequest;
 import pbl2.sub119.backend.partyoperation.dto.request.PartyOperationSetupRequest;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationConfirmResponse;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationDashboardResponse;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationMemberResponse;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationSetupResponse;
+import pbl2.sub119.backend.partyoperation.dto.response.*;
 
 @Tag(name = "Party Operation API", description = "파티 운영 등록, 확인, 조회 API")
 public interface PartyOperationDocs {
@@ -112,5 +109,28 @@ public interface PartyOperationDocs {
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId,
             @RequestBody @Valid PartyOperationResetRequest request
+    );
+
+    @Operation(
+            summary = "내 운영 정보 조회",
+            description = """
+                본인에게 필요한 파티 운영 상세 정보를 조회합니다.
+
+                operationType:
+                - INVITE_LINK: inviteValue 반환
+                - ACCOUNT_SHARED: sharedAccountEmail, sharedAccountPassword 반환
+                """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "내 운영 정보 조회 성공",
+                            content = @Content(schema = @Schema(implementation = PartyOperationMeResponse.class))
+                    )
+            }
+    )
+    @GetMapping("/{partyId}/operation/me")
+    ResponseEntity<PartyOperationMeResponse> getMyOperationInfo(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @PathVariable Long partyId
     );
 }

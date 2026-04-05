@@ -127,7 +127,7 @@
         operation_status = #{operationStatus},
         updated_at = #{updatedAt}
         WHERE id = #{id}
-        AND operation_status <> 'ACTIVE'
+        AND operation_status  &lt;&gt; 'ACTIVE'
     </update>
 
     <!-- 전원 완료 시 운영 상태 ACTIVE + 완료 시각 기록 -->

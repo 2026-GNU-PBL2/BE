@@ -74,7 +74,10 @@ public enum ErrorCode {
     PARTY_OPERATION_SHARED_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY027", "계정공유형 운영은 공유 계정 이메일이 필요합니다."),
     PARTY_OPERATION_SHARED_PASSWORD_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY028", "계정공유형 운영은 공유 계정 비밀번호가 필요합니다."),
     PARTY_OPERATION_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "PARTY029", "이미 운영이 완료된 상태입니다."),
-    PARTY_OPERATION_RESET_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY030", "운영 재설정이 필요한 상태입니다.");
+    PARTY_OPERATION_RESET_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY030", "운영 재설정이 필요한 상태입니다."),
+    PARTY_OPERATION_NOT_READABLE(HttpStatus.BAD_REQUEST, "PARTY031", "현재 상태에서는 운영 정보를 조회할 수 없습니다."),
+    PARTY_OPERATION_PASSWORD_DECRYPT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PARTY032", "공유 계정 비밀번호를 불러오는 중 오류가 발생했습니다.");
+
 
     private final HttpStatus status;
     private final String code;
