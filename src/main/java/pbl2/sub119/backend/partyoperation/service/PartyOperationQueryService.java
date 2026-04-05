@@ -5,12 +5,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.common.util.CryptoUtil;
 import pbl2.sub119.backend.party.entity.Party;
 import pbl2.sub119.backend.party.exception.PartyException;
 import pbl2.sub119.backend.party.mapper.PartyMapper;
 import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationDashboardResponse;
+import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationMeResponse;
 import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationMemberResponse;
 import pbl2.sub119.backend.partyoperation.entity.PartyOperation;
+import pbl2.sub119.backend.partyoperation.entity.PartyOperationMember;
+import pbl2.sub119.backend.partyoperation.enumerated.OperationMemberStatus;
+import pbl2.sub119.backend.partyoperation.enumerated.OperationType;
 import pbl2.sub119.backend.partyoperation.mapper.PartyOperationMapper;
 import pbl2.sub119.backend.partyoperation.mapper.PartyOperationMemberMapper;
 
@@ -22,6 +27,7 @@ public class PartyOperationQueryService {
     private final PartyMapper partyMapper;
     private final PartyOperationMapper partyOperationMapper;
     private final PartyOperationMemberMapper partyOperationMemberMapper;
+    private final CryptoUtil cryptoUtil;
 
     // 파티 운영이 어디까지 진행됐는지 대시보드 조회
     public PartyOperationDashboardResponse getOperationDashboard(
@@ -108,5 +114,78 @@ public class PartyOperationQueryService {
         }
 
         return email.substring(0, 2) + "***" + email.substring(atIndex);
+    }
+
+    // 본인이 포함된 파티 운영 상태 조회
+    public PartyOperationMeResponse getMyOperationInfo(
+            final Long userId,
+            final Long partyId
+    ) {
+        final PartyOperationMember operationMember =
+                partyOperationMemberMapper.findByPartyIdAndUserId(partyId, userId);
+
+        // 파티 운영 멤버만 조회 가능
+        if (operationMember == null) {
+            throw new PartyException(ErrorCode.PARTY_OPERATION_MEMBER_NOT_FOUND);
+        }
+
+        // 파티 상태가 WAITING이면 운영 정보 조회 불가능
+        validateReadableMemberStatus(operationMember);
+
+        // 운영 정보 조회
+        final PartyOperation operation = partyOperationMapper.findByPartyId(partyId);
+
+        if (operation == null) {
+            throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);
+        }
+
+        // 계정 링크
+        final String inviteValue =
+                operation.getOperationType() == OperationType.INVITE_LINK
+                        ? operation.getInviteValue()
+                        : null;
+
+        // 공유 계정 이메일
+        final String sharedAccountEmail =
+                operation.getOperationType() == OperationType.ACCOUNT_SHARED
+                        ? operation.getSharedAccountEmail()
+                        : null;
+
+        // 공유 계정 비밀번호
+        final String sharedAccountPassword =
+                operation.getOperationType() == OperationType.ACCOUNT_SHARED
+                        ? decryptSharedPassword(operation.getSharedAccountPasswordEncrypted())
+                        : null;
+
+        return new PartyOperationMeResponse(
+                operation.getId(),
+                operation.getPartyId(),
+                operation.getOperationType(),
+                operation.getOperationStatus(),
+                operationMember.getMemberStatus(),
+                inviteValue,
+                sharedAccountEmail,
+                sharedAccountPassword,
+                operation.getOperationGuide(),
+                operation.getOperationStartedAt(),
+                operation.getOperationCompletedAt(),
+                operation.getLastResetAt()
+        );
+    }
+
+    // 상태 유효성 검사
+    private void validateReadableMemberStatus(final PartyOperationMember operationMember) {
+        if (operationMember.getMemberStatus() == OperationMemberStatus.WAITING) {
+            throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_READABLE);
+        }
+    }
+
+    // 복호화
+    private String decryptSharedPassword(final String encryptedPassword) {
+        if (encryptedPassword == null || encryptedPassword.isBlank()) {
+            return null;
+        }
+
+        return cryptoUtil.decrypt(encryptedPassword);
     }
 }

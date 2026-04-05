@@ -13,10 +13,7 @@ import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.partyoperation.controller.docs.PartyOperationDocs;
 import pbl2.sub119.backend.partyoperation.dto.request.PartyOperationResetRequest;
 import pbl2.sub119.backend.partyoperation.dto.request.PartyOperationSetupRequest;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationConfirmResponse;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationDashboardResponse;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationMemberResponse;
-import pbl2.sub119.backend.partyoperation.dto.response.PartyOperationSetupResponse;
+import pbl2.sub119.backend.partyoperation.dto.response.*;
 import pbl2.sub119.backend.partyoperation.service.PartyOperationCommandService;
 import pbl2.sub119.backend.partyoperation.service.PartyOperationQueryService;
 
@@ -82,5 +79,16 @@ public class PartyOperationController implements PartyOperationDocs {
     ) {
         partyOperationCommandService.resetOperation(accessor.getUserId(), partyId, request);
         return ResponseEntity.ok().build();
+    }
+
+    //본인에게 필요한 파티 운영 상세 정보 조회
+    @Override
+    public ResponseEntity<PartyOperationMeResponse> getMyOperationInfo(
+            @Auth final Accessor accessor,
+            @PathVariable final Long partyId
+    ) {
+        return ResponseEntity.ok(
+                partyOperationQueryService.getMyOperationInfo(accessor.getUserId(), partyId)
+        );
     }
 }
