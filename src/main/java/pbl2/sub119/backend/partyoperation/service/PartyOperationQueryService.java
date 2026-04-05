@@ -186,6 +186,10 @@ public class PartyOperationQueryService {
             return null;
         }
 
-        return cryptoUtil.decrypt(encryptedPassword);
+        try {
+            return cryptoUtil.decrypt(encryptedPassword);
+        } catch (RuntimeException exception) {
+            throw new PartyException(ErrorCode.PARTY_OPERATION_PASSWORD_DECRYPT_FAILED);
+        }
     }
 }
