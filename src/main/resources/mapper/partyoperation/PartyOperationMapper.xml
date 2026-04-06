@@ -124,10 +124,10 @@
     <update id="updateStatusIfNotActive">
         UPDATE party_operation
         SET
-        operation_status = #{operationStatus},
-        updated_at = #{updatedAt}
+            operation_status = #{operationStatus},
+            updated_at = #{updatedAt}
         WHERE id = #{id}
-        AND operation_status  &lt;&gt; 'ACTIVE'
+          AND operation_status &lt;&gt; 'ACTIVE'
     </update>
 
     <!-- 전원 완료 시 운영 상태 ACTIVE + 완료 시각 기록 -->
@@ -147,6 +147,18 @@
             operation_status = #{operationStatus},
             last_reset_at = #{lastResetAt},
             operation_completed_at = NULL,
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- cycle start 이후 멤버 변경 발생 시 운영 재설정 처리 -->
+    <update id="updateCycleStartResetState">
+        UPDATE party_operation
+        SET
+            operation_status = #{operationStatus},
+            operation_started_at = #{operationStartedAt},
+            operation_completed_at = NULL,
+            last_reset_at = #{lastResetAt},
             updated_at = #{updatedAt}
         WHERE id = #{id}
     </update>

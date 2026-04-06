@@ -22,6 +22,10 @@ public interface PartyOperationMemberMapper {
             @Param("userId") Long userId
     );
 
+    List<PartyOperationMember> findByPartyOperationId(
+            @Param("partyOperationId") Long partyOperationId
+    );
+
     List<PartyOperationMemberResponse> findResponsesByPartyOperationId(
             @Param("partyOperationId") Long partyOperationId
     );
