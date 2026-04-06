@@ -2,6 +2,7 @@ package pbl2.sub119.backend.toss.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -19,10 +20,9 @@ import pbl2.sub119.backend.payment.dto.PaymentChargeTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.mapper.PaymentExecutionQueryMapper;
+import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 import pbl2.sub119.backend.toss.client.TossPaymentClient;
 import pbl2.sub119.backend.toss.dto.request.TossBillingPaymentRequest;
-import org.springframework.context.ApplicationEventPublisher;
-import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 
 import java.util.List;
 import java.util.UUID;
@@ -59,21 +59,23 @@ public class AutoPaymentService {
 
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
 
-        int expectedPendingCount = paymentExecutionQueryMapper.countPendingMembers(
+        PartyMemberStatus targetMemberStatus = resolveTargetMemberStatus(cycle);
+
+        int expectedMemberCount = paymentExecutionQueryMapper.countMembersByStatus(
                 partyId,
                 PartyRole.MEMBER,
-                PartyMemberStatus.PENDING
+                targetMemberStatus
         );
 
         List<PaymentChargeTarget> targets = paymentExecutionQueryMapper.findChargeTargets(
                 partyId,
                 partyCycleId,
                 PartyRole.MEMBER,
-                PartyMemberStatus.PENDING,
+                targetMemberStatus,
                 BillingKeyStatus.ACTIVE
         );
 
-        if (expectedPendingCount == 0 || targets.size() != expectedPendingCount) {
+        if (expectedMemberCount == 0 || targets.size() != expectedMemberCount) {
             failCycle(partyId, partyCycleId, null, 0L, "INVALID_CHARGE_TARGET_COUNT");
             return;
         }
@@ -90,10 +92,12 @@ public class AutoPaymentService {
                         )
                 );
 
-                partyMemberMapper.updateStatusAndActivatedAt(
-                        target.getMemberId(),
-                        PartyMemberStatus.ACTIVE
-                );
+                if (targetMemberStatus == PartyMemberStatus.PENDING) {
+                    partyMemberMapper.updateStatusAndActivatedAt(
+                            target.getMemberId(),
+                            PartyMemberStatus.ACTIVE
+                    );
+                }
 
                 partyHistoryService.saveHistory(
                         partyId,
@@ -127,6 +131,8 @@ public class AutoPaymentService {
             throw new IllegalStateException("party_cycle RUNNING 상태 전이 실패. partyCycleId=" + partyCycleId);
         }
 
+        closePreviousCycleIfExists(cycle);
+
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -138,6 +144,40 @@ public class AutoPaymentService {
         });
 
         log.info("자동결제 전원 성공. partyId={}, partyCycleId={}", partyId, partyCycleId);
+    }
+
+    private PartyMemberStatus resolveTargetMemberStatus(PartyCycle cycle) {
+        if (cycle.getCycleNo() == 1) {
+            return PartyMemberStatus.PENDING;
+        }
+        return PartyMemberStatus.ACTIVE;
+    }
+
+    private void closePreviousCycleIfExists(PartyCycle currentCycle) {
+        if (currentCycle.getCycleNo() <= 1) {
+            return;
+        }
+
+        PartyCycle previousCycle = partyCycleMapper.findByPartyIdAndCycleNo(
+                currentCycle.getPartyId(),
+                currentCycle.getCycleNo() - 1
+        );
+
+        if (previousCycle == null) {
+            return;
+        }
+
+        int closed = partyCycleMapper.closeCycle(
+                previousCycle.getId(),
+                PartyCycleStatus.RUNNING,
+                PartyCycleStatus.CLOSED,
+                currentCycle.getBillingDueAt()
+        );
+
+        if (closed == 1) {
+            log.info("이전 회차 종료 처리 완료. partyId={}, previousCycleId={}, currentCycleId={}",
+                    currentCycle.getPartyId(), previousCycle.getId(), currentCycle.getId());
+        }
     }
 
     private void failCycle(

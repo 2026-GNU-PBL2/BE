@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.payment.mapper.RecurringPaymentQueryMapper">
+
+    <resultMap id="RecurringPaymentTargetMap" type="pbl2.sub119.backend.payment.dto.RecurringPaymentTarget">
+        <result property="partyId" column="party_id"/>
+        <result property="currentCycleId" column="current_cycle_id"/>
+        <result property="currentCycleNo" column="current_cycle_no"/>
+        <result property="billingDueAt" column="billing_due_at"/>
+        <result property="memberCountSnapshot" column="member_count_snapshot"/>
+        <result property="pricePerMemberSnapshot" column="price_per_member_snapshot"/>
+    </resultMap>
+
+    <select id="findRunningCycles" resultMap="RecurringPaymentTargetMap">
+        SELECT pc.party_id                  AS party_id,
+               pc.id                        AS current_cycle_id,
+               pc.cycle_no                  AS current_cycle_no,
+               pc.billing_due_at            AS billing_due_at,
+               pc.member_count_snapshot     AS member_count_snapshot,
+               pc.price_per_member_snapshot AS price_per_member_snapshot
+        FROM party_cycle pc
+                 INNER JOIN party p ON p.id = pc.party_id
+        WHERE pc.status = #{runningStatus}
+          AND p.operation_status = #{activeOperationStatus}
+        ORDER BY pc.id ASC
+    </select>
+
+</mapper>

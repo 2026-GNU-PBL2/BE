@@ -14,7 +14,7 @@
         <result property="amount" column="amount"/>
     </resultMap>
 
-    <select id="countPendingMembers" resultType="int">
+    <select id="countMembersByStatus" resultType="int">
         SELECT COUNT(1)
         FROM party_member
         WHERE party_id = #{partyId}
