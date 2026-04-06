@@ -131,6 +131,15 @@
         LIMIT 1
     </select>
 
+    <!--cycle start 이후 현재 운영 멤버 구성 비교용 조회-->
+    <select id="findByPartyOperationId" resultMap="partyOperationMemberResultMap">
+        SELECT
+        <include refid="partyOperationMemberColumns"/>
+        FROM party_operation_member
+        WHERE party_operation_id = #{partyOperationId}
+        ORDER BY id ASC
+    </select>
+
     <!--파티장/파티원이 운영 현황 확인할 때 전체 멤버 상태 리스트 반환-->
     <select id="findResponsesByPartyOperationId" resultMap="partyOperationMemberResponseResultMap">
         SELECT
@@ -165,7 +174,6 @@
         WHERE party_operation_id = #{partyOperationId}
           AND member_status = 'ACTIVE'
     </select>
-
 
     <select id="countByPartyIdAndUserId" resultType="int">
         SELECT COUNT(*)

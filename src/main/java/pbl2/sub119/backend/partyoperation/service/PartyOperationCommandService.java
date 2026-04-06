@@ -2,6 +2,8 @@ package pbl2.sub119.backend.partyoperation.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ import pbl2.sub119.backend.partyoperation.mapper.PartyOperationMemberMapper;
 @RequiredArgsConstructor
 @Transactional
 public class PartyOperationCommandService {
+
+    private static final String CYCLE_MEMBER_CHANGED_MESSAGE =
+            "결제일 기준 멤버 변경이 반영되어 운영 재설정이 필요합니다.";
 
     private final PartyMapper partyMapper;
     private final PartyMemberMapper partyMemberMapper;
@@ -110,6 +115,51 @@ public class PartyOperationCommandService {
         );
     }
 
+    // cycle start 이후 운영 자동 상태 반영
+    public void handleCycleStart(final Long partyId) {
+        final Party party = getParty(partyId);
+        final PartyOperation operation = partyOperationMapper.findByPartyIdForUpdate(partyId);
+
+        // 아직 운영 정보가 등록되지 않은 파티는 후속 처리하지 않음
+        if (operation == null) {
+            return;
+        }
+
+
+        final List<PartyMember> currentTargetMembers =
+                partyMemberMapper.findOperationTargetMembersByPartyId(partyId);
+
+        final List<PartyOperationMember> existingOperationMembers =
+                partyOperationMemberMapper.findByPartyOperationId(operation.getId());
+
+        final boolean memberChanged = hasOperationTargetChanged(currentTargetMembers, existingOperationMembers);
+
+        // 멤버 변경이 없으면 기존 운영 상태 유지
+        if (!memberChanged) {
+            return;
+        }
+
+        final LocalDateTime now = LocalDateTime.now();
+
+        partyOperationMapper.updateCycleStartResetState(
+                operation.getId(),
+                OperationStatus.RESET_REQUIRED,
+                operation.getOperationStartedAt(),
+                now,
+                now
+        );
+
+        resetMemberRows(operation.getId(), partyId, party.getHostUserId(), now);
+
+        partyOperationMemberMapper.markAllResetRequired(
+                operation.getId(),
+                OperationMemberStatus.RESET_REQUIRED,
+                CYCLE_MEMBER_CHANGED_MESSAGE,
+                now,
+                now
+        );
+    }
+
     // 파티원이 운영 완료를 확인하면 멤버 상태 및 파티 전체 운영 상태 갱신
     public PartyOperationConfirmResponse confirmOperation(
             final Long userId,
@@ -118,11 +168,11 @@ public class PartyOperationCommandService {
         final PartyOperation operation = getOperationForUpdate(partyId);
 
         if (operation.getOperationStatus() == OperationStatus.ACTIVE) {
-                    throw new PartyException(ErrorCode.PARTY_OPERATION_ALREADY_ACTIVE);
-                }
+            throw new PartyException(ErrorCode.PARTY_OPERATION_ALREADY_ACTIVE);
+        }
 
         if (operation.getOperationStatus() == OperationStatus.RESET_REQUIRED) {
-                  throw new PartyException(ErrorCode.PARTY_OPERATION_RESET_REQUIRED);
+            throw new PartyException(ErrorCode.PARTY_OPERATION_RESET_REQUIRED);
         }
 
         final PartyOperationMember member = getOperationMember(partyId, userId);
@@ -136,6 +186,7 @@ public class PartyOperationCommandService {
                     member.getActivatedAt()
             );
         }
+
         final LocalDateTime now = LocalDateTime.now();
 
         partyOperationMemberMapper.markActive(
@@ -259,6 +310,25 @@ public class PartyOperationCommandService {
                 OperationStatus.IN_PROGRESS,
                 now
         );
+    }
+
+    private boolean hasOperationTargetChanged(
+            final List<PartyMember> currentTargetMembers,
+            final List<PartyOperationMember> existingOperationMembers
+    ) {
+        if (currentTargetMembers.size() != existingOperationMembers.size()) {
+            return true;
+        }
+
+        final Set<Long> currentPartyMemberIds = currentTargetMembers.stream()
+                .map(PartyMember::getId)
+                .collect(Collectors.toSet());
+
+        final Set<Long> existingPartyMemberIds = existingOperationMembers.stream()
+                .map(PartyOperationMember::getPartyMemberId)
+                .collect(Collectors.toSet());
+
+        return !currentPartyMemberIds.equals(existingPartyMemberIds);
     }
 
     // 파티 조회

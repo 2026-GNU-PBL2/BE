@@ -53,4 +53,12 @@ public interface PartyOperationMapper {
             @Param("lastResetAt") LocalDateTime lastResetAt,
             @Param("updatedAt") LocalDateTime updatedAt
     );
+
+    void updateCycleStartResetState(
+            @Param("id") Long id,
+            @Param("operationStatus") OperationStatus operationStatus,
+            @Param("operationStartedAt") LocalDateTime operationStartedAt,
+            @Param("lastResetAt") LocalDateTime lastResetAt,
+            @Param("updatedAt") LocalDateTime updatedAt
+    );
 }
