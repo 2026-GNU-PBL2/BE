@@ -12,7 +12,7 @@ import java.util.List;
 @Mapper
 public interface PaymentExecutionQueryMapper {
 
-    int countPendingMembers(
+    int countMembersByStatus(
             @Param("partyId") Long partyId,
             @Param("memberRole") PartyRole memberRole,
             @Param("memberStatus") PartyMemberStatus memberStatus

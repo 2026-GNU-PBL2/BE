@@ -17,6 +17,7 @@ public class PartyCycle {
     private LocalDateTime startAt;
     private LocalDateTime endAt;
     private LocalDateTime billingDueAt;
+    private LocalDateTime nextBillingDueAt;
     private PartyCycleStatus status;
     private Integer memberCountSnapshot;
     private Integer pricePerMemberSnapshot;

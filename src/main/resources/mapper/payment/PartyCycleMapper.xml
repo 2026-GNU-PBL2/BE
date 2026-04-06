@@ -67,9 +67,36 @@
         WHERE party_id = #{partyId}
     </select>
 
+    <select id="findByPartyIdAndCycleNo" resultMap="PartyCycleMap">
+        SELECT id,
+               party_id,
+               cycle_no,
+               start_at,
+               end_at,
+               billing_due_at,
+               status,
+               member_count_snapshot,
+               price_per_member_snapshot,
+               created_at,
+               updated_at
+        FROM party_cycle
+        WHERE party_id = #{partyId}
+          AND cycle_no = #{cycleNo}
+            LIMIT 1
+    </select>
+
     <update id="compareAndUpdateStatus">
         UPDATE party_cycle
         SET status = #{newStatus},
+            updated_at = NOW()
+        WHERE id = #{partyCycleId}
+          AND status = #{expectedStatus}
+    </update>
+
+    <update id="closeCycle">
+        UPDATE party_cycle
+        SET status = #{newStatus},
+            end_at = #{endAt},
             updated_at = NOW()
         WHERE id = #{partyCycleId}
           AND status = #{expectedStatus}
