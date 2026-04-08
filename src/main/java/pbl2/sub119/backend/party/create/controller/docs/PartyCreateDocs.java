@@ -40,7 +40,7 @@ public interface PartyCreateDocs {
                     )
             }
     )
-    @PostMapping("/create-summary")
+    @PostMapping("/api/v1/parties/create-preview")
     ResponseEntity<PartyCreateSummaryResponse> getCreateSummary(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @RequestBody @Valid PartyCreateSummaryRequest request
