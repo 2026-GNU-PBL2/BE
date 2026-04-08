@@ -14,7 +14,7 @@ import pbl2.sub119.backend.party.enumerated.VacancyType;
 import pbl2.sub119.backend.party.exception.PartyException;
 import pbl2.sub119.backend.party.mapper.PartyMapper;
 import pbl2.sub119.backend.party.mapper.PartyMemberMapper;
-import pbl2.sub119.backend.partyoperation.service.PartyOperationCommandService;
+import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class PartyCycleService {
     private final PartyMapper partyMapper;
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
-    private final PartyOperationCommandService partyOperationCommandService;
+    private final PartyProvisionCommandService partyOperationCommandService;
 
     // 결제 성공 후 시작되는 이용 주기 기준으로 파티 상태를 반영
     @Transactional

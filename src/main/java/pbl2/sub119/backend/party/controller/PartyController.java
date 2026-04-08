@@ -12,9 +12,11 @@ import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.controller.docs.PartyDocs;
 import pbl2.sub119.backend.party.dto.request.PartyCreateRequest;
 import pbl2.sub119.backend.party.dto.response.PartyCreateResponse;
+import pbl2.sub119.backend.party.dto.response.PartyCycleResponse;
 import pbl2.sub119.backend.party.dto.response.PartyDetailResponse;
 import pbl2.sub119.backend.party.dto.response.PartyListResponse;
 import pbl2.sub119.backend.party.service.PartyCommandService;
+import pbl2.sub119.backend.party.service.PartyCycleQueryService;
 import pbl2.sub119.backend.party.service.PartyJoinService;
 import pbl2.sub119.backend.party.service.PartyQueryService;
 
@@ -26,6 +28,7 @@ public class PartyController implements PartyDocs {
     private final PartyCommandService partyCommandService;
     private final PartyQueryService partyQueryService;
     private final PartyJoinService partyJoinService;
+    private final PartyCycleQueryService partyCycleQueryService;
 
     @Override
     public ResponseEntity<PartyCreateResponse> createParty(
@@ -58,5 +61,16 @@ public class PartyController implements PartyDocs {
     ) {
         partyJoinService.joinParty(partyId, accessor.getUserId());
         return ResponseEntity.ok().build();
+    }
+
+    // 파티 이용 주기 조회 (파티원/파티장 공통)
+    @Override
+    public ResponseEntity<PartyCycleResponse> getPartyCycle(
+            @Auth final Accessor accessor,
+            final Long partyId
+    ) {
+        return ResponseEntity.ok(
+                partyCycleQueryService.getPartyCycle(accessor.getUserId(), partyId)
+        );
     }
 }

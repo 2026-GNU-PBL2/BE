@@ -5,7 +5,10 @@
 
 <mapper namespace="pbl2.sub119.backend.party.mapper.PartyHistoryMapper">
 
-    <insert id="insertHistory" parameterType="pbl2.sub119.backend.party.entity.PartyHistory" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertHistory"
+            parameterType="pbl2.sub119.backend.party.entity.PartyHistory"
+            useGeneratedKeys="true"
+            keyProperty="id">
         INSERT INTO party_history (
             party_id,
             member_id,

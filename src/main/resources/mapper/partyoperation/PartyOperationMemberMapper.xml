@@ -3,16 +3,16 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.partyoperation.mapper.PartyOperationMemberMapper">
+<mapper namespace="pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper">
 
-    <resultMap id="partyOperationMemberResultMap" type="pbl2.sub119.backend.partyoperation.entity.PartyOperationMember">
+    <resultMap id="partyOperationMemberResultMap" type="pbl2.sub119.backend.party.provision.entity.PartyProvisionMember">
         <id property="id" column="id"/>
         <result property="partyOperationId" column="party_operation_id"/>
         <result property="partyMemberId" column="party_member_id"/>
         <result property="partyId" column="party_id"/>
         <result property="userId" column="user_id"/>
         <result property="memberStatus" column="member_status"
-                javaType="pbl2.sub119.backend.partyoperation.enumerated.OperationMemberStatus"/>
+                javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
         <result property="inviteSentAt" column="invite_sent_at"/>
         <result property="mustCompleteBy" column="must_complete_by"/>
         <result property="confirmedAt" column="confirmed_at"/>
@@ -26,13 +26,13 @@
     </resultMap>
 
     <resultMap id="partyOperationMemberResponseResultMap"
-               type="pbl2.sub119.backend.partyoperation.dto.response.PartyOperationMemberResponse">
+               type="pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse">
         <constructor>
             <idArg column="id" javaType="java.lang.Long"/>
             <arg column="party_member_id" javaType="java.lang.Long"/>
             <arg column="user_id" javaType="java.lang.Long"/>
             <arg column="member_status"
-                 javaType="pbl2.sub119.backend.partyoperation.enumerated.OperationMemberStatus"/>
+                 javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
             <arg column="invite_sent_at" javaType="java.time.LocalDateTime"/>
             <arg column="must_complete_by" javaType="java.time.LocalDateTime"/>
             <arg column="confirmed_at" javaType="java.time.LocalDateTime"/>
@@ -65,7 +65,7 @@
 
     <!--결제 완료 후 파티 운영 시작 시 현재 ACTIVE 파티원들을 운영 멤버로 초기 셋팅-->
     <insert id="insert"
-            parameterType="pbl2.sub119.backend.partyoperation.entity.PartyOperationMember"
+            parameterType="pbl2.sub119.backend.party.provision.entity.PartyProvisionMember"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO party_operation_member

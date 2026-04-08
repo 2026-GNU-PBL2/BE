@@ -3,15 +3,15 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.partyoperation.mapper.PartyOperationMapper">
+<mapper namespace="pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper">
 
-    <resultMap id="partyOperationResultMap" type="pbl2.sub119.backend.partyoperation.entity.PartyOperation">
+    <resultMap id="partyOperationResultMap" type="pbl2.sub119.backend.party.provision.entity.PartyProvision">
         <id property="id" column="id"/>
         <result property="partyId" column="party_id"/>
         <result property="operationType" column="operation_type"
-                javaType="pbl2.sub119.backend.partyoperation.enumerated.OperationType"/>
+                javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionType"/>
         <result property="operationStatus" column="operation_status"
-                javaType="pbl2.sub119.backend.partyoperation.enumerated.OperationStatus"/>
+                javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus"/>
         <result property="inviteValue" column="invite_value"/>
         <result property="sharedAccountEmail" column="shared_account_email"/>
         <result property="sharedAccountPasswordEncrypted" column="shared_account_password_encrypted"/>
@@ -60,7 +60,7 @@
 
     <!-- 파티장이 파티 운영 정보 최초 생성 -->
     <insert id="insert"
-            parameterType="pbl2.sub119.backend.partyoperation.entity.PartyOperation"
+            parameterType="pbl2.sub119.backend.party.provision.entity.PartyProvision"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO party_operation

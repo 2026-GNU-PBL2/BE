@@ -17,6 +17,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.dto.request.PartyCreateRequest;
 import pbl2.sub119.backend.party.dto.response.PartyCreateResponse;
+import pbl2.sub119.backend.party.dto.response.PartyCycleResponse;
 import pbl2.sub119.backend.party.dto.response.PartyDetailResponse;
 import pbl2.sub119.backend.party.dto.response.PartyListResponse;
 
@@ -115,6 +116,30 @@ public interface PartyDocs {
     )
     @PostMapping("/{partyId}/join")
     ResponseEntity<Void> joinParty(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @PathVariable Long partyId
+    );
+
+    @Operation(
+            summary = "파티 이용 주기 조회",
+            description = """
+                    파티의 공통 결제일 기준 이용 기간을 조회합니다.
+                    
+                    - 현재 이용 시작일
+                    - 현재 이용 종료일
+                    - 다음 결제일
+                    - 종료 예정 여부
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공",
+                            content = @Content(schema = @Schema(implementation = PartyCycleResponse.class))
+                    )
+            }
+    )
+    @GetMapping("/{partyId}/cycle")
+    ResponseEntity<PartyCycleResponse> getPartyCycle(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId
     );
