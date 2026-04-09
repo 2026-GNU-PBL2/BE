@@ -25,24 +25,24 @@ import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 public class PartyProvisionQueryService {
 
     private final PartyMapper partyMapper;
-    private final PartyProvisionMapper partyOperationMapper;
-    private final PartyProvisionMemberMapper partyOperationMemberMapper;
+    private final PartyProvisionMapper partyProvisionMapper;
+    private final PartyProvisionMemberMapper partyProvisionMemberMapper;
     private final CryptoUtil cryptoUtil;
 
-    // 파티 운영이 어디까지 진행됐는지 대시보드 조회
-    public PartyProvisionDashboardResponse getOperationDashboard(
+    // 파티 provision 전체 현황 조회
+    public PartyProvisionDashboardResponse getProvisionDashboard(
             final Long userId,
             final Long partyId
     ) {
-        validatePartyMember(partyId, userId);
+        validateProvisionMember(partyId, userId);
 
-        final PartyProvision operation = partyOperationMapper.findByPartyId(partyId);
-        if (operation == null) {
+        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
+        if (provision == null) {
             throw new PartyException(ErrorCode.NOT_FOUND);
         }
 
         final List<PartyProvisionMemberResponse> members =
-                partyOperationMemberMapper.findResponsesByPartyOperationId(operation.getId());
+                partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId());
 
         final int totalMemberCount = members.size();
 
@@ -51,24 +51,24 @@ public class PartyProvisionQueryService {
                 .count();
 
         return new PartyProvisionDashboardResponse(
-                operation.getId(),
-                operation.getPartyId(),
-                operation.getOperationType(),
-                operation.getOperationStatus(),
-                operation.getInviteValue(),
-                maskEmail(operation.getSharedAccountEmail()),
-                operation.getOperationGuide(),
+                provision.getId(),
+                provision.getPartyId(),
+                provision.getOperationType(),
+                provision.getOperationStatus(),
+                provision.getInviteValue(),
+                maskEmail(provision.getSharedAccountEmail()),
+                provision.getOperationGuide(),
                 totalMemberCount,
                 activeMemberCount,
-                operation.getOperationStartedAt(),
-                operation.getOperationCompletedAt(),
-                operation.getLastResetAt(),
+                provision.getOperationStartedAt(),
+                provision.getOperationCompletedAt(),
+                provision.getLastResetAt(),
                 members
         );
     }
 
-    // 파티장이 전체 멤버 상태 확인
-    public List<PartyProvisionMemberResponse> getOperationMembers(
+    // 파티장이 provision 멤버 상태 목록 조회
+    public List<PartyProvisionMemberResponse> getProvisionMembers(
             final Long userId,
             final Long partyId
     ) {
@@ -83,25 +83,25 @@ public class PartyProvisionQueryService {
             throw new PartyException(ErrorCode.PARTY_HOST_ONLY);
         }
 
-        final PartyProvision operation = partyOperationMapper.findByPartyId(partyId);
+        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
 
-        if (operation == null) {
+        if (provision == null) {
             throw new PartyException(ErrorCode.NOT_FOUND);
         }
 
-        return partyOperationMemberMapper.findResponsesByPartyOperationId(operation.getId());
+        return partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId());
     }
 
-    // 파티 소속 여부 검증
-    private void validatePartyMember(final Long partyId, final Long userId) {
-        final Integer count = partyOperationMemberMapper.countByPartyIdAndUserId(partyId, userId);
+    // 파티 소속 여부 확인
+    private void validateProvisionMember(final Long partyId, final Long userId) {
+        final Integer count = partyProvisionMemberMapper.countByPartyIdAndUserId(partyId, userId);
 
         if (count == null || count == 0) {
             throw new PartyException(ErrorCode.PARTY_LEAVE_FORBIDDEN);
         }
     }
 
-    // 계정 이메일 마스킹
+    // 공유계정 이메일 마스킹
     private String maskEmail(final String email) {
         if (email == null || email.isBlank()) {
             return null;
@@ -116,71 +116,67 @@ public class PartyProvisionQueryService {
         return email.substring(0, 2) + "***" + email.substring(atIndex);
     }
 
-    // 본인이 포함된 파티 운영 상태 조회
-    public PartyProvisionMeResponse getMyOperationInfo(
+    // 본인에게 필요한 provision 정보 조회
+    public PartyProvisionMeResponse getMyProvisionInfo(
             final Long userId,
             final Long partyId
     ) {
-        final PartyProvisionMember operationMember =
-                partyOperationMemberMapper.findByPartyIdAndUserId(partyId, userId);
+        final PartyProvisionMember provisionMember =
+                partyProvisionMemberMapper.findByPartyIdAndUserId(partyId, userId);
 
-        // 파티 운영 멤버만 조회 가능
-        if (operationMember == null) {
+        // provision 대상 멤버만 조회 가능
+        if (provisionMember == null) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_MEMBER_NOT_FOUND);
         }
 
-        // 파티 상태가 WAITING이면 운영 정보 조회 불가능
-        validateReadableMemberStatus(operationMember);
+        // 아직 안내를 볼 수 없는 상태는 차단
+        validateReadableMemberStatus(provisionMember);
 
-        // 운영 정보 조회
-        final PartyProvision operation = partyOperationMapper.findByPartyId(partyId);
+        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
 
-        if (operation == null) {
+        if (provision == null) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);
         }
 
-        // 계정 링크
         final String inviteValue =
-                operation.getOperationType() == ProvisionType.INVITE_LINK
-                        ? operation.getInviteValue()
+                provision.getOperationType() == ProvisionType.INVITE_LINK
+                        ? provision.getInviteValue()
                         : null;
 
-        // 공유 계정 이메일
         final String sharedAccountEmail =
-                operation.getOperationType() == ProvisionType.ACCOUNT_SHARED
-                        ? operation.getSharedAccountEmail()
+                provision.getOperationType() == ProvisionType.ACCOUNT_SHARED
+                        ? provision.getSharedAccountEmail()
                         : null;
 
-        // 공유 계정 비밀번호
         final String sharedAccountPassword =
-                operation.getOperationType() == ProvisionType.ACCOUNT_SHARED
-                        ? decryptSharedPassword(operation.getSharedAccountPasswordEncrypted())
+                provision.getOperationType() == ProvisionType.ACCOUNT_SHARED
+                        ? decryptSharedPassword(provision.getSharedAccountPasswordEncrypted())
                         : null;
 
         return new PartyProvisionMeResponse(
-                operation.getId(),
-                operation.getPartyId(),
-                operation.getOperationType(),
-                operation.getOperationStatus(),
-                operationMember.getMemberStatus(),
+                provision.getId(),
+                provision.getPartyId(),
+                provision.getOperationType(),
+                provision.getOperationStatus(),
+                provisionMember.getMemberStatus(),
                 inviteValue,
                 sharedAccountEmail,
                 sharedAccountPassword,
-                operation.getOperationGuide(),
-                operation.getOperationStartedAt(),
-                operation.getOperationCompletedAt(),
-                operation.getLastResetAt()
+                provision.getOperationGuide(),
+                provision.getOperationStartedAt(),
+                provision.getOperationCompletedAt(),
+                provision.getLastResetAt()
         );
     }
 
-    // 상태 유효성 검사
-    private void validateReadableMemberStatus(final PartyProvisionMember operationMember) {
-        if (operationMember.getMemberStatus() == ProvisionMemberStatus.WAITING) {
+    // 안내를 볼 수 있는 상태인지 확인
+    private void validateReadableMemberStatus(final PartyProvisionMember provisionMember) {
+        if (provisionMember.getMemberStatus() == ProvisionMemberStatus.WAITING) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_READABLE);
         }
     }
 
-    // 복호화
+    // 공유계정 비밀번호 복호화
     private String decryptSharedPassword(final String encryptedPassword) {
         if (encryptedPassword == null || encryptedPassword.isBlank()) {
             return null;

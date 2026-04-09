@@ -5,18 +5,19 @@ import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
 
+// 본인에게 필요한 이용 정보 응답
 public record PartyProvisionMeResponse(
-        Long operationId,
+        Long provisionId,
         Long partyId,
-        ProvisionType operationType,
-        ProvisionStatus operationStatus,
+        ProvisionType provisionType,
+        ProvisionStatus provisionStatus,
         ProvisionMemberStatus memberStatus,
         String inviteValue,
         String sharedAccountEmail,
         String sharedAccountPassword,
-        String operationGuide,
-        LocalDateTime operationStartedAt,
-        LocalDateTime operationCompletedAt,
+        String provisionGuide,
+        LocalDateTime provisionStartedAt,
+        LocalDateTime provisionCompletedAt,
         LocalDateTime lastResetAt
 ) {
 }

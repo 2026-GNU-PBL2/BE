@@ -5,24 +5,24 @@
 
 <mapper namespace="pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper">
 
-    <resultMap id="partyOperationMemberResultMap" type="pbl2.sub119.backend.party.provision.entity.PartyProvisionMember">
-        <id property="id" column="id"/>
-        <result property="partyOperationId" column="party_operation_id"/>
-        <result property="partyMemberId" column="party_member_id"/>
-        <result property="partyId" column="party_id"/>
-        <result property="userId" column="user_id"/>
-        <result property="memberStatus" column="member_status"
-                javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
-        <result property="inviteSentAt" column="invite_sent_at"/>
-        <result property="mustCompleteBy" column="must_complete_by"/>
-        <result property="confirmedAt" column="confirmed_at"/>
-        <result property="completedAt" column="completed_at"/>
-        <result property="activatedAt" column="activated_at"/>
-        <result property="lastResetAt" column="last_reset_at"/>
-        <result property="penaltyApplied" column="penalty_applied"/>
-        <result property="operationMessage" column="operation_message"/>
-        <result property="createdAt" column="created_at"/>
-        <result property="updatedAt" column="updated_at"/>
+    <resultMap id="partyOperationMemberResponseResultMap"
+               type="pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse">
+        <constructor>
+            <idArg column="id" javaType="java.lang.Long"/>
+            <arg column="party_member_id" javaType="java.lang.Long"/>
+            <arg column="user_id" javaType="java.lang.Long"/>
+            <arg column="nickname" javaType="java.lang.String"/>
+            <arg column="member_status"
+                 javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
+            <arg column="invite_sent_at" javaType="java.time.LocalDateTime"/>
+            <arg column="must_complete_by" javaType="java.time.LocalDateTime"/>
+            <arg column="confirmed_at" javaType="java.time.LocalDateTime"/>
+            <arg column="completed_at" javaType="java.time.LocalDateTime"/>
+            <arg column="activated_at" javaType="java.time.LocalDateTime"/>
+            <arg column="last_reset_at" javaType="java.time.LocalDateTime"/>
+            <arg column="penalty_applied" javaType="Boolean"/>
+            <arg column="operation_message" javaType="java.lang.String"/>
+        </constructor>
     </resultMap>
 
     <resultMap id="partyOperationMemberResponseResultMap"
@@ -143,21 +143,23 @@
     <!--파티장/파티원이 운영 현황 확인할 때 전체 멤버 상태 리스트 반환-->
     <select id="findResponsesByPartyOperationId" resultMap="partyOperationMemberResponseResultMap">
         SELECT
-            id,
-            party_member_id,
-            user_id,
-            member_status,
-            invite_sent_at,
-            must_complete_by,
-            confirmed_at,
-            completed_at,
-            activated_at,
-            last_reset_at,
-            penalty_applied,
-            operation_message
-        FROM party_operation_member
-        WHERE party_operation_id = #{partyOperationId}
-        ORDER BY id ASC
+            pom.id,
+            pom.party_member_id,
+            pom.user_id,
+            u.nickname,
+            pom.member_status,
+            pom.invite_sent_at,
+            pom.must_complete_by,
+            pom.confirmed_at,
+            pom.completed_at,
+            pom.activated_at,
+            pom.last_reset_at,
+            pom.penalty_applied,
+            pom.operation_message
+        FROM party_operation_member pom
+                 INNER JOIN users u ON u.id = pom.user_id
+        WHERE pom.party_operation_id = #{partyOperationId}
+        ORDER BY pom.id ASC
     </select>
 
     <!--운영 진행률 계산할 때 전체 멤버 수 집계-->

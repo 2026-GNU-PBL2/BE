@@ -3,10 +3,12 @@ package pbl2.sub119.backend.party.provision.dto.response;
 import java.time.LocalDateTime;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
 
+// 이용 대상 멤버 상태 응답
 public record PartyProvisionMemberResponse(
-        Long partyOperationMemberId,
+        Long provisionMemberId,
         Long partyMemberId,
         Long userId,
+        String nickname,
         ProvisionMemberStatus memberStatus,
         LocalDateTime inviteSentAt,
         LocalDateTime mustCompleteBy,
@@ -15,6 +17,6 @@ public record PartyProvisionMemberResponse(
         LocalDateTime activatedAt,
         LocalDateTime lastResetAt,
         Boolean penaltyApplied,
-        String operationMessage
+        String provisionMessage
 ) {
 }
