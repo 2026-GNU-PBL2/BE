@@ -1,20 +1,40 @@
 package pbl2.sub119.backend.bankaccounts.entity;
 
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import pbl2.sub119.backend.bankaccounts.enums.AccountType;
+import pbl2.sub119.backend.bankaccounts.enums.VerificationStatus;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class BankAccount {
-    private Long id;                  // PK
-    private Long userId;              // 사용자 FK
-    private String fintechUseNum;     // 핀테크이용번호
-    private String accessToken;       // OAuth 접근 토큰
-    private String refreshToken;      // OAuth 갱신 토큰
-    private String bankTranId;        // 은행거래고유번호
-    private String bankName;          // 은행명
-    private String accountAlias;      // 계좌 별칭
-    private String accountNumMasked;  // 마스킹된 계좌번호
-    private Long balanceAmt;          // 계좌 잔액
+    private Long id;
+    private Long userId;
+    private String fintechUseNum;
+    private String accessToken;
+    private String refreshToken;
+    private String bankTranId;
+    private String bankName;
+    private String accountAlias;
+    private String accountNumMasked;
+    private Long balanceAmt;
+
+    private String bankCode;
+    private String accountNumber;
+    private String accountHolderName;
+    private String accountHolderBirthDate;
+    private AccountType accountType;
+    private Boolean isPrimary;
+    private VerificationStatus verificationStatus;
+    private LocalDateTime verifiedAt;
+    private LocalDateTime lastVerifiedAt;
+    private String failReason;
+    private LocalDateTime updatedAt;
 }

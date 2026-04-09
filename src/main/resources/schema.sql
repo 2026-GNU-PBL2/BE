@@ -5,11 +5,13 @@ CREATE TABLE test (
     amount BIGINT
 );
 
---bankAccount (2026.01.26 / kyh)
+--bankAccount (2026.04.09 / kyh)
+DROP TABLE IF EXISTS bank_accounts;
+
 CREATE TABLE IF NOT EXISTS bank_accounts (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    fintech_use_num VARCHAR(24) NOT NULL,
+                                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                             user_id BIGINT NOT NULL,
+                                             fintech_use_num VARCHAR(24) NOT NULL,
     access_token VARCHAR(1000) NOT NULL,
     refresh_token VARCHAR(1000) NOT NULL,
     bank_tran_id VARCHAR(20),
@@ -17,8 +19,26 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
     account_alias VARCHAR(100),
     account_num_masked VARCHAR(20),
     balance_amt BIGINT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+
+    bank_code VARCHAR(10),
+    account_number VARCHAR(50),
+    account_holder_name VARCHAR(100),
+    account_holder_birth_date CHAR(8),
+    account_type VARCHAR(20),
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    verified_at TIMESTAMP NULL,
+    last_verified_at TIMESTAMP NULL,
+    fail_reason VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_bank_accounts_user_fintech
+    ON bank_accounts(user_id, fintech_use_num);
+
+CREATE INDEX IF NOT EXISTS idx_bank_accounts_user_primary
+    ON bank_accounts(user_id, is_primary);
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_bank_accounts_user_fintech
     ON bank_accounts(user_id, fintech_use_num);

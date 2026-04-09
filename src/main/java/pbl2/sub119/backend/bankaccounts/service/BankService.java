@@ -1,38 +1,47 @@
 package pbl2.sub119.backend.bankaccounts.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-import pbl2.sub119.backend.bankaccounts.config.KftcProperties;
+import pbl2.sub119.backend.bankaccounts.client.KftcApiClient;
+import pbl2.sub119.backend.bankaccounts.dto.KftcAccountRealNameResponse;
 import pbl2.sub119.backend.bankaccounts.dto.KftcTokenResponse;
 import pbl2.sub119.backend.bankaccounts.dto.KftcUserInfoResponse;
+import pbl2.sub119.backend.bankaccounts.dto.request.RegisterSettlementAccountRequest;
+import pbl2.sub119.backend.bankaccounts.dto.response.BankAccountSummaryResponse;
+import pbl2.sub119.backend.bankaccounts.dto.response.PrimaryBankAccountResponse;
 import pbl2.sub119.backend.bankaccounts.entity.BankAccount;
+import pbl2.sub119.backend.bankaccounts.enums.VerificationStatus;
 import pbl2.sub119.backend.bankaccounts.mapper.BankMapper;
+import pbl2.sub119.backend.common.exception.BusinessException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_VERIFICATION_FAILED;
+import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED;
+import static pbl2.sub119.backend.common.error.ErrorCode.BANK_CONNECTED_ACCOUNT_NOT_FOUND;
+import static pbl2.sub119.backend.common.error.ErrorCode.BANK_PRIMARY_ACCOUNT_NOT_FOUND;
+import static pbl2.sub119.backend.common.error.ErrorCode.BANK_SETTLEMENT_ACCOUNT_REGISTER_FAILED;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BankService {
 
-    private final WebClient webClient;
     private final BankMapper bankMapper;
-    private final KftcProperties kftcProperties;
-    private final ObjectMapper objectMapper;
+    private final KftcApiClient kftcApiClient;
 
     @Transactional
     public void registerAccount(Long userId, String code) {
-        log.info("KFTC 계좌 인증 시작  userId={}", userId);
+        log.info("KFTC account registration started. userId={}", userId);
 
-        KftcTokenResponse tokenResponse = requestToken(code);
-        KftcUserInfoResponse userInfo = requestUserInfo(tokenResponse);
+        KftcTokenResponse tokenResponse = kftcApiClient.requestToken(code);
+        KftcUserInfoResponse userInfo = kftcApiClient.requestUserInfo(tokenResponse);
 
         if (userInfo.getResList() == null || userInfo.getResList().isEmpty()) {
-            log.warn("KFTC 계좌 목록이 비어있음. userId={}", userId);
+            log.warn("KFTC account list is empty. userId={}", userId);
             return;
         }
 
@@ -61,43 +70,125 @@ public class BankService {
             processedCount++;
         }
 
-        log.info("KFTC 계좌 인증 완료. userId={}, accountCount={}", userId, processedCount);
+        log.info("KFTC account registration completed. userId={}, accountCount={}", userId, processedCount);
     }
 
-    private KftcTokenResponse requestToken(String code) {
-        try {
-            String tokenJson = webClient.post()
-                    .uri(kftcProperties.getBaseUrl() + "/oauth/2.0/token")
-                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                    .body(BodyInserters.fromFormData("code", code)
-                            .with("client_id", kftcProperties.getClientId())
-                            .with("client_secret", kftcProperties.getClientSecret())
-                            .with("redirect_uri", kftcProperties.getRedirectUrl())
-                            .with("grant_type", "authorization_code"))
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+    @Transactional
+    public void registerSettlementAccount(Long userId, RegisterSettlementAccountRequest request) {
+        BankAccount connectedAccount = bankMapper.findByUserIdAndFintechUseNum(userId, request.getFintechUseNum());
+        if (connectedAccount == null) {
+            throw new BusinessException(BANK_CONNECTED_ACCOUNT_NOT_FOUND);
+        }
 
-            return objectMapper.readValue(tokenJson, KftcTokenResponse.class);
+        LocalDateTime now = LocalDateTime.now();
+        boolean isPrimary = Boolean.TRUE.equals(request.getIsPrimary());
+
+        if (isPrimary) {
+            bankMapper.clearPrimaryByUserId(userId);
+        }
+
+        BankAccount bankAccount = BankAccount.builder()
+                .userId(userId)
+                .fintechUseNum(request.getFintechUseNum())
+                .bankCode(request.getBankCode())
+                .accountNumber(request.getAccountNumber())
+                .accountHolderName(request.getAccountHolderName())
+                .accountHolderBirthDate(request.getAccountHolderBirthDate())
+                .accountType(request.getAccountType())
+                .isPrimary(isPrimary)
+                .verificationStatus(VerificationStatus.PENDING)
+                .verifiedAt(null)
+                .lastVerifiedAt(now)
+                .failReason(null)
+                .updatedAt(now)
+                .build();
+
+        int updated = bankMapper.updateSettlementAccountMeta(bankAccount);
+        if (updated != 1) {
+            throw new BusinessException(BANK_SETTLEMENT_ACCOUNT_REGISTER_FAILED);
+        }
+
+        try {
+            KftcAccountRealNameResponse realNameResponse = kftcApiClient.requestAccountRealName(
+                    connectedAccount.getAccessToken(),
+                    request.getBankCode(),
+                    request.getAccountNumber(),
+                    request.getAccountHolderBirthDate(),
+                    connectedAccount.getBankTranId()
+            );
+
+            boolean nameMatched = normalizeName(request.getAccountHolderName())
+                    .equals(normalizeName(realNameResponse.getAccountHolderName()));
+            boolean verified = realNameResponse.isSuccess() && nameMatched;
+
+            if (verified) {
+                bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
+                log.info("Settlement account verified. userId={}, fintechUseNum={}", userId, request.getFintechUseNum());
+                return;
+            }
+
+            String failReason = realNameResponse.getRspMessage();
+            if (!nameMatched) {
+                failReason = "예금주명이 일치하지 않습니다.";
+            }
+
+            bankMapper.updateVerificationFailure(
+                    userId,
+                    request.getFintechUseNum(),
+                    trimFailReason(failReason)
+            );
+
+            log.warn("Settlement account verification failed. userId={}, fintechUseNum={}",
+                    userId, request.getFintechUseNum());
+
+            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_FAILED);
+
+        } catch (BusinessException e) {
+            if (e.getErrorCode() == BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED) {
+                bankMapper.updateVerificationFailure(
+                        userId,
+                        request.getFintechUseNum(),
+                        trimFailReason(e.getErrorCode().getMessage())
+                );
+            }
+            throw e;
         } catch (Exception e) {
-            log.error("KFTC 토큰 요청 실패", e);
-            throw new RuntimeException("오픈뱅킹 토큰 요청 실패", e);
+            bankMapper.updateVerificationFailure(
+                    userId,
+                    request.getFintechUseNum(),
+                    trimFailReason(e.getMessage())
+            );
+            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
         }
     }
 
-    private KftcUserInfoResponse requestUserInfo(KftcTokenResponse tokenResponse) {
-        try {
-            String userJson = webClient.get()
-                    .uri(kftcProperties.getBaseUrl() + "/v2.0/user/me?user_seq_no=" + tokenResponse.getUserSeqNo())
-                    .header("Authorization", "Bearer " + tokenResponse.getAccessToken())
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+    @Transactional(readOnly = true)
+    public List<BankAccountSummaryResponse> getAccounts(Long userId) {
+        return bankMapper.findAllByUserId(userId).stream()
+                .map(BankAccountSummaryResponse::from)
+                .toList();
+    }
 
-            return objectMapper.readValue(userJson, KftcUserInfoResponse.class);
-        } catch (Exception e) {
-            log.error("KFTC 사용자 정보 조회 실패", e);
-            throw new RuntimeException("오픈뱅킹 사용자 정보 조회 실패", e);
+    @Transactional(readOnly = true)
+    public PrimaryBankAccountResponse getPrimaryAccount(Long userId) {
+        BankAccount primary = bankMapper.findPrimaryByUserId(userId);
+        if (primary == null) {
+            throw new BusinessException(BANK_PRIMARY_ACCOUNT_NOT_FOUND);
         }
+        return PrimaryBankAccountResponse.from(primary);
+    }
+
+    private String normalizeName(String name) {
+        if (name == null) {
+            return "";
+        }
+        return name.replace(" ", "").trim();
+    }
+
+    private String trimFailReason(String failReason) {
+        if (failReason == null || failReason.isBlank()) {
+            return "계좌 검증에 실패했습니다.";
+        }
+        return failReason.length() > 250 ? failReason.substring(0, 250) : failReason;
     }
 }
