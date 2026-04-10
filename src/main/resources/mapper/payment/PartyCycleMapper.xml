@@ -102,6 +102,14 @@
           AND status = #{expectedStatus}
     </update>
 
+    <update id="updateMemberCountSnapshot">
+        UPDATE party_cycle
+        SET member_count_snapshot = #{memberCountSnapshot},
+            updated_at = NOW()
+        WHERE id = #{partyCycleId}
+          AND status = #{expectedStatus}
+    </update>
+
     <insert id="save"
             parameterType="pbl2.sub119.backend.payment.entity.PartyCycle"
             useGeneratedKeys="true"
@@ -130,12 +138,5 @@
                      #{updatedAt}
                  )
     </insert>
-
-    <update id="updateMemberCountSnapshot">
-        UPDATE party_cycle
-        SET member_count_snapshot = #{memberCountSnapshot},
-            updated_at = NOW()
-        WHERE id = #{partyCycleId}
-    </update>
 
 </mapper>

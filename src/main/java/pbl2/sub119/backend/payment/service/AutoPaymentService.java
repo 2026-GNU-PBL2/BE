@@ -144,7 +144,16 @@ public class AutoPaymentService {
 
     private void refreshRecurringSnapshot(Long partyId, Long partyCycleId) {
         int billableMemberCount = partyCycleService.countRecurringBillableMembers(partyId);
-        partyCycleMapper.updateMemberCountSnapshot(partyCycleId, billableMemberCount);
+
+        int updated = partyCycleMapper.updateMemberCountSnapshot(
+                partyCycleId,
+                billableMemberCount,
+                PartyCycleStatus.PROCESSING
+        );
+
+        if (updated != 1) {
+            throw new IllegalStateException("party_cycle snapshot 갱신 실패. partyCycleId=" + partyCycleId);
+        }
 
         log.info("반복회차 snapshot 재동기화 완료. partyId={}, partyCycleId={}, memberCountSnapshot={}",
                 partyId, partyCycleId, billableMemberCount);
