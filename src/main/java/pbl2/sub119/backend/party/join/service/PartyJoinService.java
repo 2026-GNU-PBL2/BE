@@ -6,16 +6,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.party.entity.Party;
-import pbl2.sub119.backend.party.entity.PartyMember;
-import pbl2.sub119.backend.party.enumerated.PartyHistoryEventType;
-import pbl2.sub119.backend.party.enumerated.PartyMemberStatus;
-import pbl2.sub119.backend.party.enumerated.PartyRole;
-import pbl2.sub119.backend.party.enumerated.RecruitStatus;
-import pbl2.sub119.backend.party.exception.PartyException;
-import pbl2.sub119.backend.party.mapper.PartyMapper;
-import pbl2.sub119.backend.party.mapper.PartyMemberMapper;
-import pbl2.sub119.backend.party.service.PartyHistoryService;
+import pbl2.sub119.backend.party.common.entity.Party;
+import pbl2.sub119.backend.party.common.entity.PartyMember;
+import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
+import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
+import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.common.service.PartyHistoryService;
+import pbl2.sub119.backend.party.common.exception.PartyException;
+import pbl2.sub119.backend.party.common.mapper.PartyMapper;
+import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 
 @Service
 @RequiredArgsConstructor

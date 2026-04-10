@@ -3,10 +3,11 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.party.mapper.PartyHistoryMapper">
+<mapper namespace="pbl2.sub119.backend.party.common.mapper.PartyHistoryMapper">
 
+    <!-- 파티 이력 저장 -->
     <insert id="insertHistory"
-            parameterType="pbl2.sub119.backend.party.entity.PartyHistory"
+            parameterType="pbl2.sub119.backend.party.common.entity.PartyHistory"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO party_history (

@@ -25,7 +25,17 @@ public interface PartyLeaveDocs {
             summary = "탈퇴 예약",
             description = """
                     현재 이용 중인 파티에서 다음 결제일 기준으로 탈퇴를 예약합니다.
-                    파티원 탈퇴 예약 시 파티원 결원, 파티장 탈퇴 예약 시 파티장 결원으로 반영됩니다.
+
+                    안내
+                    - 이 API를 호출해도 즉시 탈퇴되지는 않습니다.
+                    - 다음 결제일에 새로운 이용 주기가 시작될 때 탈퇴가 반영됩니다.
+                    - 파티원 탈퇴 예약 시 파티원 결원으로 반영됩니다.
+                    - 파티장 탈퇴 예약 시 파티장 결원으로 반영됩니다.
+
+                    상태값 안내
+                    - ACTIVE : 현재 정상 이용 중
+                    - LEAVE_RESERVED : 다음 결제일 기준 탈퇴 예약된 상태
+                    - LEFT : 실제 이용 종료가 반영된 상태
                     """,
             responses = {
                     @ApiResponse(
@@ -43,7 +53,12 @@ public interface PartyLeaveDocs {
 
     @Operation(
             summary = "탈퇴 예약 취소",
-            description = "등록한 탈퇴 예약을 취소하고 기존 이용 상태로 되돌립니다.",
+            description = """
+                    등록한 탈퇴 예약을 취소하고 기존 이용 상태로 되돌립니다.
+
+                    상태값 안내
+                    - LEAVE_RESERVED 상태에서 취소하면 다시 ACTIVE 로 돌아갑니다.
+                    """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "탈퇴 예약 취소 성공")
             }
@@ -56,7 +71,16 @@ public interface PartyLeaveDocs {
 
     @Operation(
             summary = "탈퇴 예약 멤버 목록 조회",
-            description = "파티장이 현재 탈퇴 예약된 멤버 목록을 조회합니다.",
+            description = """
+                    파티장이 현재 탈퇴 예약된 멤버 목록을 조회합니다.
+
+                    이 API는 아래 화면에서 사용합니다.
+                    - 파티장 파티 관리 화면
+                    - 다음 회차에 결원이 발생할 멤버를 확인하는 화면
+
+                    상태값 안내
+                    - LEAVE_RESERVED : 다음 결제일 기준으로 탈퇴가 예약된 멤버
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",

@@ -27,7 +27,13 @@ public interface PartyVacancyDocs {
 
     @Operation(
             summary = "파티원 결원 파티 목록 조회",
-            description = "현재 파티원을 찾고 있는 결원 파티 목록을 조회합니다.",
+            description = """
+                    현재 파티원을 찾고 있는 결원 파티 목록을 조회합니다.
+
+                    이 API는 아래 화면에서 사용합니다.
+                    - 파티 참여 희망자가 결원 파티를 찾는 화면
+                    - 바로 참여 가능한 파티를 비교하는 화면
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -45,7 +51,13 @@ public interface PartyVacancyDocs {
 
     @Operation(
             summary = "결원 파티 상세 조회",
-            description = "직접 참여 전에 결원 파티의 상품 정보, 인원 현황, 결제 금액을 확인합니다.",
+            description = """
+                    파티 참여 희망자가 직접 참여 전에 결원 파티의 상품 정보, 인원 현황, 결제 금액을 확인합니다.
+
+                    이 API는 아래 화면에서 사용합니다.
+                    - 결원 파티 상세 안내 화면
+                    - 직접 참여 전 최종 확인 화면
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -61,7 +73,13 @@ public interface PartyVacancyDocs {
 
     @Operation(
             summary = "결원 파티 직접 참여",
-            description = "바로 참여 가능한 결원 파티에 직접 참여합니다.",
+            description = """
+                    바로 참여 가능한 결원 파티에 직접 참여합니다.
+
+                    상태값 안내
+                    - 참여 성공 시 해당 파티의 멤버로 등록됩니다.
+                    - 참여 가능한 자리가 없으면 실패할 수 있습니다.
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",

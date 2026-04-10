@@ -5,11 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.party.entity.MatchWaitingQueue;
-import pbl2.sub119.backend.party.enumerated.MatchWaitingStatus;
-import pbl2.sub119.backend.party.exception.PartyException;
+import pbl2.sub119.backend.party.common.entity.MatchWaitingQueue;
+import pbl2.sub119.backend.party.common.enumerated.MatchWaitingStatus;
+import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.join.dto.response.PartyJoinMeResponse;
-import pbl2.sub119.backend.party.mapper.MatchWaitingQueueMapper;
+import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
 

@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.party.mapper.PartyMapper">
+<mapper namespace="pbl2.sub119.backend.party.common.mapper.PartyMapper">
 
-    <resultMap id="partyResultMap" type="pbl2.sub119.backend.party.entity.Party">
+    <resultMap id="partyResultMap" type="pbl2.sub119.backend.party.common.entity.Party">
         <id property="id" column="id"/>
         <result property="productId" column="product_id"/>
         <result property="hostUserId" column="host_user_id"/>
@@ -21,7 +21,7 @@
     </resultMap>
 
     <!-- 새 멤버 등록 -->
-    <insert id="insertParty" parameterType="pbl2.sub119.backend.party.entity.Party" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertParty" parameterType="pbl2.sub119.backend.party.common.entity.Party" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO party (
             product_id,
             host_user_id,

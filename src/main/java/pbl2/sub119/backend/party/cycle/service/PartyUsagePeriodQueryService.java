@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.cycle.dto.response.PartyUsagePeriodResponse;
-import pbl2.sub119.backend.party.exception.PartyException;
+import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 

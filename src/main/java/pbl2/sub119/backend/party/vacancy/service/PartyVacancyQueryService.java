@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.party.exception.PartyException;
+import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.vacancy.dto.response.MemberVacancyPartyResponse;
 import pbl2.sub119.backend.party.vacancy.dto.response.PartyVacancyDetailResponse;
 import pbl2.sub119.backend.party.vacancy.mapper.PartyVacancyQueryMapper;

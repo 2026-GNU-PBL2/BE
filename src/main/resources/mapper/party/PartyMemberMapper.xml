@@ -3,16 +3,16 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.party.mapper.PartyMemberMapper">
+<mapper namespace="pbl2.sub119.backend.party.common.mapper.PartyMemberMapper">
 
-    <resultMap id="partyMemberResultMap" type="pbl2.sub119.backend.party.entity.PartyMember">
+    <resultMap id="partyMemberResultMap" type="pbl2.sub119.backend.party.common.entity.PartyMember">
         <id property="id" column="id"/>
         <result property="partyId" column="party_id"/>
         <result property="userId" column="user_id"/>
         <result property="role" column="role"
-                javaType="pbl2.sub119.backend.party.enumerated.PartyRole"/>
+                javaType="pbl2.sub119.backend.party.common.enumerated.PartyRole"/>
         <result property="status" column="status"
-                javaType="pbl2.sub119.backend.party.enumerated.PartyMemberStatus"/>
+                javaType="pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus"/>
         <result property="joinedAt" column="joined_at"/>
         <result property="activatedAt" column="activated_at"/>
         <result property="serviceStartAt" column="service_start_at"/>
@@ -39,7 +39,7 @@
 
     <!--새 멤버 등록-->
     <insert id="insertPartyMember"
-            parameterType="pbl2.sub119.backend.party.entity.PartyMember"
+            parameterType="pbl2.sub119.backend.party.common.entity.PartyMember"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO party_member (
@@ -140,7 +140,7 @@
     </select>
 
     <!--이용 대상 멤버 조회-->
-    <select id="findOperationTargetMembersByPartyId" resultMap="partyMemberResultMap">
+    <select id="findProvisionTargetMembersByPartyId" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
         FROM party_member

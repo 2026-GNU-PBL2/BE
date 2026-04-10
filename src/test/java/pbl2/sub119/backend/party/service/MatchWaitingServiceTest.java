@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import pbl2.sub119.backend.party.dto.response.MatchWaitingRegisterResponse;
-import pbl2.sub119.backend.party.entity.MatchWaitingQueue;
+import pbl2.sub119.backend.party.common.entity.MatchWaitingQueue;
 import pbl2.sub119.backend.party.exception.PartyException;
-import pbl2.sub119.backend.party.mapper.MatchWaitingQueueMapper;
+import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 
 @SpringBootTest
 @ActiveProfiles("local")

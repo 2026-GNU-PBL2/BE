@@ -11,15 +11,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import pbl2.sub119.backend.party.entity.Party;
-import pbl2.sub119.backend.party.entity.PartyMember;
-import pbl2.sub119.backend.party.enumerated.OperationStatus;
-import pbl2.sub119.backend.party.enumerated.PartyMemberStatus;
-import pbl2.sub119.backend.party.enumerated.PartyRole;
-import pbl2.sub119.backend.party.enumerated.RecruitStatus;
-import pbl2.sub119.backend.party.enumerated.VacancyType;
-import pbl2.sub119.backend.party.mapper.PartyMapper;
-import pbl2.sub119.backend.party.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.common.entity.Party;
+import pbl2.sub119.backend.party.common.entity.PartyMember;
+import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
+import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
+import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.common.enumerated.VacancyType;
+import pbl2.sub119.backend.party.common.mapper.PartyMapper;
+import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 
 @SpringBootTest
 @ActiveProfiles("local")

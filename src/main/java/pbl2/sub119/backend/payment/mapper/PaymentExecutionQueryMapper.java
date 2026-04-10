@@ -3,8 +3,8 @@ package pbl2.sub119.backend.payment.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import pbl2.sub119.backend.common.enumerated.BillingKeyStatus;
-import pbl2.sub119.backend.party.enumerated.PartyMemberStatus;
-import pbl2.sub119.backend.party.enumerated.PartyRole;
+import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.payment.dto.PaymentChargeTarget;
 
 import java.util.List;

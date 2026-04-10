@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.party.mapper.HostTransferRequestMapper">
+<mapper namespace="pbl2.sub119.backend.party.common.mapper.HostTransferRequestMapper">
 
-    <resultMap id="hostTransferRequestResultMap" type="pbl2.sub119.backend.party.entity.HostTransferRequest">
+    <resultMap id="hostTransferRequestResultMap" type="pbl2.sub119.backend.party.common.entity.HostTransferRequest">
         <id property="id" column="id"/>
         <result property="partyId" column="party_id"/>
         <result property="requesterUserId" column="requester_user_id"/>
@@ -20,7 +20,7 @@
 
     <!-- 승계 요청 생성 -->
     <insert id="insertHostTransferRequest"
-            parameterType="pbl2.sub119.backend.party.entity.HostTransferRequest"
+            parameterType="pbl2.sub119.backend.party.common.entity.HostTransferRequest"
             useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO host_transfer_request (

@@ -7,7 +7,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
-import pbl2.sub119.backend.party.enumerated.OperationStatus;
+import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;

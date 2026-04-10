@@ -5,24 +5,25 @@
 
 <mapper namespace="pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper">
 
-    <resultMap id="partyOperationMemberResponseResultMap"
-               type="pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse">
-        <constructor>
-            <idArg column="id" javaType="java.lang.Long"/>
-            <arg column="party_member_id" javaType="java.lang.Long"/>
-            <arg column="user_id" javaType="java.lang.Long"/>
-            <arg column="nickname" javaType="java.lang.String"/>
-            <arg column="member_status"
-                 javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
-            <arg column="invite_sent_at" javaType="java.time.LocalDateTime"/>
-            <arg column="must_complete_by" javaType="java.time.LocalDateTime"/>
-            <arg column="confirmed_at" javaType="java.time.LocalDateTime"/>
-            <arg column="completed_at" javaType="java.time.LocalDateTime"/>
-            <arg column="activated_at" javaType="java.time.LocalDateTime"/>
-            <arg column="last_reset_at" javaType="java.time.LocalDateTime"/>
-            <arg column="penalty_applied" javaType="Boolean"/>
-            <arg column="operation_message" javaType="java.lang.String"/>
-        </constructor>
+    <resultMap id="partyOperationMemberResultMap"
+               type="pbl2.sub119.backend.party.provision.entity.PartyProvisionMember">
+        <id property="id" column="id"/>
+        <result property="partyOperationId" column="party_operation_id"/>
+        <result property="partyMemberId" column="party_member_id"/>
+        <result property="partyId" column="party_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="memberStatus" column="member_status"
+                javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
+        <result property="inviteSentAt" column="invite_sent_at"/>
+        <result property="mustCompleteBy" column="must_complete_by"/>
+        <result property="confirmedAt" column="confirmed_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="activatedAt" column="activated_at"/>
+        <result property="lastResetAt" column="last_reset_at"/>
+        <result property="penaltyApplied" column="penalty_applied"/>
+        <result property="operationMessage" column="operation_message"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <resultMap id="partyOperationMemberResponseResultMap"
@@ -31,6 +32,7 @@
             <idArg column="id" javaType="java.lang.Long"/>
             <arg column="party_member_id" javaType="java.lang.Long"/>
             <arg column="user_id" javaType="java.lang.Long"/>
+            <arg column="nickname" javaType="java.lang.String"/>
             <arg column="member_status"
                  javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
             <arg column="invite_sent_at" javaType="java.time.LocalDateTime"/>
@@ -63,7 +65,7 @@
         updated_at
     </sql>
 
-    <!--결제 완료 후 파티 운영 시작 시 현재 ACTIVE 파티원들을 운영 멤버로 초기 셋팅-->
+    <!-- provision 멤버 저장 -->
     <insert id="insert"
             parameterType="pbl2.sub119.backend.party.provision.entity.PartyProvisionMember"
             useGeneratedKeys="true"
@@ -106,13 +108,13 @@
             )
     </insert>
 
-    <!--기존 운영 멤버 전체 삭제 후 재생성-->
+    <!-- 기존 provision 멤버 전체 삭제 -->
     <delete id="deleteByPartyOperationId">
         DELETE FROM party_operation_member
         WHERE party_operation_id = #{partyOperationId}
     </delete>
 
-    <!--특정 멤버 상태 변경할 때 운영 멤버 단건 조회-->
+    <!-- provision 멤버 단건 조회 -->
     <select id="findById" resultMap="partyOperationMemberResultMap">
         SELECT
         <include refid="partyOperationMemberColumns"/>
@@ -121,7 +123,7 @@
         LIMIT 1
     </select>
 
-    <!--파티원이 본인 상태 확인할 때 운영 상태 단건 조회-->
+    <!-- 파티/유저 기준 provision 멤버 조회 -->
     <select id="findByPartyIdAndUserId" resultMap="partyOperationMemberResultMap">
         SELECT
         <include refid="partyOperationMemberColumns"/>
@@ -131,7 +133,7 @@
         LIMIT 1
     </select>
 
-    <!--cycle start 이후 현재 운영 멤버 구성 비교용 조회-->
+    <!-- provision 멤버 구성 전체 조회 -->
     <select id="findByPartyOperationId" resultMap="partyOperationMemberResultMap">
         SELECT
         <include refid="partyOperationMemberColumns"/>
@@ -140,7 +142,7 @@
         ORDER BY id ASC
     </select>
 
-    <!--파티장/파티원이 운영 현황 확인할 때 전체 멤버 상태 리스트 반환-->
+    <!-- provision 멤버 상태 목록 조회 -->
     <select id="findResponsesByPartyOperationId" resultMap="partyOperationMemberResponseResultMap">
         SELECT
             pom.id,
@@ -162,14 +164,14 @@
         ORDER BY pom.id ASC
     </select>
 
-    <!--운영 진행률 계산할 때 전체 멤버 수 집계-->
+    <!-- 전체 provision 멤버 수 조회 -->
     <select id="countByPartyOperationId" resultType="int">
         SELECT COUNT(*)
         FROM party_operation_member
         WHERE party_operation_id = #{partyOperationId}
     </select>
 
-    <!--전원 완료 여부 판단할 때 이용 가능 멤버 수 집계-->
+    <!-- ACTIVE provision 멤버 수 조회 -->
     <select id="countActiveByPartyOperationId" resultType="int">
         SELECT COUNT(*)
         FROM party_operation_member
@@ -177,6 +179,7 @@
           AND member_status = 'ACTIVE'
     </select>
 
+    <!-- 파티/유저 provision 멤버 존재 여부 조회 -->
     <select id="countByPartyIdAndUserId" resultType="int">
         SELECT COUNT(*)
         FROM party_operation_member
@@ -184,7 +187,7 @@
           AND user_id = #{userId}
     </select>
 
-    <!--파티원이 초대 수락 및 계정 설정 완료 시 ACTIVE로 상태 전환 + 이용 가능 처리-->
+    <!-- provision 완료 확인 처리 -->
     <update id="markActive">
         UPDATE party_operation_member
         SET
@@ -196,7 +199,7 @@
         WHERE id = #{id}
     </update>
 
-    <!--결제 주기 변경 및 멤버 변경 발생 시 모든 멤버 상태 초기화 및 재설정 필요 상태로 변경-->
+    <!-- provision 재설정 필요 상태로 일괄 변경 -->
     <update id="markAllResetRequired">
         UPDATE party_operation_member
         SET

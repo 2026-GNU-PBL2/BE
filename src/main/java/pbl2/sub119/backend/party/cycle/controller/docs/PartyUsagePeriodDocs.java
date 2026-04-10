@@ -18,7 +18,19 @@ public interface PartyUsagePeriodDocs {
 
     @Operation(
             summary = "현재 이용 기간 조회",
-            description = "마이파티, 파티 상세, 탈퇴 예약 안내 화면에서 현재 이용 기간과 다음 결제일을 조회합니다.",
+            description = """
+                    현재 이용 중인 파티의 이용 기간과 다음 결제일을 조회합니다.
+
+                    이 API는 아래 화면에서 사용합니다.
+                    - 마이파티 화면
+                    - 탈퇴 예약 안내 화면
+                    - 파티 이용 현황 안내 화면
+
+                    프론트 표시 예시
+                    - 현재 이용 기간
+                    - 다음 결제일
+                    - 탈퇴 예약 시 실제 반영일 안내
+                    """,
             responses = {
                     @ApiResponse(
                             responseCode = "200",
