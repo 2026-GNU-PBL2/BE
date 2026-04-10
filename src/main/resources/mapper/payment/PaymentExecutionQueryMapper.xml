@@ -22,6 +22,15 @@
           AND status = #{memberStatus}
     </select>
 
+    <!-- 반복회차 과금 대상은 상태변이 반영 이후 ACTIVE인 MEMBER만 집계한다. -->
+    <select id="countRecurringBillableMembers" resultType="int">
+        SELECT COUNT(1)
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role = #{memberRole}
+          AND status = 'ACTIVE'
+    </select>
+
     <select id="findChargeTargets" resultMap="PaymentChargeTargetMap">
         SELECT pm.party_id                  AS party_id,
                pc.id                        AS party_cycle_id,
@@ -39,6 +48,28 @@
           AND pc.id = #{partyCycleId}
           AND pm.role = #{memberRole}
           AND pm.status = #{memberStatus}
+          AND bk.status = #{billingKeyStatus}
+        ORDER BY pm.id ASC
+    </select>
+
+    <!-- 반복회차 과금 조회는 ACTIVE인 MEMBER만 대상으로 하고 LEAVE_RESERVED, SWITCH_WAITING은 제외한다. -->
+    <select id="findRecurringChargeTargets" resultMap="PaymentChargeTargetMap">
+        SELECT pm.party_id                  AS party_id,
+               pc.id                        AS party_cycle_id,
+               pm.id                        AS member_id,
+               pm.user_id                   AS user_id,
+               bk.billing_key               AS billing_key,
+               bk.customer_key              AS customer_key,
+               pc.price_per_member_snapshot AS amount
+        FROM party_member pm
+                 INNER JOIN billing_key bk
+                            ON bk.user_id = pm.user_id
+                 INNER JOIN party_cycle pc
+                            ON pc.party_id = pm.party_id
+        WHERE pm.party_id = #{partyId}
+          AND pc.id = #{partyCycleId}
+          AND pm.role = #{memberRole}
+          AND pm.status = 'ACTIVE'
           AND bk.status = #{billingKeyStatus}
         ORDER BY pm.id ASC
     </select>

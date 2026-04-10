@@ -48,7 +48,8 @@ public class TossPaymentClient {
 
     public TossBillingPaymentResponse executeBillingPayment(
             String billingKey,
-            TossBillingPaymentRequest request
+            TossBillingPaymentRequest request,
+            String idempotencyKey
     ) {
         log.info("토스 자동결제 요청. orderId={}, amount={}",
                 request.orderId(), request.amount());
@@ -57,6 +58,7 @@ public class TossPaymentClient {
             return webClient.post()
                     .uri(tossPaymentProperties.getBaseUrl() + "/v1/billing/" + billingKey)
                     .header(HttpHeaders.AUTHORIZATION, encodeSecretKey())
+                    .header("Idempotency-Key", idempotencyKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()

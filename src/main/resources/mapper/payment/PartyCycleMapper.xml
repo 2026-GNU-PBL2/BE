@@ -131,4 +131,11 @@
                  )
     </insert>
 
+    <update id="updateMemberCountSnapshot">
+        UPDATE party_cycle
+        SET member_count_snapshot = #{memberCountSnapshot},
+            updated_at = NOW()
+        WHERE id = #{partyCycleId}
+    </update>
+
 </mapper>

@@ -39,7 +39,7 @@ public class InitialPaymentCycleService {
                 .endAt(null)
                 .billingDueAt(now)
                 .status(PartyCycleStatus.PAYMENT_PENDING)
-                .memberCountSnapshot(info.getCurrentMemberCount())
+                .memberCountSnapshot(info.getPendingMemberCount())
                 .pricePerMemberSnapshot(info.getPricePerMemberSnapshot())
                 .createdAt(now)
                 .updatedAt(now)

@@ -45,4 +45,9 @@ public interface PartyCycleMapper {
     );
 
     int save(PartyCycle partyCycle);
+
+    int updateMemberCountSnapshot(
+            @Param("partyCycleId") Long partyCycleId,
+            @Param("memberCountSnapshot") int memberCountSnapshot
+    );
 }

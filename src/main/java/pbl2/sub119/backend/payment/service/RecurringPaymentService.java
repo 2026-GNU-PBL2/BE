@@ -1,5 +1,7 @@
 package pbl2.sub119.backend.payment.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -8,14 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.enumerated.OperationStatus;
+import pbl2.sub119.backend.party.service.PartyCycleService;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.mapper.RecurringPaymentQueryMapper;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -25,6 +25,7 @@ public class RecurringPaymentService {
     private final RecurringPaymentQueryMapper recurringPaymentQueryMapper;
     private final PartyCycleMapper partyCycleMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final PartyCycleService partyCycleService;
 
     @Transactional
     public void processDueCycles() {
@@ -61,6 +62,8 @@ public class RecurringPaymentService {
         }
 
         LocalDateTime now = LocalDateTime.now();
+        // 다음 회차 snapshot은 반복회차 실제 과금 대상과 동일하게 ACTIVE MEMBER 수로 저장한다.
+        int billableMemberCount = partyCycleService.countRecurringBillableMembers(target.getPartyId());
 
         PartyCycle nextCycle = PartyCycle.builder()
                 .partyId(target.getPartyId())
@@ -69,7 +72,7 @@ public class RecurringPaymentService {
                 .endAt(null)
                 .billingDueAt(nextBillingDueAt)
                 .status(PartyCycleStatus.PAYMENT_PENDING)
-                .memberCountSnapshot(target.getMemberCountSnapshot())
+                .memberCountSnapshot(billableMemberCount)
                 .pricePerMemberSnapshot(target.getPricePerMemberSnapshot())
                 .createdAt(now)
                 .updatedAt(now)
