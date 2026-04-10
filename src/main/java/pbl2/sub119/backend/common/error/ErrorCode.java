@@ -64,6 +64,8 @@ public enum ErrorCode {
     PAYMENT_CHARGE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "자동결제 실행에 실패했습니다."),
     PAYMENT_BILLING_EXECUTION_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT_004", "자동결제 실행에 실패했습니다."),
     PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "등록된 결제 수단이 없습니다."),
+    PAYMENT_INVALID_BILLING_REQUEST(HttpStatus.BAD_REQUEST,"PAYMENT006", "유효하지 않은 자동결제 요청입니다."),
+    PAYMENT_INVALID_IDEMPOTENCY_KEY(HttpStatus.BAD_REQUEST,"PAYMENT007", "유효하지 않은 멱등 키입니다."),
 
     // Bank
     BANK_CONNECTED_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "BANK001", "연결된 계좌를 찾을 수 없습니다."),

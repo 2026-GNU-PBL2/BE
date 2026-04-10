@@ -150,6 +150,15 @@
           AND status IN ('ACTIVE', 'PENDING', 'LEAVE_RESERVED', 'SWITCH_WAITING')
     </select>
 
+    <!-- 다음 회차 snapshot 수는 반복회차 실제 과금 대상과 동일하게 ACTIVE MEMBER만 사용한다. -->
+    <select id="countRecurringBillableMembers" resultType="int">
+        SELECT COUNT(*)
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role = 'MEMBER'
+          AND status = 'ACTIVE'
+    </select>
+
     <update id="updateLeaveReserved">
         UPDATE party_member
         SET

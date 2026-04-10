@@ -5,8 +5,6 @@ import org.apache.ibatis.annotations.Param;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 
-import java.time.LocalDateTime;
-
 @Mapper
 public interface PartyCycleMapper {
 
@@ -24,12 +22,12 @@ public interface PartyCycleMapper {
 
     PartyCycle findById(@Param("partyCycleId") Long partyCycleId);
 
+    int findNextCycleNo(@Param("partyId") Long partyId);
+
     PartyCycle findByPartyIdAndCycleNo(
             @Param("partyId") Long partyId,
-            @Param("cycleNo") Integer cycleNo
+            @Param("cycleNo") int cycleNo
     );
-
-    int findNextCycleNo(@Param("partyId") Long partyId);
 
     int compareAndUpdateStatus(
             @Param("partyCycleId") Long partyCycleId,
@@ -41,7 +39,13 @@ public interface PartyCycleMapper {
             @Param("partyCycleId") Long partyCycleId,
             @Param("expectedStatus") PartyCycleStatus expectedStatus,
             @Param("newStatus") PartyCycleStatus newStatus,
-            @Param("endAt") LocalDateTime endAt
+            @Param("endAt") java.time.LocalDateTime endAt
+    );
+
+    int updateMemberCountSnapshot(
+            @Param("partyCycleId") Long partyCycleId,
+            @Param("memberCountSnapshot") int memberCountSnapshot,
+            @Param("expectedStatus") PartyCycleStatus expectedStatus
     );
 
     int save(PartyCycle partyCycle);

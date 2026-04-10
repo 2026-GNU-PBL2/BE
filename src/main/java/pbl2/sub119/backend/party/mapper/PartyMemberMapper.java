@@ -36,10 +36,14 @@ public interface PartyMemberMapper {
 
     int countOccupiedMembers(@Param("partyId") Long partyId);
 
+    int countRecurringBillableMembers(@Param("partyId") Long partyId);
+
     int updateLeaveReserved(
             @Param("partyId") Long partyId,
             @Param("userId") Long userId
     );
+
+
 
     int clearLeaveReserved(
             @Param("partyId") Long partyId,

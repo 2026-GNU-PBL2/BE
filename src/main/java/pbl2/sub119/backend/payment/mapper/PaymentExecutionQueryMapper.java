@@ -18,11 +18,23 @@ public interface PaymentExecutionQueryMapper {
             @Param("memberStatus") PartyMemberStatus memberStatus
     );
 
+    int countRecurringBillableMembers(
+            @Param("partyId") Long partyId,
+            @Param("memberRole") PartyRole memberRole
+    );
+
     List<PaymentChargeTarget> findChargeTargets(
             @Param("partyId") Long partyId,
             @Param("partyCycleId") Long partyCycleId,
             @Param("memberRole") PartyRole memberRole,
             @Param("memberStatus") PartyMemberStatus memberStatus,
+            @Param("billingKeyStatus") BillingKeyStatus billingKeyStatus
+    );
+
+    List<PaymentChargeTarget> findRecurringChargeTargets(
+            @Param("partyId") Long partyId,
+            @Param("partyCycleId") Long partyCycleId,
+            @Param("memberRole") PartyRole memberRole,
             @Param("billingKeyStatus") BillingKeyStatus billingKeyStatus
     );
 }
