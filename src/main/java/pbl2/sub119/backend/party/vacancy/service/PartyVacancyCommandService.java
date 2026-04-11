@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.exception.PartyException;
-import pbl2.sub119.backend.party.join.service.PartyJoinService;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
+import pbl2.sub119.backend.party.join.service.PartyJoinService;
 import pbl2.sub119.backend.party.vacancy.dto.response.PartyVacancyJoinResponse;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
@@ -27,10 +27,6 @@ public class PartyVacancyCommandService {
         final Party party = partyMapper.findById(partyId);
         if (party == null) {
             throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
-        }
-
-        if (party.getCurrentMemberCount() >= party.getCapacity()) {
-            throw new PartyException(ErrorCode.PARTY_FULL);
         }
 
         partyJoinService.joinParty(partyId, userId);

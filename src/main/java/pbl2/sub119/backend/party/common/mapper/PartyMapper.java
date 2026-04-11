@@ -55,4 +55,7 @@ public interface PartyMapper {
 
     // 결원 있고 바로 참여 가능한 파티 목록 조회
     List<Party> findJoinablePartiesByProductId(@Param("productId") String productId);
+
+    // 빈자리 있는 경우에만 현재 멤버 증가
+    int increaseCurrentMemberCountIfNotFull(Long partyId);
 }

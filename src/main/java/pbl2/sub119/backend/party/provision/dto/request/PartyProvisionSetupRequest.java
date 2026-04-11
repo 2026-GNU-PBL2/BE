@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.provision.dto.request;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
@@ -12,6 +13,7 @@ public record PartyProvisionSetupRequest(
         @Size(max = 500)
         String inviteValue,
 
+        @Email
         @Size(max = 150)
         String sharedAccountEmail,
 

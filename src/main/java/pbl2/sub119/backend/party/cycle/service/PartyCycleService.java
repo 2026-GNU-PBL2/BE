@@ -12,10 +12,10 @@ import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
 import pbl2.sub119.backend.party.common.enumerated.VacancyType;
-import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
 
 @Service
@@ -68,7 +68,11 @@ public class PartyCycleService {
         partyMapper.updateCurrentMemberCount(partyId, occupiedCount);
 
         // 결원 상태 갱신
-        final VacancyType vacancyType = calculateVacancyType(partyId, occupiedCount, party.getCapacity());
+        final VacancyType vacancyType = calculateVacancyType(
+                occupiedCount,
+                party.getCapacity(),
+                leaveReservedMembers
+        );
         partyMapper.updateVacancyType(partyId, vacancyType);
 
         // 모집 상태 갱신
@@ -84,16 +88,15 @@ public class PartyCycleService {
 
     // 현재 상태 기준 결원 유형 계산
     private VacancyType calculateVacancyType(
-            final Long partyId,
             final int occupiedCount,
-            final int totalCapacity
+            final int totalCapacity,
+            final List<PartyMember> leaveReservedMembers
     ) {
         if (occupiedCount >= totalCapacity) {
             return VacancyType.NONE;
         }
 
-        final List<PartyMember> reservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);
-        final boolean hasHostReservation = reservedMembers.stream()
+        final boolean hasHostReservation = leaveReservedMembers.stream()
                 .anyMatch(member -> member.getRole() == PartyRole.HOST);
 
         return hasHostReservation ? VacancyType.HOST : VacancyType.MEMBER;

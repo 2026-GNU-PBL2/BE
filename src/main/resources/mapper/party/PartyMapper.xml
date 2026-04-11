@@ -171,4 +171,13 @@
         ORDER BY (capacity - current_member_count) ASC, created_at ASC
     </select>
 
+    <update id="increaseCurrentMemberCountIfNotFull">
+        UPDATE party
+        SET
+            current_member_count = current_member_count + 1,
+            updated_at = NOW()
+        WHERE id = #{partyId}
+          AND current_member_count &lt; capacity
+    </update>
+
 </mapper>

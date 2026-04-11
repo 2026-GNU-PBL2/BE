@@ -23,6 +23,7 @@ import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmRes
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionDashboardResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMeResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse;
+import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRevealResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
 
 @Tag(name = "Party Provision API", description = "파티 이용 정보 등록, 확인, 조회 API")
@@ -239,9 +240,15 @@ public interface PartyProvisionDocs {
 
                     이 API는 아래 화면에서 사용합니다.
                     - 초대 링크 확인 화면
-                    - 공유계정 아이디/비밀번호 확인 화면
+                    - 공유계정 이메일 확인 화면
+                    - 마스킹된 비밀번호와 이용 가이드를 확인하는 화면
                     - 이용 완료 후 계정 정보와 이용 가이드를 다시 보는 화면
                     - 이용 재설정 후 다시 절차를 진행하는 화면
+
+                    비밀번호 노출 정책
+                    - 기본 조회 응답에는 평문 비밀번호를 포함하지 않습니다.
+                    - 공유계정형인 경우 maskedSharedAccountPassword 와 passwordRevealAvailable 값만 제공합니다.
+                    - 평문 비밀번호는 별도 보기 API에서만 제한적으로 조회할 수 있습니다.
 
                     상태값 안내
                     - REQUIRED : 아직 이용 확인 전인 상태입니다.
@@ -258,6 +265,34 @@ public interface PartyProvisionDocs {
     )
     @GetMapping("/{partyId}/provision/me")
     ResponseEntity<PartyProvisionMeResponse> getMyProvisionInfo(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @PathVariable Long partyId
+    );
+
+    @Operation(
+            summary = "내 공유계정 비밀번호 보기",
+            description = """
+                    파티원이 보기 버튼을 눌렀을 때 공유계정 비밀번호 평문을 조회합니다.
+
+                    사용 조건
+                    - provision 대상 멤버만 조회할 수 있습니다.
+                    - WAITING 상태 멤버는 조회할 수 없습니다.
+                    - ACCOUNT_SHARED 방식인 경우에만 조회할 수 있습니다.
+
+                    보안 정책
+                    - 기본 이용 정보 조회 API에서는 평문 비밀번호를 내려주지 않습니다.
+                    - 이 API는 명시적으로 보기 버튼을 누른 경우에만 호출하는 것을 권장합니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "공유계정 비밀번호 조회 성공",
+                            content = @Content(schema = @Schema(implementation = PartyProvisionPasswordRevealResponse.class))
+                    )
+            }
+    )
+    @GetMapping("/{partyId}/provision/me/password")
+    ResponseEntity<PartyProvisionPasswordRevealResponse> getMyProvisionPassword(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId
     );

@@ -149,6 +149,10 @@ public class PartyProvisionCommandService {
                 now
         );
 
+        // 현재 호스트가 기존 provision 멤버였던 경우에만 ACTIVE 유지
+        final boolean keepCurrentHostActive = existingProvisionMembers.stream()
+                .anyMatch(member -> member.getUserId().equals(party.getHostUserId()));
+
         resetMemberRows(provision.getId(), partyId, party.getHostUserId(), now);
 
         partyProvisionMemberMapper.markAllResetRequired(
@@ -158,6 +162,10 @@ public class PartyProvisionCommandService {
                 now,
                 now
         );
+
+        if (keepCurrentHostActive) {
+            restoreHostActive(partyId, party.getHostUserId(), now);
+        }
     }
 
     // 파티원이 provision 완료 확인
@@ -231,7 +239,7 @@ public class PartyProvisionCommandService {
                 now
         );
 
-        // 기존 파티원 전부 다시 확인 필요
+        // 일괄 RESET_REQUIRED 후 현재 호스트만 ACTIVE 복원
         partyProvisionMemberMapper.markAllResetRequired(
                 provision.getId(),
                 ProvisionMemberStatus.RESET_REQUIRED,
@@ -239,6 +247,8 @@ public class PartyProvisionCommandService {
                 now,
                 now
         );
+
+        restoreHostActive(partyId, party.getHostUserId(), now);
     }
 
     // 현재 provision 대상 멤버 초기 생성
@@ -284,6 +294,29 @@ public class PartyProvisionCommandService {
     ) {
         partyProvisionMemberMapper.deleteByPartyOperationId(provisionId);
         initializeMembers(provisionId, partyId, hostUserId, now);
+    }
+
+    // 현재 호스트를 ACTIVE 상태로 복원
+    private void restoreHostActive(
+            final Long partyId,
+            final Long hostUserId,
+            final LocalDateTime now
+    ) {
+        final PartyProvisionMember hostProvisionMember =
+                partyProvisionMemberMapper.findByPartyIdAndUserId(partyId, hostUserId);
+
+        if (hostProvisionMember == null) {
+            throw new PartyException(ErrorCode.PARTY_OPERATION_MEMBER_NOT_FOUND);
+        }
+
+        partyProvisionMemberMapper.markActive(
+                hostProvisionMember.getId(),
+                ProvisionMemberStatus.ACTIVE,
+                now,
+                now,
+                now,
+                now
+        );
     }
 
     // 전원 완료 여부에 따라 provision 상태 갱신

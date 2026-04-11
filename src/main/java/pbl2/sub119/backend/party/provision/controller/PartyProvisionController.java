@@ -17,6 +17,7 @@ import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmRes
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionDashboardResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMeResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse;
+import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRevealResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionQueryService;
@@ -93,6 +94,17 @@ public class PartyProvisionController implements PartyProvisionDocs {
     ) {
         return ResponseEntity.ok(
                 partyProvisionQueryService.getMyProvisionInfo(accessor.getUserId(), partyId)
+        );
+    }
+
+    // 보기 버튼 클릭 시 평문 비밀번호 조회
+    @Override
+    public ResponseEntity<PartyProvisionPasswordRevealResponse> getMyProvisionPassword(
+            @Auth final Accessor accessor,
+            @PathVariable final Long partyId
+    ) {
+        return ResponseEntity.ok(
+                partyProvisionQueryService.getMyProvisionPassword(accessor.getUserId(), partyId)
         );
     }
 }

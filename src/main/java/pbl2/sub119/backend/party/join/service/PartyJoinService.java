@@ -12,10 +12,10 @@ import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
 import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
-import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 
 @Service
 @RequiredArgsConstructor
@@ -44,17 +44,19 @@ public class PartyJoinService {
             throw new PartyException(ErrorCode.PARTY_ALREADY_JOINED);
         }
 
-        final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
-        if (occupiedCount >= party.getCapacity()) {
+        final int increased = partyMapper.increaseCurrentMemberCountIfNotFull(partyId);
+        if (increased == 0) {
             throw new PartyException(ErrorCode.PARTY_FULL);
         }
+
+        final LocalDateTime now = LocalDateTime.now();
 
         final PartyMember newMember = PartyMember.builder()
                 .partyId(partyId)
                 .userId(userId)
                 .role(PartyRole.MEMBER)
                 .status(PartyMemberStatus.PENDING)
-                .joinedAt(LocalDateTime.now())
+                .joinedAt(now)
                 .activatedAt(null)
                 .serviceStartAt(null)
                 .serviceEndAt(null)
@@ -65,10 +67,12 @@ public class PartyJoinService {
 
         partyMemberMapper.insertPartyMember(newMember);
 
-        final int updatedCount = partyMemberMapper.countOccupiedMembers(partyId);
-        partyMapper.updateCurrentMemberCount(partyId, updatedCount);
+        final Party updatedParty = partyMapper.findByIdForUpdate(partyId);
+        if (updatedParty == null) {
+            throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
+        }
 
-        if (updatedCount >= party.getCapacity()) {
+        if (updatedParty.getCurrentMemberCount() >= updatedParty.getCapacity()) {
             partyMapper.updateRecruitStatus(partyId, RecruitStatus.FULL);
 
             partyHistoryService.saveHistory(

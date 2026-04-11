@@ -1,14 +1,14 @@
 package pbl2.sub119.backend.party.create.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.party.create.dto.request.PartyCreateRequest;
-import pbl2.sub119.backend.party.create.dto.request.PartyCreateSummaryRequest;
-import pbl2.sub119.backend.party.create.dto.response.PartyCreateResponse;
-import pbl2.sub119.backend.party.create.dto.response.PartyCreateSummaryResponse;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyHistory;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
@@ -22,6 +22,10 @@ import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyHistoryMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.create.dto.request.PartyCreateRequest;
+import pbl2.sub119.backend.party.create.dto.request.PartyCreateSummaryRequest;
+import pbl2.sub119.backend.party.create.dto.response.PartyCreateResponse;
+import pbl2.sub119.backend.party.create.dto.response.PartyCreateSummaryResponse;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
 
@@ -36,6 +40,7 @@ public class PartyCreateService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryMapper partyHistoryMapper;
     private final SubProductService subProductService;
+    private final ObjectMapper objectMapper;
 
     // 파티 생성 전에 화면에서 보여줄 예상 금액과 안내 문구를 계산
     @Transactional(readOnly = true)
@@ -89,7 +94,6 @@ public class PartyCreateService {
      * 선택한 상품으로 새 파티를 생성한다.
      * 생성자는 파티장(HOST)으로 등록되고 첫 멤버로 함께 저장된다.
      */
-
     @Transactional
     public PartyCreateResponse createParty(
             final Long hostUserId,
@@ -140,11 +144,7 @@ public class PartyCreateService {
                 .partyId(party.getId())
                 .memberId(hostMember.getId())
                 .eventType(PartyHistoryEventType.PARTY_CREATED)
-                .eventPayload(
-                        "{\"hostUserId\":" + hostUserId
-                                + ",\"productId\":\"" + product.getId()
-                                + "\",\"capacity\":" + request.capacity() + "}"
-                )
+                .eventPayload(createPartyCreatedPayload(hostUserId, product.getId(), request.capacity()))
                 .createdAt(now)
                 .createdBy(hostUserId)
                 .build();
@@ -165,6 +165,23 @@ public class PartyCreateService {
                 party.getCreatedAt(),
                 "SETUP_PROVISION"
         );
+    }
+
+    private String createPartyCreatedPayload(
+            final Long hostUserId,
+            final String productId,
+            final Integer capacity
+    ) {
+        final Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("hostUserId", hostUserId);
+        payload.put("productId", productId);
+        payload.put("capacity", capacity);
+
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("파티 생성 이력 payload 직렬화에 실패했습니다.", e);
+        }
     }
 
     // 생성 전 요약 조회 요청 최소 입력값 검증

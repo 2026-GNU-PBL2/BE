@@ -18,14 +18,16 @@ public class PartyUsagePeriodController implements PartyUsagePeriodDocs {
 
     private final PartyUsagePeriodQueryService partyUsagePeriodQueryService;
 
-    // 현재 이용 기간 조회
     @Override
     public ResponseEntity<PartyUsagePeriodResponse> getUsagePeriod(
             @Auth final Accessor accessor,
             @PathVariable final Long partyId
     ) {
         return ResponseEntity.ok(
-                partyUsagePeriodQueryService.getUsagePeriod(partyId)
+                partyUsagePeriodQueryService.getUsagePeriod(
+                        partyId,
+                        accessor.getUserId()
+                )
         );
     }
 }

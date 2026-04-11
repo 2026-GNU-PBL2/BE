@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.party.cycle.dto.response.PartyUsagePeriodResponse;
+import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.exception.PartyException;
+import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.cycle.dto.response.PartyUsagePeriodResponse;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 
@@ -18,9 +20,20 @@ import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 public class PartyUsagePeriodQueryService {
 
     private final PartyCycleMapper partyCycleMapper;
+    private final PartyMemberMapper partyMemberMapper;
 
     // 현재 이용 기간 조회
-    public PartyUsagePeriodResponse getUsagePeriod(final Long partyId) {
+    public PartyUsagePeriodResponse getUsagePeriod(
+            final Long partyId,
+            final Long userId
+    ) {
+        final PartyMember partyMember =
+                partyMemberMapper.findByPartyIdAndUserId(partyId, userId);
+
+        if (partyMember == null) {
+            throw new PartyException(ErrorCode.PARTY_LEAVE_FORBIDDEN);
+        }
+
         final PartyCycle cycle = partyCycleMapper.findLatestPendingOrRunningCycle(
                 partyId,
                 PartyCycleStatus.PAYMENT_PENDING,
