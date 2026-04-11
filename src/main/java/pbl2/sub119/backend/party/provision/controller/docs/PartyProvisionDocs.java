@@ -296,7 +296,7 @@ public interface PartyProvisionDocs {
                     )
             }
     )
-    @GetMapping("/{partyId}/provision/me/password")
+    @PostMapping("/{partyId}/provision/me/password")
     ResponseEntity<PartyProvisionPasswordRevealResponse> getMyProvisionPassword(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId

@@ -51,6 +51,7 @@ public class PartyCreateService {
         validateSummaryRequest(request);
 
         final SubProductResponse product = subProductService.getProduct(request.productId());
+        validateProductPricing(product);
         validateCapacity(request.capacity(), product.getMaxMemberCount());
 
         final int totalCapacity = request.capacity(); // 파티 총 인원 (파티장 포함)
@@ -210,6 +211,13 @@ public class PartyCreateService {
     private void validateCapacity(final Integer capacity, final Integer maxMemberCount) {
         if (maxMemberCount != null && capacity > maxMemberCount) {
             throw new PartyException(ErrorCode.PARTY_INVALID_CAPACITY);
+        }
+    }
+
+    private void validateProductPricing(final SubProductResponse product) {
+        final Long pricePerMember = product.getPricePerMember();
+        if (pricePerMember != null && pricePerMember > Integer.MAX_VALUE) {
+            throw new IllegalStateException("pricePerMember가 저장 가능한 범위를 초과했습니다.");
         }
     }
 }

@@ -139,7 +139,11 @@ public interface PartyVacancyDocs {
                             responseCode = "200",
                             description = "결원 파티 직접 참여 성공",
                             content = @Content(schema = @Schema(implementation = PartyVacancyJoinResponse.class))
-                    )
+                    ),
+                    @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+                    @ApiResponse(responseCode = "401", description = "인증이 필요합니다."),
+                    @ApiResponse(responseCode = "403", description = "참여 권한이 없습니다."),
+                    @ApiResponse(responseCode = "404", description = "파티를 찾을 수 없습니다."), @ApiResponse(responseCode = "409", description = "참여 가능한 자리가 없거나 이미 참여한 사용자입니다.")
             }
     )
     @PostMapping("/{partyId}/join")

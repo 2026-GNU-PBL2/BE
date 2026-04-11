@@ -81,13 +81,8 @@ public class PartyProvisionQueryService {
             final Long userId,
             final Long partyId
     ) {
+        final PartyProvision provision = getProvisionByPartyId(partyId);
         final PartyProvisionMember provisionMember = getReadableProvisionMember(userId, partyId);
-
-        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
-
-        if (provision == null) {
-            throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);
-        }
 
         final String inviteValue =
                 provision.getOperationType() == ProvisionType.INVITE_LINK
@@ -129,13 +124,8 @@ public class PartyProvisionQueryService {
             final Long userId,
             final Long partyId
     ) {
+        final PartyProvision provision = getProvisionByPartyId(partyId);
         getReadableProvisionMember(userId, partyId);
-
-        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
-
-        if (provision == null) {
-            throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);
-        }
 
         if (provision.getOperationType() != ProvisionType.ACCOUNT_SHARED) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_READABLE);
