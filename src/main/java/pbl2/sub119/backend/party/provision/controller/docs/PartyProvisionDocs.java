@@ -169,7 +169,9 @@ public interface PartyProvisionDocs {
                     상태값 안내
                     - 호출 전 : REQUIRED 상태에서 이용 확인 완료를 진행할 수 있습니다.
                     - 호출 후 : ACTIVE 상태로 변경됩니다.
-                    - RESET_REQUIRED 상태라면 파티장이 이용 정보를 다시 반영한 뒤 다시 진행해야 할 수 있습니다.
+                    - RESET_REQUIRED 상태에서는 파티장이 새 이용 정보를 다시 저장하기 전까지
+                      파티원이 이용 확인 완료를 진행할 수 없습니다.
+                      즉, reset 이후에는 파티장이 provision 정보를 다시 등록한 뒤에만 confirm이 가능합니다.
                     """,
             responses = {
                     @ApiResponse(
@@ -254,6 +256,9 @@ public interface PartyProvisionDocs {
                     - REQUIRED : 아직 이용 확인 전인 상태입니다.
                     - ACTIVE : 이용 확인까지 끝나 현재 정상 이용 중인 상태입니다.
                     - RESET_REQUIRED : 파티장이 정보를 다시 바꿔 다시 확인해야 하는 상태입니다.
+                    
+                    이용 재설정 이후에는 파티장이 새 이용 정보를 다시 저장해야 하며,
+                    그 전까지 파티원 confirmProvision 호출은 차단됩니다.
                     """,
             responses = {
                     @ApiResponse(

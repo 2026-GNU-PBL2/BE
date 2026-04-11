@@ -50,14 +50,14 @@ public class PartyUsagePeriodQueryService {
         final LocalDateTime nextBillingDate = cycle.getBillingDueAt();
 
         long daysRemaining = 0L;
+        boolean endingSoon = false;
         if (currentEndDate != null) {
             daysRemaining = ChronoUnit.DAYS.between(now, currentEndDate);
             if (daysRemaining < 0) {
                 daysRemaining = 0L;
             }
+            endingSoon = currentEndDate.isAfter(now) && daysRemaining <= 3;
         }
-
-        final boolean endingSoon = currentEndDate != null && daysRemaining <= 3;
 
         return new PartyUsagePeriodResponse(
                 partyId,

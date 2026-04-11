@@ -37,8 +37,8 @@ public class SubscriptionCycleWindowValidator {
 
         final LocalDateTime now = LocalDateTime.now();
 
-        // 이미 종료된 주기면 탈퇴 예약 불가
-        if (now.isAfter(cycle.getEndAt())) {
+        // 종료 시각 이상이면 탈퇴 예약 불가
+        if (!now.isBefore(cycle.getEndAt())) {
             throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
         }
     }

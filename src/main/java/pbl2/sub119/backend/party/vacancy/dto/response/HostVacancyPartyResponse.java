@@ -2,22 +2,17 @@ package pbl2.sub119.backend.party.vacancy.dto.response;
 
 import java.time.LocalDateTime;
 
-// 결원 파티 상세 응답
-public record PartyVacancyDetailResponse(
+// 파티장 결원 예정/결원 파티 목록 응답
+public record HostVacancyPartyResponse(
         Long partyId,
         String productId,
         String productName,
         String thumbnailUrl,
-        Long hostUserId,
         Integer totalCapacity,
         Integer currentMemberCount,
         Integer remainingSeatCount,
         Long monthlyPaymentAmount,
         LocalDateTime nextPaymentDate,
-        String operationType,
-        String partyStatusLabel,
-        Boolean joinAvailable,
-        String joinButtonLabel,
-        String description
+        String joinButtonLabel
 ) {
 }

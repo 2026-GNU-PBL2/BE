@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.vacancy.controller.docs.PartyVacancyDocs;
+import pbl2.sub119.backend.party.vacancy.dto.response.HostVacancyPartyResponse;
 import pbl2.sub119.backend.party.vacancy.dto.response.MemberVacancyPartyResponse;
 import pbl2.sub119.backend.party.vacancy.dto.response.PartyVacancyDetailResponse;
 import pbl2.sub119.backend.party.vacancy.dto.response.PartyVacancyJoinResponse;
@@ -24,7 +25,6 @@ public class PartyVacancyController implements PartyVacancyDocs {
     private final PartyVacancyQueryService partyVacancyQueryService;
     private final PartyVacancyCommandService partyVacancyCommandService;
 
-    // 파티원 결원 파티 목록 조회
     @Override
     public ResponseEntity<List<MemberVacancyPartyResponse>> getMemberVacancyParties(
             @RequestParam(required = false) final String productId
@@ -34,7 +34,15 @@ public class PartyVacancyController implements PartyVacancyDocs {
         );
     }
 
-    // 결원 파티 상세 조회
+    @Override
+    public ResponseEntity<List<HostVacancyPartyResponse>> getHostVacancyParties(
+            @RequestParam(required = false) final String productId
+    ) {
+        return ResponseEntity.ok(
+                partyVacancyQueryService.getHostVacancyParties(productId)
+        );
+    }
+
     @Override
     public ResponseEntity<PartyVacancyDetailResponse> getMemberVacancyDetail(
             @PathVariable final Long partyId
@@ -44,7 +52,6 @@ public class PartyVacancyController implements PartyVacancyDocs {
         );
     }
 
-    // 결원 파티 직접 참여
     @Override
     public ResponseEntity<PartyVacancyJoinResponse> joinMemberVacancyParty(
             @Auth final Accessor accessor,
