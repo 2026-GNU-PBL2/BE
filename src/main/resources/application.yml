@@ -59,3 +59,6 @@ kftc:
 toss:
   secret-key: ${TOSS_SECRET_KEY}
   base-url : https://api.tosspayments.com
+
+app:
+  frontend-base-url: ${FRONTEND_BASE_URL}

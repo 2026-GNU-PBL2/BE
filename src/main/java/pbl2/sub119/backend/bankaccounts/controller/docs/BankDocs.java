@@ -1,4 +1,4 @@
-package pbl2.sub119.backend.bankaccounts.docs;
+package pbl2.sub119.backend.bankaccounts.controller.docs;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import pbl2.sub119.backend.auth.aop.Auth;
@@ -24,25 +25,40 @@ import java.util.List;
 public interface BankDocs {
 
     @Operation(
-            summary = "금융결제원 계좌 연결 콜백",
-            description = "OAuth 인가코드(code)를 받아 사용자의 연결 계좌 후보를 저장합니다."
+            summary = "금융결제원 계좌 연결 인증 시작",
+            description = "로그인 사용자의 계좌 연결을 위해 금융결제원 authorize URL로 리다이렉트합니다."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "계좌 연결 성공",
-                    content = @Content(schema = @Schema(implementation = String.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "302", description = "금융결제원 authorize URL로 리다이렉트",
+                    content = @Content),
             @ApiResponse(responseCode = "401", description = "인증 실패",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "계좌 연결 요청 실패 (BANK007)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    String callback(
+    ResponseEntity<Void> authorize(
             @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "파티 생성 대상 상품 ID", required = true, example = "1")
+            @RequestParam Long productId
+    );
+
+    @Operation(
+            summary = "금융결제원 계좌 연결 콜백",
+            description = "OAuth 인가코드(code)와 state를 받아 연결 계좌 후보를 저장한 뒤 프론트 계좌등록 페이지로 리다이렉트합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "프론트 계좌등록 페이지로 리다이렉트",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "계좌 연결 요청 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<Void> callback(
             @Parameter(description = "금융결제원 OAuth 인가코드", required = true, example = "AbCdEf123456")
             @RequestParam String code,
-            @Parameter(description = "동의 범위(scope)", required = true, example = "login inquiry")
-            @RequestParam String scope
+            @Parameter(description = "동의 범위(scope)", required = false, example = "login inquiry")
+            @RequestParam(required = false) String scope,
+            @Parameter(description = "인증 요청 식별용 state", required = true, example = "12345678901234567890123456789012")
+            @RequestParam String state
     );
 
     @Operation(
