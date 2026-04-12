@@ -189,6 +189,10 @@ public class PartyProvisionQueryService {
 
         final int atIndex = email.indexOf("@");
 
+        if (atIndex < 0) {
+            return "***";
+        }
+
         if (atIndex <= 2) {
             return "***" + email.substring(atIndex);
         }
