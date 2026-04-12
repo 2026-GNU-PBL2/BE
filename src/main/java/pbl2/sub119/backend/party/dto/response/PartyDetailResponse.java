@@ -2,9 +2,9 @@ package pbl2.sub119.backend.party.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import pbl2.sub119.backend.party.enumerated.OperationStatus;
-import pbl2.sub119.backend.party.enumerated.RecruitStatus;
-import pbl2.sub119.backend.party.enumerated.VacancyType;
+import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
+import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.common.enumerated.VacancyType;
 
 public record PartyDetailResponse(
         Long partyId,

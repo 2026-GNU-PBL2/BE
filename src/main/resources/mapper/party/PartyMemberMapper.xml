@@ -3,16 +3,16 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="pbl2.sub119.backend.party.mapper.PartyMemberMapper">
+<mapper namespace="pbl2.sub119.backend.party.common.mapper.PartyMemberMapper">
 
-    <resultMap id="partyMemberResultMap" type="pbl2.sub119.backend.party.entity.PartyMember">
+    <resultMap id="partyMemberResultMap" type="pbl2.sub119.backend.party.common.entity.PartyMember">
         <id property="id" column="id"/>
         <result property="partyId" column="party_id"/>
         <result property="userId" column="user_id"/>
         <result property="role" column="role"
-                javaType="pbl2.sub119.backend.party.enumerated.PartyRole"/>
+                javaType="pbl2.sub119.backend.party.common.enumerated.PartyRole"/>
         <result property="status" column="status"
-                javaType="pbl2.sub119.backend.party.enumerated.PartyMemberStatus"/>
+                javaType="pbl2.sub119.backend.common.enumerated.PartyMemberStatus"/>
         <result property="joinedAt" column="joined_at"/>
         <result property="activatedAt" column="activated_at"/>
         <result property="serviceStartAt" column="service_start_at"/>
@@ -38,11 +38,10 @@
     </sql>
 
     <insert id="insertPartyMember"
-            parameterType="pbl2.sub119.backend.party.entity.PartyMember"
+            parameterType="pbl2.sub119.backend.party.common.entity.PartyMember"
             useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO party_member
-        (
+        INSERT INTO party_member (
             party_id,
             user_id,
             role,
@@ -54,21 +53,19 @@
             leave_reserved_at,
             left_at,
             replaced_target_member_id
-        )
-        VALUES
-            (
-                #{partyId},
-                #{userId},
-                #{role},
-                #{status},
-                #{joinedAt},
-                #{activatedAt},
-                #{serviceStartAt},
-                #{serviceEndAt},
-                #{leaveReservedAt},
-                #{leftAt},
-                #{replacedTargetMemberId}
-            )
+        ) VALUES (
+                     #{partyId},
+                     #{userId},
+                     #{role},
+                     #{status},
+                     #{joinedAt},
+                     #{activatedAt},
+                     #{serviceStartAt},
+                     #{serviceEndAt},
+                     #{leaveReservedAt},
+                     #{leftAt},
+                     #{replacedTargetMemberId}
+                 )
     </insert>
 
     <select id="findByPartyIdAndUserId" resultMap="partyMemberResultMap">
@@ -134,7 +131,7 @@
         ORDER BY id ASC
     </select>
 
-    <select id="findOperationTargetMembersByPartyId" resultMap="partyMemberResultMap">
+    <select id="findProvisionTargetMembersByPartyId" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
         FROM party_member
@@ -150,7 +147,7 @@
           AND status IN ('ACTIVE', 'PENDING', 'LEAVE_RESERVED', 'SWITCH_WAITING')
     </select>
 
-    <!-- 다음 회차 snapshot 수는 반복회차 실제 과금 대상과 동일하게 ACTIVE MEMBER만 사용한다. -->
+    <!-- 팀원 코드 기준 유지: 반복회차 실제 과금 대상은 ACTIVE MEMBER만 -->
     <select id="countRecurringBillableMembers" resultType="int">
         SELECT COUNT(*)
         FROM party_member
@@ -161,8 +158,7 @@
 
     <update id="updateLeaveReserved">
         UPDATE party_member
-        SET
-            status = 'LEAVE_RESERVED',
+        SET status = 'LEAVE_RESERVED',
             leave_reserved_at = CURRENT_TIMESTAMP
         WHERE party_id = #{partyId}
           AND user_id = #{userId}
@@ -170,8 +166,7 @@
 
     <update id="clearLeaveReserved">
         UPDATE party_member
-        SET
-            status = 'ACTIVE',
+        SET status = 'ACTIVE',
             leave_reserved_at = NULL
         WHERE party_id = #{partyId}
           AND user_id = #{userId}
@@ -180,31 +175,27 @@
 
     <update id="updateStatus">
         UPDATE party_member
-        SET
-            status = #{status}
+        SET status = #{status}
         WHERE id = #{memberId}
     </update>
 
     <update id="updateStatusAndLeftAt">
         UPDATE party_member
-        SET
-            status = #{status},
+        SET status = #{status},
             left_at = CURRENT_TIMESTAMP
         WHERE id = #{memberId}
     </update>
 
     <update id="updateStatusAndActivatedAt">
         UPDATE party_member
-        SET
-            status = #{status},
+        SET status = #{status},
             activated_at = CURRENT_TIMESTAMP
         WHERE id = #{memberId}
     </update>
 
     <update id="updateRole">
         UPDATE party_member
-        SET
-            role = #{role}
+        SET role = #{role}
         WHERE id = #{memberId}
     </update>
 
