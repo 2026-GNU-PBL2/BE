@@ -1,7 +1,8 @@
 package pbl2.sub119.backend.party.dto.response;
 
+import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
+
 import java.time.LocalDateTime;
-import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
 
 public record PartyLeaveReserveResponse(
         Long partyId,

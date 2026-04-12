@@ -12,7 +12,7 @@
         <result property="role" column="role"
                 javaType="pbl2.sub119.backend.party.common.enumerated.PartyRole"/>
         <result property="status" column="status"
-                javaType="pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus"/>
+                javaType="pbl2.sub119.backend.common.enumerated.PartyMemberStatus"/>
         <result property="joinedAt" column="joined_at"/>
         <result property="activatedAt" column="activated_at"/>
         <result property="serviceStartAt" column="service_start_at"/>
@@ -37,7 +37,6 @@
         replaced_target_member_id
     </sql>
 
-    <!--새 멤버 등록-->
     <insert id="insertPartyMember"
             parameterType="pbl2.sub119.backend.party.common.entity.PartyMember"
             useGeneratedKeys="true"
@@ -69,7 +68,6 @@
                  )
     </insert>
 
-    <!--멤버 단건 조회 + 락-->
     <select id="findByPartyIdAndUserId" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -79,7 +77,6 @@
         LIMIT 1
     </select>
 
-    <!--파티장 조회 + 락-->
     <select id="findByPartyIdAndUserIdForUpdate" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -90,7 +87,6 @@
         FOR UPDATE
     </select>
 
-    <!--ID 단건 조회 + 락-->
     <select id="findHostMemberByPartyIdForUpdate" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -101,7 +97,6 @@
         FOR UPDATE
     </select>
 
-    <!--전체 멤버 조회-->
     <select id="findById" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -110,7 +105,6 @@
         LIMIT 1
     </select>
 
-    <!--전체 멤버 조회-->
     <select id="findMembersByPartyId" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -119,7 +113,6 @@
         ORDER BY id ASC
     </select>
 
-    <!--탈퇴 예약 멤버 조회-->
     <select id="findLeaveReservedMembers" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -129,7 +122,6 @@
         ORDER BY id ASC
     </select>
 
-    <!--다음 주기 대기 멤버 조회-->
     <select id="findSwitchWaitingMembers" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -139,7 +131,6 @@
         ORDER BY id ASC
     </select>
 
-    <!--이용 대상 멤버 조회-->
     <select id="findProvisionTargetMembersByPartyId" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
@@ -149,7 +140,6 @@
         ORDER BY id ASC
     </select>
 
-    <!--현재 인원 수 조회-->
     <select id="countOccupiedMembers" resultType="int">
         SELECT COUNT(*)
         FROM party_member
@@ -157,7 +147,15 @@
           AND status IN ('ACTIVE', 'PENDING', 'LEAVE_RESERVED', 'SWITCH_WAITING')
     </select>
 
-    <!--탈퇴 예약-->
+    <!-- 팀원 코드 기준 유지: 반복회차 실제 과금 대상은 ACTIVE MEMBER만 -->
+    <select id="countRecurringBillableMembers" resultType="int">
+        SELECT COUNT(*)
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role = 'MEMBER'
+          AND status = 'ACTIVE'
+    </select>
+
     <update id="updateLeaveReserved">
         UPDATE party_member
         SET status = 'LEAVE_RESERVED',
@@ -166,7 +164,6 @@
           AND user_id = #{userId}
     </update>
 
-    <!--탈퇴 예약 취소-->
     <update id="clearLeaveReserved">
         UPDATE party_member
         SET status = 'ACTIVE',
@@ -176,14 +173,12 @@
           AND status = 'LEAVE_RESERVED'
     </update>
 
-    <!--상태 변경-->
     <update id="updateStatus">
         UPDATE party_member
         SET status = #{status}
         WHERE id = #{memberId}
     </update>
 
-    <!--상태 + 탈퇴시간-->
     <update id="updateStatusAndLeftAt">
         UPDATE party_member
         SET status = #{status},
@@ -191,7 +186,6 @@
         WHERE id = #{memberId}
     </update>
 
-    <!--상태 + 활성화시간-->
     <update id="updateStatusAndActivatedAt">
         UPDATE party_member
         SET status = #{status},
@@ -199,7 +193,6 @@
         WHERE id = #{memberId}
     </update>
 
-    <!--역할 변경-->
     <update id="updateRole">
         UPDATE party_member
         SET role = #{role}

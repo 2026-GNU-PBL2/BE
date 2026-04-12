@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import pbl2.sub119.backend.party.common.enumerated.PartyMemberStatus;
+import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 
 @Getter

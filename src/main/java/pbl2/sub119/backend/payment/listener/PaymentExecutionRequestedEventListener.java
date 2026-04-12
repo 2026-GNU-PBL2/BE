@@ -4,10 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
-import pbl2.sub119.backend.toss.service.AutoPaymentService;
+import pbl2.sub119.backend.payment.service.AutoPaymentService;
 
 @Slf4j
 @Component

@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.settlement.service;
 
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -14,8 +15,6 @@ import pbl2.sub119.backend.pointWallet.entity.PointWallet;
 import pbl2.sub119.backend.pointWallet.mapper.PointWalletMapper;
 import pbl2.sub119.backend.settlement.entity.Settlement;
 import pbl2.sub119.backend.settlement.mapper.SettlementMapper;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -51,7 +50,8 @@ public class SettlementService {
             throw new IllegalStateException("파티가 존재하지 않습니다. partyId=" + partyId);
         }
 
-        int memberCount = cycle.getMemberCountSnapshot() - 1; // host 제외
+        // 정산 인원수는 호스트를 제외한 ACTIVE MEMBER 기준 snapshot 값을 그대로 사용한다.
+        int memberCount = cycle.getMemberCountSnapshot();
         if (memberCount <= 0) {
             log.info("정산 대상 멤버가 없습니다. partyId={}, partyCycleId={}", partyId, partyCycleId);
             return;

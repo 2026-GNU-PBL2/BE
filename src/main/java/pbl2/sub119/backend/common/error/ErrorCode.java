@@ -32,7 +32,6 @@ public enum ErrorCode {
     // MAIL
     RECEIVED_MAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "MAIL001", "존재하지 않는 메일입니다."),
 
-
     // Party
     PARTY_INVALID_PRODUCT_ID(HttpStatus.BAD_REQUEST, "PARTY001", "상품 ID는 필수입니다."),
     PARTY_INVALID_CAPACITY(HttpStatus.BAD_REQUEST, "PARTY002", "정원은 2명 이상이어야 합니다."),
@@ -63,8 +62,19 @@ public enum ErrorCode {
     PAYMENT_BILLING_KEY_ISSUE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT001", "빌링키 발급에 실패했습니다."),
     PAYMENT_BILLING_KEY_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "PAYMENT002", "이미 등록된 결제 수단이 있습니다."),
     PAYMENT_CHARGE_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "자동결제 실행에 실패했습니다."),
-    PAYMENT_BILLING_EXECUTION_FAILED(HttpStatus.BAD_REQUEST,"PAYMENT_004","자동결제 실행에 실패했습니다."),
+    PAYMENT_BILLING_EXECUTION_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT_004", "자동결제 실행에 실패했습니다."),
     PAYMENT_BILLING_KEY_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "등록된 결제 수단이 없습니다."),
+    PAYMENT_INVALID_BILLING_REQUEST(HttpStatus.BAD_REQUEST,"PAYMENT006", "유효하지 않은 자동결제 요청입니다."),
+    PAYMENT_INVALID_IDEMPOTENCY_KEY(HttpStatus.BAD_REQUEST,"PAYMENT007", "유효하지 않은 멱등 키입니다."),
+
+    // Bank
+    BANK_CONNECTED_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "BANK001", "연결된 계좌를 찾을 수 없습니다."),
+    BANK_INVALID_ACCOUNT_TYPE(HttpStatus.BAD_REQUEST, "BANK002", "유효하지 않은 계좌 유형입니다."),
+    BANK_SETTLEMENT_ACCOUNT_REGISTER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK003", "정산 계좌 등록에 실패했습니다."),
+    BANK_ACCOUNT_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "BANK004", "계좌 실명 검증에 실패했습니다."),
+    BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK005", "계좌 실명 검증 요청에 실패했습니다."),
+    BANK_PRIMARY_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "BANK006", "대표 정산 계좌가 없습니다."),
+    BANK_ACCOUNT_CONNECT_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK007", "계좌 연결 요청에 실패했습니다."),
 
     // Party Operation
     PARTY_OPERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY023", "파티 운영 정보가 존재하지 않습니다."),
@@ -77,7 +87,6 @@ public enum ErrorCode {
     PARTY_OPERATION_RESET_REQUIRED(HttpStatus.BAD_REQUEST, "PARTY030", "운영 재설정이 필요한 상태입니다."),
     PARTY_OPERATION_NOT_READABLE(HttpStatus.BAD_REQUEST, "PARTY031", "현재 상태에서는 운영 정보를 조회할 수 없습니다."),
     PARTY_OPERATION_PASSWORD_DECRYPT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PARTY032", "공유 계정 비밀번호를 불러오는 중 오류가 발생했습니다.");
-
 
     private final HttpStatus status;
     private final String code;

@@ -30,7 +30,10 @@ public class TossPaymentClient {
     }
 
     public TossBillingAuthResponse issueBillingKey(TossBillingAuthRequest request) {
+        validateBillingAuthRequest(request);
+
         log.info("토스 빌링키 발급 요청. customerKey={}", request.customerKey());
+
         try {
             return webClient.post()
                     .uri(tossPaymentProperties.getBaseUrl() + "/v1/billing/authorizations/issue")
@@ -41,15 +44,18 @@ public class TossPaymentClient {
                     .bodyToMono(TossBillingAuthResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
-            log.error("토스 빌링키 발급 실패. status={}", e.getStatusCode());
+            log.error("토스 빌링키 발급 실패. status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new PaymentException(ErrorCode.PAYMENT_BILLING_KEY_ISSUE_FAILED);
         }
     }
 
     public TossBillingPaymentResponse executeBillingPayment(
             String billingKey,
-            TossBillingPaymentRequest request
+            TossBillingPaymentRequest request,
+            String idempotencyKey
     ) {
+        validateBillingPaymentRequest(billingKey, request, idempotencyKey);
+
         log.info("토스 자동결제 요청. orderId={}, amount={}",
                 request.orderId(), request.amount());
 
@@ -57,14 +63,44 @@ public class TossPaymentClient {
             return webClient.post()
                     .uri(tossPaymentProperties.getBaseUrl() + "/v1/billing/" + billingKey)
                     .header(HttpHeaders.AUTHORIZATION, encodeSecretKey())
+                    .header("Idempotency-Key", idempotencyKey)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono(TossBillingPaymentResponse.class)
                     .block();
         } catch (WebClientResponseException e) {
-            log.error("토스 자동결제 실패. status={}", e.getStatusCode());
+            log.error("토스 자동결제 실패. status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new PaymentException(ErrorCode.PAYMENT_BILLING_EXECUTION_FAILED);
         }
+    }
+
+    private void validateBillingAuthRequest(TossBillingAuthRequest request) {
+        if (request == null || isBlank(request.customerKey())) {
+            throw new PaymentException(ErrorCode.PAYMENT_INVALID_BILLING_REQUEST);
+        }
+    }
+
+    private void validateBillingPaymentRequest(
+            String billingKey,
+            TossBillingPaymentRequest request,
+            String idempotencyKey
+    ) {
+        if (isBlank(billingKey)
+                || request == null
+                || isBlank(request.customerKey())
+                || isBlank(request.orderId())
+                || request.amount() == null
+                || request.amount() <= 0) {
+            throw new PaymentException(ErrorCode.PAYMENT_INVALID_BILLING_REQUEST);
+        }
+
+        if (isBlank(idempotencyKey)) {
+            throw new PaymentException(ErrorCode.PAYMENT_INVALID_IDEMPOTENCY_KEY);
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

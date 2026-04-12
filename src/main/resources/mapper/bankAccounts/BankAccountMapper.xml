@@ -13,6 +13,17 @@
         <result property="accountAlias" column="account_alias"/>
         <result property="accountNumMasked" column="account_num_masked"/>
         <result property="balanceAmt" column="balance_amt"/>
+        <result property="bankCode" column="bank_code"/>
+        <result property="accountNumber" column="account_number"/>
+        <result property="accountHolderName" column="account_holder_name"/>
+        <result property="accountHolderBirthDate" column="account_holder_birth_date"/>
+        <result property="accountType" column="account_type"/>
+        <result property="isPrimary" column="is_primary"/>
+        <result property="verificationStatus" column="verification_status"/>
+        <result property="verifiedAt" column="verified_at"/>
+        <result property="lastVerifiedAt" column="last_verified_at"/>
+        <result property="failReason" column="fail_reason"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="saveBankAccount"
@@ -22,15 +33,28 @@
             user_id, fintech_use_num, access_token, refresh_token,
             bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt
         ) VALUES (
-                     #{userId}, #{fintechUseNum}, #{accessToken}, #{refreshToken},
-                     #{bankTranId}, #{bankName}, #{accountAlias}, #{accountNumMasked}, COALESCE(#{balanceAmt}, 0)
-                 )
+            #{userId}, #{fintechUseNum}, #{accessToken}, #{refreshToken},
+            #{bankTranId}, #{bankName}, #{accountAlias}, #{accountNumMasked}, COALESCE(#{balanceAmt}, 0)
+        )
     </insert>
+
+    <select id="findAllByUserId" resultMap="BankAccountMap">
+        SELECT
+            id, user_id, fintech_use_num, access_token, refresh_token,
+            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt,
+            bank_code, account_number, account_holder_name, account_holder_birth_date,
+            account_type, is_primary, verification_status, verified_at, last_verified_at, fail_reason, updated_at
+        FROM bank_accounts
+        WHERE user_id = #{userId}
+        ORDER BY id DESC
+    </select>
 
     <select id="findByUserId" resultMap="BankAccountMap">
         SELECT
             id, user_id, fintech_use_num, access_token, refresh_token,
-            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt
+            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt,
+            bank_code, account_number, account_holder_name, account_holder_birth_date,
+            account_type, is_primary, verification_status, verified_at, last_verified_at, fail_reason, updated_at
         FROM bank_accounts
         WHERE user_id = #{userId}
         ORDER BY id DESC
@@ -39,10 +63,37 @@
     <select id="findByIdAndUserId" resultMap="BankAccountMap">
         SELECT
             id, user_id, fintech_use_num, access_token, refresh_token,
-            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt
+            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt,
+            bank_code, account_number, account_holder_name, account_holder_birth_date,
+            account_type, is_primary, verification_status, verified_at, last_verified_at, fail_reason, updated_at
         FROM bank_accounts
         WHERE id = #{id} AND user_id = #{userId}
-            LIMIT 1
+        LIMIT 1
+    </select>
+
+    <select id="findPrimaryByUserId" resultMap="BankAccountMap">
+        SELECT
+            id, user_id, fintech_use_num, access_token, refresh_token,
+            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt,
+            bank_code, account_number, account_holder_name, account_holder_birth_date,
+            account_type, is_primary, verification_status, verified_at, last_verified_at, fail_reason, updated_at
+        FROM bank_accounts
+        WHERE user_id = #{userId}
+          AND is_primary = TRUE
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByUserIdAndFintechUseNum" resultMap="BankAccountMap">
+        SELECT
+            id, user_id, fintech_use_num, access_token, refresh_token,
+            bank_tran_id, bank_name, account_alias, account_num_masked, balance_amt,
+            bank_code, account_number, account_holder_name, account_holder_birth_date,
+            account_type, is_primary, verification_status, verified_at, last_verified_at, fail_reason, updated_at
+        FROM bank_accounts
+        WHERE user_id = #{userId}
+          AND fintech_use_num = #{fintechUseNum}
+        LIMIT 1
     </select>
 
     <select id="existsByUserIdAndFintechUseNum" resultType="boolean">
@@ -65,7 +116,59 @@
             bank_name = #{bankName},
             account_alias = #{accountAlias},
             account_num_masked = #{accountNumMasked},
-            balance_amt = COALESCE(#{balanceAmt}, 0)
+            balance_amt = COALESCE(#{balanceAmt}, 0),
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+          AND fintech_use_num = #{fintechUseNum}
+    </update>
+
+    <update id="clearPrimaryByUserId">
+        UPDATE bank_accounts
+        SET is_primary = FALSE,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+          AND is_primary = TRUE
+    </update>
+
+    <update id="updateSettlementAccountMeta"
+            parameterType="pbl2.sub119.backend.bankaccounts.entity.BankAccount">
+        UPDATE bank_accounts
+        SET
+            bank_code = #{bankCode},
+            account_number = #{accountNumber},
+            account_holder_name = #{accountHolderName},
+            account_holder_birth_date = #{accountHolderBirthDate},
+            account_type = #{accountType},
+            is_primary = #{isPrimary},
+            verification_status = #{verificationStatus},
+            verified_at = #{verifiedAt},
+            last_verified_at = #{lastVerifiedAt},
+            fail_reason = #{failReason},
+            updated_at = #{updatedAt}
+        WHERE user_id = #{userId}
+          AND fintech_use_num = #{fintechUseNum}
+    </update>
+
+    <update id="updateVerificationSuccess">
+        UPDATE bank_accounts
+        SET
+            verification_status = 'VERIFIED',
+            verified_at = NOW(),
+            last_verified_at = NOW(),
+            fail_reason = NULL,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+          AND fintech_use_num = #{fintechUseNum}
+    </update>
+
+    <update id="updateVerificationFailure">
+        UPDATE bank_accounts
+        SET
+            verification_status = 'FAILED',
+            verified_at = NULL,
+            last_verified_at = NOW(),
+            fail_reason = #{failReason},
+            updated_at = NOW()
         WHERE user_id = #{userId}
           AND fintech_use_num = #{fintechUseNum}
     </update>
