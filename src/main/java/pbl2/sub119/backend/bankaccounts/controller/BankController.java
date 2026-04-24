@@ -19,6 +19,7 @@ import pbl2.sub119.backend.bankaccounts.controller.docs.BankDocs;
 import pbl2.sub119.backend.bankaccounts.dto.BankAuthState;
 import pbl2.sub119.backend.bankaccounts.dto.request.RegisterSettlementAccountRequest;
 import pbl2.sub119.backend.bankaccounts.dto.response.BankAccountSummaryResponse;
+import pbl2.sub119.backend.bankaccounts.dto.response.BankAuthorizeUrlResponse;
 import pbl2.sub119.backend.bankaccounts.dto.response.PrimaryBankAccountResponse;
 import pbl2.sub119.backend.bankaccounts.service.BankAuthStateStore;
 import pbl2.sub119.backend.bankaccounts.service.BankService;
@@ -152,5 +153,26 @@ public class BankController implements BankDocs {
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(url));
         return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
+    }
+
+    @Override
+    @GetMapping("/authorize-url")
+    public BankAuthorizeUrlResponse authorizeUrl(
+            @Auth final Accessor accessor,
+            @RequestParam Long productId
+    ) {
+        String state = bankAuthStateStore.create(accessor.getUserId(), productId);
+
+        String authorizeUrl = UriComponentsBuilder
+                .fromHttpUrl(kftcBaseUrl + "/oauth/2.0/authorize")
+                .queryParam("response_type", "code")
+                .queryParam("client_id", kftcClientId)
+                .queryParam("redirect_uri", kftcRedirectUrl)
+                .queryParam("scope", "login inquiry")
+                .queryParam("state", state)
+                .queryParam("auth_type", "0")
+                .toUriString();
+
+        return new BankAuthorizeUrlResponse(authorizeUrl);
     }
 }
