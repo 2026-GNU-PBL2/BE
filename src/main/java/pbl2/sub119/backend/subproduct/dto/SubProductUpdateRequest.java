@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.subproduct.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -12,7 +13,7 @@ import pbl2.sub119.backend.subproduct.enumerated.SubProductCategory;
 @AllArgsConstructor
 public class SubProductUpdateRequest {
 
-    @NotNull(message = "서비스명은 필수입니다.")
+    @NotBlank(message = "서비스명은 필수입니다.")
     private String serviceName;
 
     private String description;

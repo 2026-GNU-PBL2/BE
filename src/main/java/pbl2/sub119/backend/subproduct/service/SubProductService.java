@@ -88,7 +88,7 @@ public class SubProductService {
         String thumbnailUrl;
         if (image != null && !image.isEmpty()) {
             thumbnailUrl = s3UploadService.upload(image);
-        } else if (request.getThumbnailUrl() != null) {
+        } else if (request.getThumbnailUrl() != null && !request.getThumbnailUrl().isBlank()) {
             thumbnailUrl = request.getThumbnailUrl();
         } else {
             thumbnailUrl = existing.getThumbnailUrl();
