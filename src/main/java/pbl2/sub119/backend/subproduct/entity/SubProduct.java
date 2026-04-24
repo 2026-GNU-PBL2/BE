@@ -1,7 +1,9 @@
-
 package pbl2.sub119.backend.subproduct.entity;
 
 import lombok.*;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
+import pbl2.sub119.backend.subproduct.enumerated.SubProductCategory;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,13 +17,13 @@ public class SubProduct {
     private String description;
     private String thumbnailUrl;
 
-    // INVITE_CODE | ACCOUNT_SHARE
-    private String operationType;
+    private OperationType operationType;
+    private SubProductCategory category;
 
     private Integer maxMemberCount;
-    private Long basePrice;        // 서비스 전체 구독료
-    private Long pricePerMember;   // 파티원 1인당 결제 금액
-    private String status;         // ACTIVE 고정
+    private Long basePrice;
+    private Long pricePerMember;
+    private String status;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -3,8 +3,10 @@ package pbl2.sub119.backend.subproduct.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import pbl2.sub119.backend.auth.annotation.AdminOnly;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
@@ -15,7 +17,6 @@ import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
 
 import java.util.List;
-
 
 @AdminOnly
 @RestController
@@ -38,35 +39,21 @@ public class SubProductAdminController implements SubProductAdminDocs {
         return ResponseEntity.ok(subProductService.getProduct(id));
     }
 
-    /**
-     * POST /api/v1/admin/products
-     * {
-     *   "serviceName"    : "넷플릭스 프리미엄",
-     *   "description"    : "4명이 함께 쓰는 넷플릭스",
-     *   "thumbnailUrl"   : "https://cdn.submate.io/netflix.png",
-     *   "operationType"  : "ACCOUNT_SHARE",
-     *   "maxMemberCount" : 4,
-     *   "basePrice"      : 17000,
-     *   "pricePerMember" : 4500
-     * }
-     */
-
-
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SubProductResponse> createProduct(
             @Auth final Accessor accessor,
-            @Valid @RequestBody SubProductRequest request) {
+            @RequestPart("data") @Valid SubProductRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(subProductService.createProduct(request));
+                .body(subProductService.createProduct(request, image));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<SubProductResponse> updateProduct(
             @Auth final Accessor accessor,
             @PathVariable String id,
-            @Valid @RequestBody SubProductUpdateRequest request) {
-        return ResponseEntity.ok(subProductService.updateProduct(id, request));
+            @RequestPart("data") @Valid SubProductUpdateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(subProductService.updateProduct(id, request, image));
     }
-
-
 }
