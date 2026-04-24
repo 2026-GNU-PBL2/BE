@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.exception.BusinessException;
 import pbl2.sub119.backend.common.exception.NotFoundException;
-
 import pbl2.sub119.backend.subproduct.dto.SubProductRequest;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.dto.SubProductUpdateRequest;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class SubProductService {
 
     private final SubProductMapper subProductMapper;
+    private final S3UploadService s3UploadService;
 
     @Transactional(readOnly = true)
     public List<SubProductResponse> getProducts() {
@@ -41,20 +42,25 @@ public class SubProductService {
     }
 
     @Transactional
-    public SubProductResponse createProduct(SubProductRequest request) {
-        log.info("구독 상품 등록 시작. serviceName={}, operationType={}",
-                request.getServiceName(), request.getOperationType());
+    public SubProductResponse createProduct(SubProductRequest request, MultipartFile image) {
+        log.info("구독 상품 등록 시작. serviceName={}, operationType={}, category={}",
+                request.getServiceName(), request.getOperationType(), request.getCategory());
 
         if (subProductMapper.existsByServiceName(request.getServiceName())) {
             throw new BusinessException(ErrorCode.SUB_PRODUCT_DUPLICATE_NAME);
         }
 
+        String thumbnailUrl = (image != null && !image.isEmpty())
+                ? s3UploadService.upload(image)
+                : request.getThumbnailUrl();
+
         SubProduct product = SubProduct.builder()
                 .id(UUID.randomUUID().toString())
                 .serviceName(request.getServiceName())
                 .description(request.getDescription())
-                .thumbnailUrl(request.getThumbnailUrl())
+                .thumbnailUrl(thumbnailUrl)
                 .operationType(request.getOperationType())
+                .category(request.getCategory())
                 .maxMemberCount(request.getMaxMemberCount())
                 .basePrice(request.getBasePrice())
                 .pricePerMember(request.getPricePerMember())
@@ -68,7 +74,7 @@ public class SubProductService {
     }
 
     @Transactional
-    public SubProductResponse updateProduct(String id, SubProductUpdateRequest request) {
+    public SubProductResponse updateProduct(String id, SubProductUpdateRequest request, MultipartFile image) {
         log.info("구독 상품 수정 시작. id={}", id);
 
         SubProduct existing = subProductMapper.findById(id)
@@ -78,13 +84,24 @@ public class SubProductService {
             throw new BusinessException(ErrorCode.SUB_PRODUCT_DUPLICATE_NAME);
         }
 
-        // operation_type은 등록 후 변경 불가 → 기존 값 유지
+        // image 있으면 새 URL, 없으면 request.thumbnailUrl 우선, 그도 없으면 기존 URL 유지
+        String thumbnailUrl;
+        if (image != null && !image.isEmpty()) {
+            thumbnailUrl = s3UploadService.upload(image);
+        } else if (request.getThumbnailUrl() != null && !request.getThumbnailUrl().isBlank()) {
+            thumbnailUrl = request.getThumbnailUrl();
+        } else {
+            thumbnailUrl = existing.getThumbnailUrl();
+        }
+
+        // operationType은 등록 후 변경 불가 → 기존 값 유지
         SubProduct updated = SubProduct.builder()
                 .id(id)
                 .serviceName(request.getServiceName())
                 .description(request.getDescription())
-                .thumbnailUrl(request.getThumbnailUrl())
+                .thumbnailUrl(thumbnailUrl)
                 .operationType(existing.getOperationType())
+                .category(request.getCategory())
                 .maxMemberCount(request.getMaxMemberCount())
                 .basePrice(request.getBasePrice())
                 .pricePerMember(request.getPricePerMember())

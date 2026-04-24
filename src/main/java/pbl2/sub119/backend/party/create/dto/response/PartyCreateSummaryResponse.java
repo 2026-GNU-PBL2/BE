@@ -1,11 +1,13 @@
 package pbl2.sub119.backend.party.create.dto.response;
 
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
+
 // 파티 생성 전 요약 정보 응답값
 public record PartyCreateSummaryResponse(
         String productId,
         String productName,
         String thumbnailUrl,
-        String operationType,
+        OperationType operationType,
         Integer maxMemberCount, // 지정할 수 있는 최대 파티원 수
 
         Integer totalCapacity, // 총 인원 수

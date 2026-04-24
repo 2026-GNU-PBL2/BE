@@ -29,6 +29,12 @@ public enum ErrorCode {
     SUB_PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "PRODUCT001", "존재하지 않는 상품입니다."),
     SUB_PRODUCT_DUPLICATE_NAME(HttpStatus.BAD_REQUEST, "PRODUCT002", "이미 등록된 서비스명입니다."),
 
+    // S3
+    S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3001", "이미지 업로드에 실패했습니다."),
+    S3_FILE_EMPTY(HttpStatus.BAD_REQUEST, "S3002", "업로드할 파일이 비어 있습니다."),
+    S3_INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "S3003", "이미지 파일(image/*)만 업로드할 수 있습니다."),
+    S3_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "S3004", "파일 크기는 5MB를 초과할 수 없습니다."),
+
     // MAIL
     RECEIVED_MAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "MAIL001", "존재하지 않는 메일입니다."),
 
