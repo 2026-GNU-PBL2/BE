@@ -16,6 +16,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.bankaccounts.dto.request.RegisterSettlementAccountRequest;
 import pbl2.sub119.backend.bankaccounts.dto.response.BankAccountSummaryResponse;
+import pbl2.sub119.backend.bankaccounts.dto.response.BankAuthorizeUrlResponse;
 import pbl2.sub119.backend.bankaccounts.dto.response.PrimaryBankAccountResponse;
 import pbl2.sub119.backend.common.error.ErrorResponse;
 
@@ -111,4 +112,26 @@ public interface BankDocs {
     PrimaryBankAccountResponse getPrimaryAccount(
             @Parameter(hidden = true) @Auth Accessor accessor
     );
+
+    @Operation(
+            summary = "금융결제원 계좌 연결 인증 URL 조회",
+            description = """
+                프론트가 axios로 호출하여 오픈뱅킹 authorize URL을 응답받습니다.
+                이 API는 Authorization 헤더 기반 인증을 통과한 뒤 state를 생성/저장하고,
+                프론트는 응답받은 authorizeUrl로 window.location.href 이동하면 됩니다.
+                """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "오픈뱅킹 authorize URL 조회 성공",
+                    content = @Content(schema = @Schema(implementation = BankAuthorizeUrlResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    BankAuthorizeUrlResponse authorizeUrl(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "파티 생성 대상 상품 ID", required = true, example = "1")
+            @RequestParam Long productId
+    );
+
+
 }
