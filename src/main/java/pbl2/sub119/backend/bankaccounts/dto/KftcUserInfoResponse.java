@@ -29,6 +29,8 @@ public class KftcUserInfoResponse {
     public static class KftcAccountDto {
         @JsonProperty("fintech_use_num")
         private String fintechUseNum; // 핵심 식별자
+        @JsonProperty("bank_tran_id")
+        private String bankTranId;
         @JsonProperty("bank_name")
         private String bankName;
         @JsonProperty("account_alias")

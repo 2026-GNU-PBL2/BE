@@ -50,6 +50,7 @@ public class BankService {
         for (KftcUserInfoResponse.KftcAccountDto accountDto : userInfo.getResList()) {
             BankAccount bankAccount = BankAccount.builder()
                     .userId(userId)
+                    .bankTranId(accountDto.getBankTranId())
                     .fintechUseNum(accountDto.getFintechUseNum())
                     .accessToken(tokenResponse.getAccessToken())
                     .refreshToken(tokenResponse.getRefreshToken())
