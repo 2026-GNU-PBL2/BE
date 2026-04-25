@@ -113,6 +113,7 @@
         SET
             access_token = #{accessToken},
             refresh_token = #{refreshToken},
+            bank_tran_id = #{bankTranId},
             bank_name = #{bankName},
             account_alias = #{accountAlias},
             account_num_masked = #{accountNumMasked},
