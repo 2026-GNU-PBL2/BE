@@ -7,7 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
 import pbl2.sub119.backend.bankaccounts.config.KftcProperties;
 import pbl2.sub119.backend.bankaccounts.dto.KftcAccountRealNameResponse;
 import pbl2.sub119.backend.bankaccounts.dto.KftcTokenResponse;
@@ -16,6 +15,7 @@ import pbl2.sub119.backend.common.exception.BusinessException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_CONNECT_REQUEST_FAILED;
@@ -48,6 +48,7 @@ public class KftcApiClient {
                     .block();
 
             return objectMapper.readValue(tokenJson, KftcTokenResponse.class);
+
         } catch (Exception e) {
             log.error("KFTC token request failed", e);
             throw new BusinessException(BANK_ACCOUNT_CONNECT_REQUEST_FAILED);
@@ -57,13 +58,16 @@ public class KftcApiClient {
     public KftcUserInfoResponse requestUserInfo(KftcTokenResponse tokenResponse) {
         try {
             String userJson = webClient.get()
-                    .uri(kftcProperties.getBaseUrl() + "/v2.0/user/me?user_seq_no=" + tokenResponse.getUserSeqNo())
+                    .uri(kftcProperties.getBaseUrl()
+                            + "/v2.0/user/me?user_seq_no="
+                            + tokenResponse.getUserSeqNo())
                     .header("Authorization", "Bearer " + tokenResponse.getAccessToken())
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
             return objectMapper.readValue(userJson, KftcUserInfoResponse.class);
+
         } catch (Exception e) {
             log.error("KFTC user info request failed", e);
             throw new BusinessException(BANK_ACCOUNT_CONNECT_REQUEST_FAILED);
@@ -80,27 +84,58 @@ public class KftcApiClient {
         try {
             String resolvedBankTranId = resolveBankTranId(bankTranId);
             String tranDtime = LocalDateTime.now().format(TRAN_DTIME_FORMAT);
+            String clientAccessToken = requestClientAccessToken();
 
-            String uri = UriComponentsBuilder
-                    .fromUriString(kftcProperties.getBaseUrl() + "/v2.0/inquiry/real_name")
-                    .queryParam("bank_tran_id", resolvedBankTranId)
-                    .queryParam("bank_code_std", bankCode)
-                    .queryParam("account_num", accountNumber)
-                    .queryParam("account_holder_info_type", " ")
-                    .queryParam("account_holder_info", accountHolderBirthDate)
-                    .queryParam("tran_dtime", tranDtime)
-                    .toUriString();
+            Map<String, String> requestBody = Map.of(
+                    "bank_tran_id", resolvedBankTranId,
+                    "bank_code_std", bankCode,
+                    "account_num", accountNumber,
+                    "account_holder_info_type", "6",
+                    "account_holder_info", accountHolderBirthDate,
+                    "tran_dtime", tranDtime
+            );
 
-            String responseJson = webClient.get()
-                    .uri(uri)
-                    .header("Authorization", "Bearer " + accessToken)
+            log.info("[KFTC REAL_NAME REQUEST] {}", requestBody);
+
+            String responseJson = webClient.post()
+                    .uri(kftcProperties.getBaseUrl() + "/v2.0/inquiry/real_name")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + clientAccessToken)
+                    .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block();
 
+            log.info("[KFTC REAL_NAME RAW RESPONSE] {}", responseJson);
+
             return objectMapper.readValue(responseJson, KftcAccountRealNameResponse.class);
+
         } catch (Exception e) {
             log.error("KFTC real-name request failed", e);
+            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
+        }
+    }
+
+    public String requestClientAccessToken() {
+        try {
+            String tokenJson = webClient.post()
+                    .uri(kftcProperties.getBaseUrl() + "/oauth/2.0/token")
+                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                    .body(BodyInserters.fromFormData("client_id", kftcProperties.getClientId())
+                            .with("client_secret", kftcProperties.getClientSecret())
+                            .with("grant_type", "client_credentials")
+                            .with("scope", "oob"))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            log.info("[KFTC CLIENT TOKEN RAW RESPONSE] {}", tokenJson);
+
+            KftcTokenResponse tokenResponse = objectMapper.readValue(tokenJson, KftcTokenResponse.class);
+            return tokenResponse.getAccessToken();
+
+        } catch (Exception e) {
+            log.error("KFTC client token request failed", e);
             throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
         }
     }
@@ -110,17 +145,21 @@ public class KftcApiClient {
             return bankTranId;
         }
 
-        String orgCode = kftcProperties.getUseOrgCode();
-        if (orgCode == null || orgCode.isBlank()) {
-            orgCode = "M202600000";
+        String clientUseCode = kftcProperties.getUseOrgCode();
+
+        if (clientUseCode == null || clientUseCode.isBlank()) {
+            clientUseCode = "M202600071";
+        }
+
+        if (clientUseCode.length() != 10) {
+            throw new IllegalStateException("KFTC client_use_code는 10자리여야 합니다. clientUseCode=" + clientUseCode);
         }
 
         String randomPart = String.format(
-                "%011d",
-                ThreadLocalRandom.current().nextLong(0, 100_000_000_000L)
+                "%09d",
+                ThreadLocalRandom.current().nextLong(0, 1_000_000_000L)
         );
 
-        String generated = orgCode + randomPart;
-        return generated.length() > 20 ? generated.substring(0, 20) : generated;
+        return clientUseCode + "U" + randomPart;
     }
 }

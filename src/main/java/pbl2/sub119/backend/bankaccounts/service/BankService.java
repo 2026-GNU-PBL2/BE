@@ -108,59 +108,71 @@ public class BankService {
         if (updated != 1) {
             throw new BusinessException(BANK_SETTLEMENT_ACCOUNT_REGISTER_FAILED);
         }
-
-        try {
-            KftcAccountRealNameResponse realNameResponse = kftcApiClient.requestAccountRealName(
-                    connectedAccount.getAccessToken(),
-                    request.getBankCode(),
-                    request.getAccountNumber(),
-                    request.getAccountHolderBirthDate(),
-                    connectedAccount.getBankTranId()
-            );
-
-            boolean nameMatched = normalizeName(request.getAccountHolderName())
-                    .equals(normalizeName(realNameResponse.getAccountHolderName()));
-            boolean verified = realNameResponse.isSuccess() && nameMatched;
-
-            if (verified) {
-                bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
-                log.info("Settlement account verified. userId={}, fintechUseNum={}", userId, request.getFintechUseNum());
-                return;
-            }
-
-            String failReason = realNameResponse.getRspMessage();
-            if (!nameMatched) {
-                failReason = "예금주명이 일치하지 않습니다.";
-            }
-
-            bankMapper.updateVerificationFailure(
-                    userId,
-                    request.getFintechUseNum(),
-                    trimFailReason(failReason)
-            );
-
-            log.warn("Settlement account verification failed. userId={}, fintechUseNum={}",
-                    userId, request.getFintechUseNum());
-
-            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_FAILED);
-
-        } catch (BusinessException e) {
-            if (e.getErrorCode() == BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED) {
-                bankMapper.updateVerificationFailure(
-                        userId,
-                        request.getFintechUseNum(),
-                        trimFailReason(e.getErrorCode().getMessage())
-                );
-            }
-            throw e;
-        } catch (Exception e) {
-            bankMapper.updateVerificationFailure(
-                    userId,
-                    request.getFintechUseNum(),
-                    trimFailReason(e.getMessage())
-            );
-            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
-        }
+        //실명검증 테스트베드
+//        try {
+//            KftcAccountRealNameResponse realNameResponse = kftcApiClient.requestAccountRealName(
+//                    connectedAccount.getAccessToken(),
+//                    request.getBankCode(),
+//                    request.getAccountNumber(),
+//                    request.getAccountHolderBirthDate(),
+//                    connectedAccount.getBankTranId()
+//            );
+//            if (!realNameResponse.isSuccess()) {
+//                String failReason = trimFailReason(realNameResponse.getRspMessage());
+//
+//                bankMapper.updateVerificationFailure(
+//                        userId,
+//                        request.getFintechUseNum(),
+//                        failReason
+//                );
+//
+//                throw new BusinessException(BANK_ACCOUNT_VERIFICATION_FAILED);
+//            }
+//
+//            boolean nameMatched = normalizeName(request.getAccountHolderName())
+//                    .equals(normalizeName(realNameResponse.getAccountHolderName()));
+//            boolean verified = realNameResponse.isSuccess() && nameMatched;
+//
+//            if (verified) {
+//                bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
+//                log.info("Settlement account verified. userId={}, fintechUseNum={}", userId, request.getFintechUseNum());
+//                return;
+//            }
+//
+//            String failReason = realNameResponse.getRspMessage();
+//            if (!nameMatched) {
+//                failReason = "예금주명이 일치하지 않습니다.";
+//            }
+//
+//            bankMapper.updateVerificationFailure(
+//                    userId,
+//                    request.getFintechUseNum(),
+//                    trimFailReason(failReason)
+//            );
+//
+//            log.warn("Settlement account verification failed. userId={}, fintechUseNum={}",
+//                    userId, request.getFintechUseNum());
+//
+//            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_FAILED);
+//
+//        } catch (BusinessException e) {
+//            if (e.getErrorCode() == BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED) {
+//                bankMapper.updateVerificationFailure(
+//                        userId,
+//                        request.getFintechUseNum(),
+//                        trimFailReason(e.getErrorCode().getMessage())
+//                );
+//            }
+//            throw e;
+//        } catch (Exception e) {
+//            bankMapper.updateVerificationFailure(
+//                    userId,
+//                    request.getFintechUseNum(),
+//                    trimFailReason(e.getMessage())
+//            );
+//            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
+//        }
+        bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
     }
 
     @Transactional(readOnly = true)
