@@ -308,6 +308,7 @@ CREATE UNIQUE INDEX uk_party_operation_member_operation_member
     ON party_operation_member(party_operation_id, party_member_id);
 
 -- settlement (2026.04.04 / kyh)
+-- fee_deducted 추가 (2026.04.26 / kyh) : 파티원 수수료 전액 + 파티장 수수료 공제 합산
 CREATE TABLE settlement (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     party_id BIGINT NOT NULL,
@@ -316,6 +317,7 @@ CREATE TABLE settlement (
     member_count INT NOT NULL,
     unit_amount INT NOT NULL,
     total_amount BIGINT NOT NULL,
+    fee_deducted BIGINT NOT NULL DEFAULT 0,
     status VARCHAR(30) NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL

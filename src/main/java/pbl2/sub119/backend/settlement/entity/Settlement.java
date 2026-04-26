@@ -19,6 +19,7 @@ public class Settlement {
     private Integer memberCount;
     private Integer unitAmount;
     private Long totalAmount;
+    private Long feeDeducted;
     private SettlementStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

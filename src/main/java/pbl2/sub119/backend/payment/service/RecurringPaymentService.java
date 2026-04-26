@@ -74,6 +74,7 @@ public class RecurringPaymentService {
                 .billingDueAt(nextBillingDueAt)
                 .status(PartyCycleStatus.PAYMENT_PENDING)
                 .memberCountSnapshot(billableMemberCount)
+                // pricePerMemberSnapshot은 첫 회차에 수수료(FeePolicy.MEMBER_FEE)가 포함된 값으로 저장되며 이후 회차는 그대로 이어받는다.
                 .pricePerMemberSnapshot(target.getPricePerMemberSnapshot())
                 .createdAt(now)
                 .updatedAt(now)
