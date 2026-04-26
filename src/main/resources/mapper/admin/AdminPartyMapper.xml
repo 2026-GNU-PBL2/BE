@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.admin.party.mapper.AdminPartyMapper">
+
+    <!-- 파티 목록 -->
+    <select id="findParties" resultType="pbl2.sub119.backend.admin.party.dto.AdminPartyResponse">
+        SELECT
+            p.id AS partyId,
+            CONCAT('PTY-', LPAD(p.id, 3, '0')) AS displayPartyId,
+            sp.service_name AS productName,
+            u.nickname AS hostNickname,
+            p.current_member_count AS currentMemberCount,
+            p.capacity AS maxMemberCount,
+            p.price_per_member_snapshot AS pricePerMember,
+            pc.billing_due_at AS nextBillingDate,
+            p.recruit_status AS recruitStatus,
+            p.operation_status AS operationStatus
+        FROM party p
+                 JOIN sub_product sp ON sp.id = p.product_id
+                 JOIN users u ON u.id = p.host_user_id
+                 LEFT JOIN party_cycle pc ON pc.party_id = p.id
+        WHERE p.operation_status != 'TERMINATED'
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- 파티 상세 -->
+    <select id="findPartyById" resultType="pbl2.sub119.backend.admin.party.dto.AdminPartyDetailBaseResponse">
+        SELECT
+            p.id AS partyId,
+            CONCAT('PTY-', LPAD(p.id, 3, '0')) AS displayPartyId,
+            sp.service_name AS productName,
+            u.nickname AS hostNickname,
+            p.created_at AS createdAt,
+            p.current_member_count AS currentMemberCount,
+            p.capacity AS maxMemberCount,
+            p.price_per_member_snapshot AS pricePerMember,
+            pc.billing_due_at AS nextBillingDate,
+            p.recruit_status AS recruitStatus,
+            p.operation_status AS operationStatus
+        FROM party p
+                 JOIN sub_product sp ON sp.id = p.product_id
+                 JOIN users u ON u.id = p.host_user_id
+                 LEFT JOIN party_cycle pc ON pc.party_id = p.id
+        WHERE p.id = #{partyId}
+    </select>
+
+    <!-- 멤버 목록 -->
+    <select id="findMembersByPartyId" resultType="pbl2.sub119.backend.admin.party.dto.AdminPartyMemberResponse">
+        SELECT
+            u.id AS userId,
+            CONCAT('USR-', LPAD(u.id, 3, '0')) AS displayUserId,
+            u.nickname,
+            pm.role,
+            pm.status
+        FROM party_member pm
+                 JOIN users u ON u.id = pm.user_id
+        WHERE pm.party_id = #{partyId}
+        ORDER BY
+            CASE WHEN pm.role = 'HOST' THEN 0 ELSE 1 END,
+            pm.joined_at
+    </select>
+
+</mapper>

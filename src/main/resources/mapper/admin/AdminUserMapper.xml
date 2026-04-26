@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.admin.user.mapper.AdminUserMapper">
+
+    <resultMap id="adminUserResponseMap" type="pbl2.sub119.backend.admin.user.dto.AdminUserResponse">
+        <constructor>
+            <arg column="user_id" javaType="java.lang.Long"/>
+            <arg column="display_user_id" javaType="java.lang.String"/>
+            <arg column="nickname" javaType="java.lang.String"/>
+            <arg column="email" javaType="java.lang.String"/>
+            <arg column="phone_number" javaType="java.lang.String"/>
+            <arg column="role" javaType="pbl2.sub119.backend.common.enumerated.UserRole"/>
+            <arg column="status" javaType="pbl2.sub119.backend.common.enumerated.UserStatus"/>
+            <arg column="created_at" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <resultMap id="userEntityResultMap" type="pbl2.sub119.backend.user.entity.UserEntity">
+        <id property="id" column="id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="submateEmail" column="submate_email"/>
+        <result property="phoneNumber" column="phone_number"/>
+        <result property="pinHash" column="pin_hash"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deletedAt" column="deleted_at"/>
+    </resultMap>
+
+    <resultMap id="adminUserPartyResponseMap" type="pbl2.sub119.backend.admin.user.dto.AdminUserPartyResponse">
+        <constructor>
+            <arg column="party_id" javaType="java.lang.Long"/>
+            <arg column="product_name" javaType="java.lang.String"/>
+            <arg column="current_member_count" javaType="int"/>
+            <arg column="max_member_count" javaType="int"/>
+            <arg column="recruit_status" javaType="pbl2.sub119.backend.party.common.enumerated.RecruitStatus"/>
+            <arg column="operation_status" javaType="pbl2.sub119.backend.party.common.enumerated.OperationStatus"/>
+            <arg column="next_billing_date" javaType="java.time.LocalDateTime"/>
+        </constructor>
+    </resultMap>
+
+    <!-- 관리자 회원 목록 조회 -->
+    <select id="findUsers" resultMap="adminUserResponseMap">
+        SELECT
+            u.id AS user_id,
+            CONCAT('USR-', LPAD(u.id, 3, '0')) AS display_user_id,
+            u.nickname,
+            COALESCE(u.submate_email, ou.email) AS email,
+            u.phone_number,
+            u.role,
+            u.status,
+            u.created_at
+        FROM users u
+        LEFT JOIN oauth_user ou
+            ON ou.user_id = u.id
+        WHERE u.deleted_at IS NULL
+        ORDER BY u.created_at DESC
+    </select>
+
+    <!-- 관리자 회원 상세 기본 정보 조회 -->
+    <select id="findUserById" resultMap="userEntityResultMap">
+        SELECT
+            id,
+            nickname,
+            submate_email,
+            phone_number,
+            pin_hash,
+            role,
+            status,
+            created_at,
+            updated_at,
+            deleted_at
+        FROM users
+        WHERE id = #{userId}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 관리자 회원 이메일 조회 -->
+    <select id="findUserEmailByUserId" resultType="string">
+        SELECT
+            COALESCE(u.submate_email, ou.email)
+        FROM users u
+        LEFT JOIN oauth_user ou
+            ON ou.user_id = u.id
+        WHERE u.id = #{userId}
+        LIMIT 1
+    </select>
+
+    <!-- 파티장으로 이용중인 파티 목록 조회 -->
+    <select id="findUsingPartiesByHostUserId" resultMap="adminUserPartyResponseMap">
+        SELECT
+            p.id AS party_id,
+            sp.service_name AS product_name,
+            p.current_member_count,
+            p.capacity AS max_member_count,
+            p.recruit_status,
+            p.operation_status,
+            pc.billing_due_at AS next_billing_date
+        FROM party p
+        INNER JOIN sub_product sp
+            ON sp.id = p.product_id
+        LEFT JOIN party_cycle pc
+            ON pc.party_id = p.id
+           AND pc.status IN ('READY', 'ACTIVE')
+        WHERE p.host_user_id = #{userId}
+          AND p.operation_status IN ('WAITING_START', 'ACTIVE', 'TERMINATION_PENDING')
+        ORDER BY p.created_at DESC
+    </select>
+
+</mapper>

@@ -13,7 +13,7 @@ import pbl2.sub119.backend.auth.entity.Accessor;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @AdminOnly
-public class AdminController implements AdminDocs {
+public class AdminController implements AdminDocs.Check {
 
     @Override
     public ResponseEntity<String> checkAdmin(@Auth final Accessor accessor) {
