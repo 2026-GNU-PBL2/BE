@@ -26,15 +26,13 @@ import pbl2.sub119.backend.party.create.dto.request.PartyCreateRequest;
 import pbl2.sub119.backend.party.create.dto.request.PartyCreateSummaryRequest;
 import pbl2.sub119.backend.party.create.dto.response.PartyCreateResponse;
 import pbl2.sub119.backend.party.create.dto.response.PartyCreateSummaryResponse;
+import pbl2.sub119.backend.payment.policy.FeePolicy;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
 
 @Service
 @RequiredArgsConstructor
 public class PartyCreateService {
-
-    private static final long PLATFORM_FEE = 990L;
-    private static final long HOST_DISCOUNT = 500L;
 
     private final PartyMapper partyMapper;
     private final PartyMemberMapper partyMemberMapper;
@@ -64,12 +62,10 @@ public class PartyCreateService {
         // 파티장이 실제로 부담하는 금액 (전체 구독료 - 파티원들이 낸 금액)
         final long hostPayAmount = Math.max(0L, ottBasePrice - memberTotalAmount);
 
-        // 플랫폼 수수료 (파티 기준 고정 비용)
-        final long platformFee = PLATFORM_FEE;
-
-        // 정산 금액 (파티원 총 금액 - 수수료 + 파티장 할인)
+        // 정산 금액 = 파티원 총 납부액 - 파티장 수수료(490원)
+        // 파티원 수수료(990)는 플랫폼이 가져가고 파티장 할인(500) 적용 후 파티장에게 공제되는 금액
         final long expectedSettlementAmount =
-                Math.max(0L, memberTotalAmount - platformFee + HOST_DISCOUNT);
+                Math.max(0L, memberTotalAmount - FeePolicy.HOST_FEE);
 
         return new PartyCreateSummaryResponse(
                 product.getId(),
@@ -83,8 +79,8 @@ public class PartyCreateService {
                 memberPayAmount,
                 memberTotalAmount,
                 hostPayAmount,
-                PLATFORM_FEE,
-                HOST_DISCOUNT,
+                FeePolicy.MEMBER_FEE,
+                FeePolicy.MEMBER_FEE - FeePolicy.HOST_FEE,
                 expectedSettlementAmount,
                 "파티 매칭이 완료되면 첫 결제일과 정산일이 확정됩니다.",
                 "정산 금액은 실제 매칭 완료 인원과 결제 완료 여부에 따라 달라질 수 있습니다."

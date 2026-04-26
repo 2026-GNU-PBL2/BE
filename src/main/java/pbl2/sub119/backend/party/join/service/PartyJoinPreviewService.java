@@ -3,6 +3,7 @@ package pbl2.sub119.backend.party.join.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pbl2.sub119.backend.payment.policy.FeePolicy;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 import pbl2.sub119.backend.subproduct.service.SubProductService;
 import pbl2.sub119.backend.party.join.dto.response.PartyJoinPreviewResponse;
@@ -11,7 +12,6 @@ import pbl2.sub119.backend.party.join.dto.response.PartyJoinPreviewResponse;
 @RequiredArgsConstructor
 public class PartyJoinPreviewService {
 
-    private static final long PLATFORM_FEE = 990L;
     private static final long DEPOSIT_AMOUNT = 0L;
 
     private final SubProductService subProductService;
@@ -22,15 +22,15 @@ public class PartyJoinPreviewService {
         final SubProductResponse product = subProductService.getProduct(productId);
 
         final long productPricePerMember = product.getPricePerMember();
-        final long firstPaymentAmount = productPricePerMember + PLATFORM_FEE + DEPOSIT_AMOUNT;
-        final long recurringPaymentAmount = productPricePerMember + PLATFORM_FEE;
+        final long firstPaymentAmount = productPricePerMember + FeePolicy.MEMBER_FEE + DEPOSIT_AMOUNT;
+        final long recurringPaymentAmount = productPricePerMember + FeePolicy.MEMBER_FEE;
 
         return new PartyJoinPreviewResponse(
                 product.getId(),
                 product.getServiceName(),
                 product.getThumbnailUrl(),
                 productPricePerMember,
-                PLATFORM_FEE,
+                FeePolicy.MEMBER_FEE,
                 DEPOSIT_AMOUNT,
                 firstPaymentAmount,
                 recurringPaymentAmount,
