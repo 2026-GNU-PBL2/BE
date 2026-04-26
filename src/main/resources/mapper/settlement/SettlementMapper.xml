@@ -12,6 +12,7 @@
         <result property="memberCount" column="member_count"/>
         <result property="unitAmount" column="unit_amount"/>
         <result property="totalAmount" column="total_amount"/>
+        <result property="feeDeducted" column="fee_deducted"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
@@ -25,6 +26,7 @@
                member_count,
                unit_amount,
                total_amount,
+               fee_deducted,
                status,
                created_at,
                updated_at
@@ -44,6 +46,7 @@
             member_count,
             unit_amount,
             total_amount,
+            fee_deducted,
             status,
             created_at,
             updated_at
@@ -54,6 +57,7 @@
                      #{memberCount},
                      #{unitAmount},
                      #{totalAmount},
+                     #{feeDeducted},
                      #{status},
                      #{createdAt},
                      #{updatedAt}

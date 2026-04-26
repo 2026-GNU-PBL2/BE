@@ -11,6 +11,7 @@ import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
+import pbl2.sub119.backend.payment.policy.FeePolicy;
 import pbl2.sub119.backend.pointWallet.entity.PointWallet;
 import pbl2.sub119.backend.pointWallet.mapper.PointWalletMapper;
 import pbl2.sub119.backend.settlement.entity.Settlement;
@@ -58,7 +59,12 @@ public class SettlementService {
         }
 
         int unitAmount = cycle.getPricePerMemberSnapshot();
-        long totalAmount = (long) memberCount * unitAmount;
+        long totalCharged = (long) memberCount * unitAmount;
+
+        // 파티원 수수료 전액 회수 + 파티장 수수료 공제
+        long feeDeducted = (long) memberCount * FeePolicy.MEMBER_FEE + FeePolicy.HOST_FEE;
+        long totalAmount = Math.max(0L, totalCharged - feeDeducted);
+
         LocalDateTime now = LocalDateTime.now();
 
         Settlement settlement = Settlement.builder()
@@ -68,6 +74,7 @@ public class SettlementService {
                 .memberCount(memberCount)
                 .unitAmount(unitAmount)
                 .totalAmount(totalAmount)
+                .feeDeducted(feeDeducted)
                 .status(SettlementStatus.ACCRUED)
                 .createdAt(now)
                 .updatedAt(now)

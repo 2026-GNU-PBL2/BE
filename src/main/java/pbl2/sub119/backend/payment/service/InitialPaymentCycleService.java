@@ -8,6 +8,7 @@ import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.payment.dto.PartyPaymentReadinessInfo;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
+import pbl2.sub119.backend.payment.policy.FeePolicy;
 
 import java.time.LocalDateTime;
 
@@ -40,7 +41,7 @@ public class InitialPaymentCycleService {
                 .billingDueAt(now)
                 .status(PartyCycleStatus.PAYMENT_PENDING)
                 .memberCountSnapshot(info.getPendingMemberCount())
-                .pricePerMemberSnapshot(info.getPricePerMemberSnapshot())
+                .pricePerMemberSnapshot(Math.toIntExact(info.getPricePerMemberSnapshot() + FeePolicy.MEMBER_FEE))
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
