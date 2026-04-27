@@ -61,5 +61,4 @@ public interface PartyMemberMapper {
             @Param("memberId") Long memberId,
             @Param("status") PartyMemberStatus status
     );
-
 }

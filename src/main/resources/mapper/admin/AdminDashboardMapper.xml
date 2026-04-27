@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.admin.dashboard.mapper.AdminDashboardMapper">
+
+    <!-- 운영 중 상품 수 조회 -->
+    <select id="countOperatingProducts" resultType="int">
+        SELECT COUNT(*)
+        FROM sub_product
+        WHERE status = 'ACTIVE'
+    </select>
+
+    <!-- 활성 회원 수 조회 -->
+    <select id="countActiveMembers" resultType="int">
+        SELECT COUNT(DISTINCT user_id)
+        FROM party_member
+        WHERE status = 'ACTIVE'
+    </select>
+
+    <!-- 모집 중 파티 수 조회 -->
+    <select id="countRecruitingParties" resultType="int">
+        SELECT COUNT(*)
+        FROM party
+        WHERE recruit_status = 'RECRUITING'
+    </select>
+
+    <!-- 결제 실패 건수 조회 -->
+    <select id="countFailedPayments" resultType="int">
+        SELECT COUNT(*)
+        FROM party_cycle
+        WHERE status = 'FAILED'
+    </select>
+
+    <!-- 결제 문제 있는 파티 수 조회 -->
+    <select id="countFailedPaymentParties" resultType="int">
+        SELECT COUNT(DISTINCT party_id)
+        FROM party_cycle
+        WHERE status IN ('PAYMENT_PENDING', 'FAILED')
+    </select>
+
+    <!-- 자동 매칭 대기 회원 수 조회 -->
+    <select id="countWaitingMatchUsers" resultType="int">
+        SELECT COUNT(DISTINCT user_id)
+        FROM match_waiting_queue
+        WHERE status = 'WAITING'
+    </select>
+
+</mapper>
