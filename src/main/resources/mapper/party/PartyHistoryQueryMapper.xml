@@ -27,6 +27,7 @@
                  INNER JOIN sub_product sp
                             ON sp.id = p.product_id
         WHERE pm.user_id = #{userId}
+          AND pm.status IN ('ACTIVE','LEAVE_RESERVED','SWITCH_WAITING','LEFT','REMOVED')
         ORDER BY
             CASE
                 WHEN pm.status IN ('LEFT', 'REMOVED') THEN 1
