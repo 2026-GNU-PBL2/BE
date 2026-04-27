@@ -87,7 +87,7 @@ public interface AdminDocs {
                         주의 필요 항목 안내:
                         - failedPaymentPartyCount : 결제 실패가 발생한 파티 수
                         - waitingMatchUserCount : 자동 매칭 대기 중인 회원 수
-                        - recruitingPartyNoticeCount : 현재 모집 중인 파티 수
+                        - recruitingPartyCount : 현재 모집 중인 파티 수
 
                         자동 매칭 상태값 안내:
                         - WAITING : 파티 매칭 대기 중

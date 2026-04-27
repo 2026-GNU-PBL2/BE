@@ -55,8 +55,11 @@
             u.status,
             u.created_at
         FROM users u
-        LEFT JOIN oauth_user ou
-            ON ou.user_id = u.id
+        LEFT JOIN (
+            SELECT user_id, MIN(email) AS email
+            FROM oauth_user
+            GROUP BY user_id
+        ) ou ON ou.user_id = u.id
         WHERE u.deleted_at IS NULL
         ORDER BY u.created_at DESC
     </select>
@@ -91,21 +94,25 @@
     </select>
 
     <!-- 파티장으로 이용중인 파티 목록 조회 -->
+    <!-- 파티장으로 이용중인 파티 목록 조회 -->
     <select id="findUsingPartiesByHostUserId" resultMap="adminUserPartyResponseMap">
-        SELECT
-            p.id AS party_id,
-            sp.service_name AS product_name,
-            p.current_member_count,
-            p.capacity AS max_member_count,
-            p.recruit_status,
-            p.operation_status,
-            pc.billing_due_at AS next_billing_date
+        SELECT p.id              AS party_id,
+               sp.service_name   AS product_name,
+               p.current_member_count,
+               p.capacity        AS max_member_count,
+               p.recruit_status,
+               p.operation_status,
+               pc.billing_due_at AS next_billing_date
         FROM party p
-        INNER JOIN sub_product sp
-            ON sp.id = p.product_id
-        LEFT JOIN party_cycle pc
-            ON pc.party_id = p.id
-           AND pc.status IN ('READY', 'ACTIVE')
+                 INNER JOIN sub_product sp
+                            ON sp.id = p.product_id
+                 LEFT JOIN (
+            SELECT party_id, MIN(billing_due_at) AS billing_due_at
+            FROM party_cycle
+            WHERE status IN ('PAYMENT_PENDING', 'RUNNING')
+              AND billing_due_at >= NOW()
+            GROUP BY party_id
+        ) pc ON pc.party_id = p.id
         WHERE p.host_user_id = #{userId}
           AND p.operation_status IN ('WAITING_START', 'ACTIVE', 'TERMINATION_PENDING')
         ORDER BY p.created_at DESC

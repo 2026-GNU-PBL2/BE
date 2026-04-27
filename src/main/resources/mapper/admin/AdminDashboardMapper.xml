@@ -26,11 +26,11 @@
         WHERE recruit_status = 'RECRUITING'
     </select>
 
-    <!-- 결제 대기 + 결제 실패 건수 조회 -->
+    <!-- 결제 실패 건수 조회 -->
     <select id="countFailedPayments" resultType="int">
         SELECT COUNT(*)
         FROM party_cycle
-        WHERE status IN ('PAYMENT_PENDING', 'FAILED')
+        WHERE status = 'FAILED'
     </select>
 
     <!-- 결제 문제 있는 파티 수 조회 -->

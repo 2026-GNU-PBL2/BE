@@ -21,7 +21,20 @@
         FROM party p
                  JOIN sub_product sp ON sp.id = p.product_id
                  JOIN users u ON u.id = p.host_user_id
-                 LEFT JOIN party_cycle pc ON pc.party_id = p.id
+                 LEFT JOIN (
+            SELECT
+                pc1.party_id,
+                pc1.billing_due_at
+            FROM party_cycle pc1
+                     INNER JOIN (
+                SELECT party_id, MAX(cycle_no) AS cycle_no
+                FROM party_cycle
+                WHERE status IN ('PAYMENT_PENDING', 'PROCESSING', 'RUNNING')
+                GROUP BY party_id
+            ) latest
+                                ON latest.party_id = pc1.party_id
+                                    AND latest.cycle_no = pc1.cycle_no
+        ) pc ON pc.party_id = p.id
         WHERE p.operation_status != 'TERMINATED'
         ORDER BY p.created_at DESC
     </select>
@@ -43,7 +56,20 @@
         FROM party p
                  JOIN sub_product sp ON sp.id = p.product_id
                  JOIN users u ON u.id = p.host_user_id
-                 LEFT JOIN party_cycle pc ON pc.party_id = p.id
+                 LEFT JOIN (
+            SELECT
+                pc1.party_id,
+                pc1.billing_due_at
+            FROM party_cycle pc1
+                     INNER JOIN (
+                SELECT party_id, MAX(cycle_no) AS cycle_no
+                FROM party_cycle
+                WHERE status IN ('PAYMENT_PENDING', 'PROCESSING', 'RUNNING')
+                GROUP BY party_id
+            ) latest
+                                ON latest.party_id = pc1.party_id
+                                    AND latest.cycle_no = pc1.cycle_no
+        ) pc ON pc.party_id = p.id
         WHERE p.id = #{partyId}
     </select>
 
