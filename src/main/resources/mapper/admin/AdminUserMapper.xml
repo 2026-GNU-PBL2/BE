@@ -94,7 +94,6 @@
     </select>
 
     <!-- 파티장으로 이용중인 파티 목록 조회 -->
-    <!-- 파티장으로 이용중인 파티 목록 조회 -->
     <select id="findUsingPartiesByHostUserId" resultMap="adminUserPartyResponseMap">
         SELECT p.id              AS party_id,
                sp.service_name   AS product_name,
