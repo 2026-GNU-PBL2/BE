@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import pbl2.sub119.backend.admin.dashboard.dto.AdminDashboardResponse;
 import pbl2.sub119.backend.admin.party.dto.AdminPartyDetailResponse;
 import pbl2.sub119.backend.admin.party.dto.AdminPartyResponse;
@@ -330,6 +331,48 @@ public interface AdminDocs {
         ResponseEntity<AdminPartyDetailResponse> getParty(
                 @Parameter(hidden = true) @Auth Accessor accessor,
                 @PathVariable Long partyId
+        );
+    }
+
+    @Tag(
+            name = "Admin API",
+            description = "관리자 전용 API"
+    )
+    interface Payment {
+
+        @Operation(
+                summary = "결제 사이클 수동 재시도",
+                description = """
+                        FAILED 상태인 결제 사이클을 관리자가 수동으로 재시도합니다.
+
+                        이 API는 아래 화면에서 사용합니다.
+                        - 관리자 결제 실패 관리 페이지
+
+                        처리 기준:
+                        - 대상 사이클의 status 가 FAILED 이어야 합니다.
+                        - billing_due_at 기준 7일 이내에만 재시도할 수 있습니다.
+                        - FAILED 상태인 멤버 결제 레코드만 PAYMENT_PENDING 으로 초기화합니다.
+                          (PAID / CANCELLED 레코드는 유지됩니다.)
+                        - 재시도 요청은 party_history 에 PAYMENT_RETRY_REQUESTED 로 기록됩니다.
+                        - 실제 결제 실행은 PaymentExecutionRequestedEvent 를 통해 비동기로 처리됩니다.
+
+                        에러 안내:
+                        - 404 : 결제 사이클을 찾을 수 없음
+                        - 409 (PAYMENT009) : FAILED 상태가 아닌 사이클에 재시도 요청
+                        - 409 (PAYMENT010) : billing_due_at 으로부터 7일 초과
+                        """,
+                responses = {
+                        @ApiResponse(responseCode = "204", description = "재시도 요청 성공"),
+                        @ApiResponse(responseCode = "401", description = "토큰 없음 또는 유효하지 않은 토큰"),
+                        @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                        @ApiResponse(responseCode = "404", description = "결제 사이클을 찾을 수 없음"),
+                        @ApiResponse(responseCode = "409", description = "재시도 불가 상태 또는 기간 초과")
+                }
+        )
+        @PostMapping("/{partyCycleId}/retry")
+        ResponseEntity<Void> retryPaymentCycle(
+                @Parameter(hidden = true) @Auth Accessor accessor,
+                @PathVariable Long partyCycleId
         );
     }
 

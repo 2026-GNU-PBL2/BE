@@ -29,7 +29,6 @@ public class BillingKeyService {
     @Transactional
     public void issueBillingKey(Accessor accessor, BillingKeyIssueRequest request) {
         Long userId = accessor.getUserId();
-        Long partyId = Long.parseLong(request.partyId());
 
         billingKeyMapper.findByUserId(userId).ifPresent(existing -> {
             throw new PaymentException(ErrorCode.PAYMENT_BILLING_KEY_ALREADY_EXISTS);
@@ -53,6 +52,6 @@ public class BillingKeyService {
 
         billingKeyMapper.insert(billingKey);
 
-        eventPublisher.publishEvent(new BillingKeyIssuedEvent(userId, partyId, response.billingKey()));
+        eventPublisher.publishEvent(new BillingKeyIssuedEvent(userId, response.billingKey()));
     }
 }

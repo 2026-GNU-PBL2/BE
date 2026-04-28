@@ -346,3 +346,28 @@ CREATE INDEX idx_party_operation_member_user_id
     ON party_operation_member(user_id);
 CREATE UNIQUE INDEX uk_point_wallet_user
     ON point_wallet(user_id);
+
+
+--party_cycle_member_payment (2026.04.28 / kyh )
+CREATE TABLE party_cycle_member_payment (
+    id                BIGINT      NOT NULL AUTO_INCREMENT,
+    party_cycle_id    BIGINT      NOT NULL,
+    party_id          BIGINT      NOT NULL,
+    party_member_id   BIGINT      NOT NULL,
+    user_id           BIGINT      NOT NULL,
+    amount            INT         NOT NULL,
+    status            VARCHAR(20) NOT NULL DEFAULT 'PAYMENT_PENDING',
+    failure_reason    VARCHAR(500),
+    failure_code      VARCHAR(50),
+    external_tx_id    VARCHAR(200),
+    idempotency_key   VARCHAR(200),
+    paid_at           DATETIME,
+    failed_at         DATETIME,
+    created_at        DATETIME    NOT NULL,
+    updated_at        DATETIME    NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE  KEY uq_pcmp_cycle_member        (party_cycle_id, party_member_id),
+    INDEX   idx_pcmp_cycle_status           (party_cycle_id, status),
+    INDEX   idx_pcmp_party_cycle_status     (party_id, party_cycle_id, status),
+    INDEX   idx_pcmp_user_status_updated    (user_id, status, updated_at)
+);
