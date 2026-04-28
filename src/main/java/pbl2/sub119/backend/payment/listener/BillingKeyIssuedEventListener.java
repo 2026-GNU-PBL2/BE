@@ -33,7 +33,11 @@ public class BillingKeyIssuedEventListener {
                 paymentExecutionQueryMapper.findPendingPartyIdsByUserId(userId);
 
         for (Long partyId : candidatePartyIds) {
-            tryTriggerInitialPayment(partyId);
+            try {
+                tryTriggerInitialPayment(partyId);
+            } catch (Exception e) {
+                log.error("초기 결제 트리거 실패. partyId={}", partyId, e);
+            }
         }
     }
 
