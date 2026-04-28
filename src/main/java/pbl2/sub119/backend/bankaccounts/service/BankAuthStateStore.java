@@ -12,7 +12,7 @@ public class BankAuthStateStore {
 
     private final Map<String, BankAuthState> store = new ConcurrentHashMap<>();
 
-    public String create(Long userId, Long productId) {
+    public String create(Long userId, String productId) {
         String state = UUID.randomUUID().toString().replace("-", "");
         store.put(state, new BankAuthState(userId, productId));
         return state;

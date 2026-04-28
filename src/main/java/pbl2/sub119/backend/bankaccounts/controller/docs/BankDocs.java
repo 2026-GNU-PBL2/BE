@@ -37,8 +37,8 @@ public interface BankDocs {
     })
     ResponseEntity<Void> authorize(
             @Parameter(hidden = true) @Auth Accessor accessor,
-            @Parameter(description = "파티 생성 대상 상품 ID", required = true, example = "1")
-            @RequestParam Long productId
+            @Parameter(description = "파티 생성 대상 상품 ID", required = true, example = "11111111-1111-1111-1111-111111111111")
+            @RequestParam String productId
     );
 
     @Operation(
@@ -129,8 +129,8 @@ public interface BankDocs {
     })
     BankAuthorizeUrlResponse authorizeUrl(
             @Parameter(hidden = true) @Auth Accessor accessor,
-            @Parameter(description = "파티 생성 대상 상품 ID", required = true, example = "1")
-            @RequestParam Long productId
+            @Parameter(description = "파티 생성 대상 상품 ID", required = true, example = "11111111-1111-1111-1111-111111111111")
+            @RequestParam String productId
     );
 
 
