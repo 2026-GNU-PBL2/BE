@@ -52,6 +52,22 @@
         ORDER BY pm.id ASC
     </select>
 
+    <select id="findPendingPartyIdsByUserId" resultType="long">
+        SELECT DISTINCT pm.party_id
+        FROM party_member pm
+        WHERE pm.user_id = #{userId}
+          AND pm.status  = 'PENDING'
+          AND pm.role    = 'MEMBER'
+    </select>
+
+    <select id="countActiveMembersByPartyId" resultType="int">
+        SELECT COUNT(1)
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND role     = 'MEMBER'
+          AND status   = 'ACTIVE'
+    </select>
+
     <!-- 반복회차 과금 조회는 ACTIVE인 MEMBER만 대상으로 하고 LEAVE_RESERVED, SWITCH_WAITING은 제외한다. -->
     <select id="findRecurringChargeTargets" resultMap="PaymentChargeTargetMap">
         SELECT pm.party_id                  AS party_id,

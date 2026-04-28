@@ -110,6 +110,14 @@
           AND status = #{expectedStatus}
     </update>
 
+    <update id="failIfPendingOrProcessing">
+        UPDATE party_cycle
+        SET status     = 'FAILED',
+            updated_at = NOW()
+        WHERE id     = #{partyCycleId}
+          AND status IN ('PAYMENT_PENDING', 'PROCESSING')
+    </update>
+
     <insert id="save"
             parameterType="pbl2.sub119.backend.payment.entity.PartyCycle"
             useGeneratedKeys="true"

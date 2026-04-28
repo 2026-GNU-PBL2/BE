@@ -37,4 +37,8 @@ public interface PaymentExecutionQueryMapper {
             @Param("memberRole") PartyRole memberRole,
             @Param("billingKeyStatus") BillingKeyStatus billingKeyStatus
     );
+
+    List<Long> findPendingPartyIdsByUserId(@Param("userId") Long userId);
+
+    int countActiveMembersByPartyId(@Param("partyId") Long partyId);
 }
