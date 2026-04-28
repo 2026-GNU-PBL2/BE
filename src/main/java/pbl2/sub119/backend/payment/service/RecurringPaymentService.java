@@ -6,6 +6,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
@@ -91,8 +93,13 @@ public class RecurringPaymentService {
         log.info("다음 회차 cycle 생성 완료. partyId={}, partyCycleId={}, cycleNo={}",
                 target.getPartyId(), nextCycle.getId(), nextCycleNo);
 
-        eventPublisher.publishEvent(
-                new PaymentExecutionRequestedEvent(target.getPartyId(), nextCycle.getId())
-        );
+        Long partyId = target.getPartyId();
+        Long partyCycleId = nextCycle.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                eventPublisher.publishEvent(new PaymentExecutionRequestedEvent(partyId, partyCycleId));
+            }
+        });
     }
 }
