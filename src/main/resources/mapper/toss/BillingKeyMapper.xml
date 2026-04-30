@@ -30,6 +30,14 @@
                  )
     </insert>
 
+    <select id="findAnyByUserId" resultMap="BillingKeyMap">
+        SELECT id, user_id, billing_key, customer_key, provider,
+               status, card_company, masked_card_number, issued_at, expired_at
+        FROM billing_key
+        WHERE user_id = #{userId}
+        LIMIT 1
+    </select>
+
     <select id="findByUserId" resultMap="BillingKeyMap">
         SELECT id, user_id, billing_key, customer_key, provider,
                status, card_company, masked_card_number, issued_at, expired_at
@@ -54,6 +62,16 @@
     <update id="updateStatus">
         UPDATE billing_key
         SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateBillingKeyInfo">
+        UPDATE billing_key
+        SET billing_key        = #{billingKey},
+            card_company       = #{cardCompany},
+            masked_card_number = #{maskedCardNumber},
+            issued_at          = NOW(),
+            status             = 'ACTIVE'
         WHERE id = #{id}
     </update>
 

@@ -11,6 +11,7 @@ import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.toss.client.TossPaymentClient;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
 import pbl2.sub119.backend.toss.dto.request.TossBillingAuthRequest;
+import pbl2.sub119.backend.toss.dto.response.BillingKeyInfoResponse;
 import pbl2.sub119.backend.toss.dto.response.TossBillingAuthResponse;
 import pbl2.sub119.backend.toss.entity.BillingKeyEntity;
 import pbl2.sub119.backend.toss.event.BillingKeyIssuedEvent;
@@ -53,5 +54,37 @@ public class BillingKeyService {
         billingKeyMapper.insert(billingKey);
 
         eventPublisher.publishEvent(new BillingKeyIssuedEvent(userId, response.billingKey()));
+    }
+
+    @Transactional(readOnly = true)
+    public BillingKeyInfoResponse getBillingInfo(Accessor accessor) {
+        return billingKeyMapper.findByUserId(accessor.getUserId())
+                .map(BillingKeyInfoResponse::of)
+                .orElse(BillingKeyInfoResponse.empty());
+    }
+
+    @Transactional
+    public void changeBillingKey(Accessor accessor, BillingKeyIssueRequest request) {
+        Long userId = accessor.getUserId();
+
+        BillingKeyEntity existing = billingKeyMapper.findAnyByUserId(userId)
+                .orElseThrow(() -> new PaymentException(ErrorCode.PAYMENT_BILLING_KEY_NOT_FOUND));
+
+        String customerKey = "submate-" + userId;
+
+        log.info("빌링키 변경 요청. userId={}, customerKey={}", userId, customerKey);
+
+        TossBillingAuthResponse response = tossPaymentClient.issueBillingKey(
+                new TossBillingAuthRequest(request.authKey(), customerKey)
+        );
+
+        billingKeyMapper.updateBillingKeyInfo(
+                existing.getId(),
+                response.billingKey(),
+                response.cardCompany(),
+                response.cardNumber()
+        );
+
+        log.info("빌링키 변경 완료. userId={}", userId);
     }
 }
