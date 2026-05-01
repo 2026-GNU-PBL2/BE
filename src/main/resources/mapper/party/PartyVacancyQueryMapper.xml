@@ -36,10 +36,10 @@
             <arg column="monthlyPaymentAmount" javaType="java.lang.Long"/>
             <arg column="nextPaymentDate" javaType="java.time.LocalDateTime"/>
             <arg column="operationType" javaType="java.lang.String"/>
-            <arg column="partyStatusLabel" javaType="java.lang.String"/>
+            <arg column="recruitStatus" javaType="pbl2.sub119.backend.party.common.enumerated.RecruitStatus"/>
+            <arg column="operationStatus" javaType="pbl2.sub119.backend.party.common.enumerated.OperationStatus"/>
+            <arg column="vacancyType" javaType="pbl2.sub119.backend.party.common.enumerated.VacancyType"/>
             <arg column="joinAvailable" javaType="java.lang.Boolean"/>
-            <arg column="joinButtonLabel" javaType="java.lang.String"/>
-            <arg column="description" javaType="java.lang.String"/>
         </constructor>
     </resultMap>
 
@@ -198,63 +198,126 @@
             LIMIT 1
     </select>
 
-    <!-- 파티장 결원 예정/결원 파티 목록 조회 -->
-    <select id="findHostVacancyParties" resultMap="hostVacancyPartyResponseMap">
+    <!-- 파티장 결원 예정/결원 파티 상세 조회 -->
+    <select id="findHostVacancyDetail" resultMap="partyVacancyDetailResponseMap">
         WITH latest_cycle AS (
-        SELECT
-        x.party_id,
-        x.billing_due_at
-        FROM (
-        SELECT
-        pc.party_id,
-        pc.billing_due_at,
-        ROW_NUMBER() OVER (
-        PARTITION BY pc.party_id
-        ORDER BY pc.cycle_no DESC, pc.id DESC
-        ) AS rn
-        FROM party_cycle pc
-        ) x
-        WHERE x.rn = 1
+            SELECT
+                x.party_id,
+                x.billing_due_at
+            FROM (
+                     SELECT
+                         pc.party_id,
+                         pc.billing_due_at,
+                         ROW_NUMBER() OVER (
+                    PARTITION BY pc.party_id
+                    ORDER BY pc.cycle_no DESC, pc.id DESC
+                ) AS rn
+                     FROM party_cycle pc
+                 ) x
+            WHERE x.rn = 1
         )
         SELECT
-        p.id AS partyId,
-        p.product_id AS productId,
-        sp.service_name AS productName,
-        sp.thumbnail_url AS thumbnailUrl,
-        p.capacity AS totalCapacity,
-        (p.current_member_count - COALESCE(rh.reserved_host_count, 0)) AS currentMemberCount,
-        (p.capacity - (p.current_member_count - COALESCE(rh.reserved_host_count, 0))) AS remainingSeatCount,
-        p.price_per_member_snapshot AS monthlyPaymentAmount,
-        lc.billing_due_at AS nextPaymentDate,
-        '파티장 참여' AS joinButtonLabel
+            p.id AS partyId,
+            p.product_id AS productId,
+            sp.service_name AS productName,
+            sp.thumbnail_url AS thumbnailUrl,
+            p.host_user_id AS hostUserId,
+            p.capacity AS totalCapacity,
+            (p.current_member_count - COALESCE(rh.reserved_host_count, 0)) AS currentMemberCount,
+            (p.capacity - (p.current_member_count - COALESCE(rh.reserved_host_count, 0))) AS remainingSeatCount,
+            p.price_per_member_snapshot AS monthlyPaymentAmount,
+            lc.billing_due_at AS nextPaymentDate,
+            sp.operation_type AS operationType,
+            p.recruit_status AS recruitStatus,
+            p.operation_status AS operationStatus,
+            p.vacancy_type AS vacancyType,
+            CASE
+                WHEN p.recruit_status = 'RECRUITING'
+                    AND p.vacancy_type = 'HOST'
+                    AND p.current_member_count &lt; p.capacity THEN true
+                ELSE false
+                END AS joinAvailable
         FROM party p
-        INNER JOIN sub_product sp ON sp.id = p.product_id
-        LEFT JOIN latest_cycle lc ON lc.party_id = p.id
-        LEFT JOIN (
-        SELECT
-        pm.party_id,
-        COUNT(*) AS reserved_host_count
-        FROM party_member pm
-        WHERE pm.role = 'HOST'
-        AND pm.status = 'LEAVE_RESERVED'
-        GROUP BY pm.party_id
+                 INNER JOIN sub_product sp ON sp.id = p.product_id
+                 LEFT JOIN latest_cycle lc ON lc.party_id = p.id
+                 LEFT JOIN (
+            SELECT
+                pm.party_id,
+                COUNT(*) AS reserved_host_count
+            FROM party_member pm
+            WHERE pm.role = 'HOST'
+              AND pm.status = 'LEAVE_RESERVED'
+            GROUP BY pm.party_id
         ) rh ON rh.party_id = p.id
-        WHERE p.recruit_status = 'RECRUITING'
-        AND p.vacancy_type = 'HOST'
-        AND (
-        p.current_member_count &lt; p.capacity
-        OR COALESCE(rh.reserved_host_count, 0) > 0
+        WHERE p.id = #{partyId}
+          AND p.recruit_status = 'RECRUITING'
+          AND p.vacancy_type = 'HOST'
+          AND (
+            p.current_member_count &lt; p.capacity
+                OR COALESCE(rh.reserved_host_count, 0) > 0
+            )
+            LIMIT 1
+    </select>
+
+    <!-- 파티원 결원 예정/결원 파티 상세 조회 -->
+    <select id="findMemberVacancyDetail" resultMap="partyVacancyDetailResponseMap">
+        WITH latest_cycle AS (
+            SELECT
+                x.party_id,
+                x.billing_due_at
+            FROM (
+                     SELECT
+                         pc.party_id,
+                         pc.billing_due_at,
+                         ROW_NUMBER() OVER (
+                    PARTITION BY pc.party_id
+                    ORDER BY pc.cycle_no DESC, pc.id DESC
+                ) AS rn
+                     FROM party_cycle pc
+                 ) x
+            WHERE x.rn = 1
         )
-        <if test="productId != null and productId != ''">
-            AND p.product_id = #{productId}
-        </if>
-        ORDER BY
-        CASE
-        WHEN p.current_member_count &lt; p.capacity THEN 0
-        ELSE 1
-        END ASC,
-        lc.billing_due_at ASC,
-        p.created_at ASC
+        SELECT
+            p.id AS partyId,
+            p.product_id AS productId,
+            sp.service_name AS productName,
+            sp.thumbnail_url AS thumbnailUrl,
+            p.host_user_id AS hostUserId,
+            p.capacity AS totalCapacity,
+            (p.current_member_count - COALESCE(rm.reserved_member_count, 0)) AS currentMemberCount,
+            (p.capacity - (p.current_member_count - COALESCE(rm.reserved_member_count, 0))) AS remainingSeatCount,
+            p.price_per_member_snapshot AS monthlyPaymentAmount,
+            lc.billing_due_at AS nextPaymentDate,
+            sp.operation_type AS operationType,
+            p.recruit_status AS recruitStatus,
+            p.operation_status AS operationStatus,
+            p.vacancy_type AS vacancyType,
+            CASE
+                WHEN p.recruit_status = 'RECRUITING'
+                    AND p.vacancy_type = 'MEMBER'
+                    AND p.current_member_count &lt; p.capacity THEN true
+                ELSE false
+                END AS joinAvailable
+        FROM party p
+                 INNER JOIN sub_product sp ON sp.id = p.product_id
+                 LEFT JOIN latest_cycle lc ON lc.party_id = p.id
+                 LEFT JOIN (
+            SELECT
+                pm.party_id,
+                COUNT(*) AS reserved_member_count
+            FROM party_member pm
+            WHERE pm.role = 'MEMBER'
+              AND pm.status = 'LEAVE_RESERVED'
+            GROUP BY pm.party_id
+        ) rm ON rm.party_id = p.id
+        WHERE p.id = #{partyId}
+          AND p.recruit_status = 'RECRUITING'
+          AND p.vacancy_type = 'MEMBER'
+          AND (
+            p.current_member_count &lt; p.capacity
+                OR COALESCE(rm.reserved_member_count, 0) > 0
+            )
+            LIMIT 1
     </select>
 
 </mapper>

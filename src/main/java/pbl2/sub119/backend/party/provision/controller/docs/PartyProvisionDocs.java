@@ -19,12 +19,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionDashboardResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMeResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRevealResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
+import pbl2.sub119.backend.party.provision.dto.response.*;
 
 @Tag(name = "Party Provision API", description = "파티 이용 정보 등록, 확인, 조회 API")
 public interface PartyProvisionDocs {
@@ -299,6 +294,32 @@ public interface PartyProvisionDocs {
     @PostMapping("/{partyId}/provision/me/password")
     ResponseEntity<PartyProvisionPasswordRevealResponse> getMyProvisionPassword(
             @Parameter(hidden = true) @Auth Accessor accessor,
+            @PathVariable Long partyId
+    );
+
+    @Operation(
+            summary = "파티 모집 완료 여부 조회",
+            description = """
+                    파티의 모집 완료 여부를 조회합니다.
+
+                    이 API는 아래 화면에서 사용합니다.
+                    - 모집 중 화면
+                    - 모집 완료 후 이용 정보 등록/조회 진입 분기 화면
+
+                    응답값 안내
+                    - recruitCompleted : 모집 완료 여부입니다.
+                    - provisionAvailable : 이용 정보 등록/조회 가능 여부입니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "파티 모집 완료 여부 조회 성공",
+                            content = @Content(schema = @Schema(implementation = PartyRecruitStatusResponse.class))
+                    )
+            }
+    )
+    @GetMapping("/{partyId}/provision/recruit-status")
+    ResponseEntity<PartyRecruitStatusResponse> getRecruitStatus(
             @PathVariable Long partyId
     );
 }
