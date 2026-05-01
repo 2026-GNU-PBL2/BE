@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
-import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 
 @Getter
 @Builder
@@ -16,7 +16,7 @@ public class PartyProvision {
 
     private Long id;
     private Long partyId;
-    private ProvisionType operationType;
+    private OperationType operationType;
     private ProvisionStatus operationStatus;
     private String inviteValue;
     private String sharedAccountEmail;

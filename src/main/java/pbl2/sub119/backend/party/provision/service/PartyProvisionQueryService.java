@@ -16,7 +16,7 @@ import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRe
 import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
-import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 
@@ -85,22 +85,22 @@ public class PartyProvisionQueryService {
         final PartyProvisionMember provisionMember = getReadableProvisionMember(userId, partyId);
 
         final String inviteValue =
-                provision.getOperationType() == ProvisionType.INVITE_LINK
+                provision.getOperationType() == OperationType.INVITE_CODE
                         ? provision.getInviteValue()
                         : null;
 
         final String sharedAccountEmail =
-                provision.getOperationType() == ProvisionType.ACCOUNT_SHARED
+                provision.getOperationType() == OperationType.ACCOUNT_SHARE
                         ? provision.getSharedAccountEmail()
                         : null;
 
         final String maskedSharedAccountPassword =
-                provision.getOperationType() == ProvisionType.ACCOUNT_SHARED
+                provision.getOperationType() == OperationType.ACCOUNT_SHARE
                         ? maskPassword(decryptSharedPassword(provision.getSharedAccountPasswordEncrypted()))
                         : null;
 
         final boolean passwordRevealAvailable =
-                provision.getOperationType() == ProvisionType.ACCOUNT_SHARED;
+                provision.getOperationType() == OperationType.ACCOUNT_SHARE;
 
         return new PartyProvisionMeResponse(
                 provision.getId(),
@@ -127,7 +127,7 @@ public class PartyProvisionQueryService {
         final PartyProvision provision = getProvisionByPartyId(partyId);
         getReadableProvisionMember(userId, partyId);
 
-        if (provision.getOperationType() != ProvisionType.ACCOUNT_SHARED) {
+        if (provision.getOperationType() != OperationType.ACCOUNT_SHARE) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_READABLE);
         }
 
