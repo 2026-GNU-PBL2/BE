@@ -27,6 +27,8 @@ public interface PartyMemberMapper {
 
     List<PartyMember> findMembersByPartyId(@Param("partyId") Long partyId);
 
+    List<PartyMember> findPendingMembers(@Param("partyId") Long partyId);
+
     List<PartyMember> findLeaveReservedMembers(@Param("partyId") Long partyId);
 
     List<PartyMember> findSwitchWaitingMembers(@Param("partyId") Long partyId);
