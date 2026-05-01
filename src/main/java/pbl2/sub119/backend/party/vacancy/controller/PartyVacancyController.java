@@ -22,6 +22,7 @@ public class PartyVacancyController implements PartyVacancyDocs {
     private final PartyVacancyQueryService partyVacancyQueryService;
     private final PartyVacancyCommandService partyVacancyCommandService;
 
+    // 파티원 결원 예정/결원 파티 목록 조회
     @Override
     public ResponseEntity<List<MemberVacancyPartyResponse>> getMemberVacancyParties(
             final String productId
@@ -31,6 +32,7 @@ public class PartyVacancyController implements PartyVacancyDocs {
         );
     }
 
+    // 파티장 결원 예정/결원 파티 목록 조회
     @Override
     public ResponseEntity<List<HostVacancyPartyResponse>> getHostVacancyParties(
             final String productId
@@ -40,6 +42,7 @@ public class PartyVacancyController implements PartyVacancyDocs {
         );
     }
 
+    // 파티원 결원 예정/결원 파티 상세 조회
     @Override
     public ResponseEntity<PartyVacancyDetailResponse> getMemberVacancyDetail(
             final Long partyId
@@ -49,6 +52,7 @@ public class PartyVacancyController implements PartyVacancyDocs {
         );
     }
 
+    // 파티장 결원 예정/결원 파티 상세 조회
     @Override
     public ResponseEntity<PartyVacancyDetailResponse> getHostVacancyDetail(
             final Long partyId
@@ -58,13 +62,17 @@ public class PartyVacancyController implements PartyVacancyDocs {
         );
     }
 
+    // 결원 파티 직접 참여
     @Override
     public ResponseEntity<PartyVacancyJoinResponse> joinMemberVacancyParty(
             final Accessor accessor,
             final Long partyId
     ) {
         return ResponseEntity.ok(
-                partyVacancyCommandService.joinMemberVacancyParty(accessor.getUserId(), partyId)
+                partyVacancyCommandService.joinMemberVacancyParty(
+                        partyId,
+                        accessor.getUserId()
+                )
         );
     }
 }
