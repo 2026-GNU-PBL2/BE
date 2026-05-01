@@ -19,8 +19,10 @@ import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMeResponse
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRevealResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
+import pbl2.sub119.backend.party.provision.dto.response.PartyRecruitStatusResponse;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionQueryService;
+import pbl2.sub119.backend.party.provision.service.PartyRecruitStatusQueryService;
 
 @RestController
 @RequestMapping("/api/v1/parties")
@@ -29,6 +31,17 @@ public class PartyProvisionController implements PartyProvisionDocs {
 
     private final PartyProvisionCommandService partyProvisionCommandService;
     private final PartyProvisionQueryService partyProvisionQueryService;
+    private final PartyRecruitStatusQueryService partyRecruitStatusQueryService;
+
+    // 파티 모집 완료 여부 조회
+    @Override
+    public ResponseEntity<PartyRecruitStatusResponse> getRecruitStatus(
+            @PathVariable final Long partyId
+    ) {
+        return ResponseEntity.ok(
+                partyRecruitStatusQueryService.getRecruitStatus(partyId)
+        );
+    }
 
     // 파티장이 provision 정보를 최초 등록하거나 다시 저장
     @Override
@@ -53,7 +66,7 @@ public class PartyProvisionController implements PartyProvisionDocs {
         );
     }
 
-    // 파티장이 provision 대상 멤버 상태 목록 조회
+    // 파티장이 이용 대상 멤버 상태 목록 조회
     @Override
     public ResponseEntity<List<PartyProvisionMemberResponse>> getProvisionMembers(
             @Auth final Accessor accessor,
@@ -64,7 +77,7 @@ public class PartyProvisionController implements PartyProvisionDocs {
         );
     }
 
-    // 파티원이 provision 완료 확인
+    // 파티원이 이용 완료 확인
     @Override
     public ResponseEntity<PartyProvisionConfirmResponse> confirmProvision(
             @Auth final Accessor accessor,
@@ -75,7 +88,7 @@ public class PartyProvisionController implements PartyProvisionDocs {
         );
     }
 
-    // 파티장이 provision 재설정
+    // 파티장이 이용 재설정
     @Override
     public ResponseEntity<Void> resetProvision(
             @Auth final Accessor accessor,
@@ -86,7 +99,7 @@ public class PartyProvisionController implements PartyProvisionDocs {
         return ResponseEntity.ok().build();
     }
 
-    // 본인에게 필요한 provision 정보 조회
+    // 본인에게 필요한 이용 정보 조회
     @Override
     public ResponseEntity<PartyProvisionMeResponse> getMyProvisionInfo(
             @Auth final Accessor accessor,

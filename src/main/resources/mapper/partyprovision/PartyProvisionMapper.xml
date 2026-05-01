@@ -9,7 +9,7 @@
         <id property="id" column="id"/>
         <result property="partyId" column="party_id"/>
         <result property="operationType" column="operation_type"
-                javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionType"/>
+                javaType="pbl2.sub119.backend.subproduct.enumerated.OperationType"/>
         <result property="operationStatus" column="operation_status"
                 javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus"/>
         <result property="inviteValue" column="invite_value"/>

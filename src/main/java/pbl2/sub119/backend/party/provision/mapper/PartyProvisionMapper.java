@@ -5,7 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
-import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 
 @Mapper
 public interface PartyProvisionMapper {
@@ -18,7 +18,7 @@ public interface PartyProvisionMapper {
 
     void updateSetup(
             @Param("id") Long id,
-            @Param("operationType") ProvisionType operationType,
+            @Param("operationType") OperationType operationType,
             @Param("inviteValue") String inviteValue,
             @Param("sharedAccountEmail") String sharedAccountEmail,
             @Param("sharedAccountPasswordEncrypted") String sharedAccountPasswordEncrypted,

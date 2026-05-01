@@ -113,6 +113,16 @@
         ORDER BY id ASC
     </select>
 
+    <select id="findPendingMembers" resultMap="partyMemberResultMap">
+        SELECT
+        <include refid="partyMemberColumns"/>
+        FROM party_member
+        WHERE party_id = #{partyId}
+          AND status = 'PENDING'
+          AND role = 'MEMBER'
+        ORDER BY id ASC
+    </select>
+
     <select id="findLeaveReservedMembers" resultMap="partyMemberResultMap">
         SELECT
         <include refid="partyMemberColumns"/>
