@@ -48,6 +48,9 @@ public interface PartyProvisionMemberMapper {
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
+    // confirm 미완료 타임아웃 대상 멤버 조회 (REQUIRED + N시간 경과)
+    List<PartyProvisionMember> findRequiredMembersTimedOut(@Param("thresholdHours") int thresholdHours);
+
     void markAllResetRequired(
             @Param("partyOperationId") Long partyOperationId,
             @Param("memberStatus") ProvisionMemberStatus memberStatus,

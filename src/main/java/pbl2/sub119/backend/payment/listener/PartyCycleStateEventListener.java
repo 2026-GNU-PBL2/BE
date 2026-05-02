@@ -1,0 +1,54 @@
+package pbl2.sub119.backend.payment.listener;
+
+import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
+import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
+import pbl2.sub119.backend.payment.entity.PartyCycle;
+import pbl2.sub119.backend.payment.event.PartyCyclePaymentCompletedEvent;
+import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
+import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PartyCycleStateEventListener {
+
+    private final PartyCycleMapper partyCycleMapper;
+    private final ApplicationEventPublisher eventPublisher;
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onPaymentCompleted(PartyCyclePaymentCompletedEvent event) {
+        log.info("결제 완료 → 사이클 상태 전환. partyCycleId={}, cycleNo={}",
+                event.partyCycleId(), event.cycleNo());
+
+        partyCycleMapper.compareAndUpdateStatus(
+                event.partyCycleId(), PartyCycleStatus.PROCESSING, PartyCycleStatus.RUNNING);
+
+        if (event.cycleNo() > 1) {
+            closePreviousCycle(event.partyId(), event.cycleNo());
+        }
+
+        eventPublisher.publishEvent(new SettlementRequestedEvent(event.partyId(), event.partyCycleId()));
+    }
+
+    private void closePreviousCycle(final Long partyId, final int currentCycleNo) {
+        final PartyCycle previousCycle =
+                partyCycleMapper.findByPartyIdAndCycleNo(partyId, currentCycleNo - 1);
+        if (previousCycle != null) {
+            partyCycleMapper.closeCycle(
+                    previousCycle.getId(),
+                    PartyCycleStatus.RUNNING,
+                    PartyCycleStatus.CLOSED,
+                    LocalDateTime.now()
+            );
+        }
+    }
+}
