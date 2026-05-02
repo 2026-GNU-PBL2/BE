@@ -58,4 +58,7 @@ public interface PartyMapper {
 
     // 빈자리 있는 경우에만 현재 멤버 증가
     int increaseCurrentMemberCountIfNotFull(Long partyId);
+
+    // provision 미등록 타임아웃 대상 파티 조회 (FULL + WAITING_START + provision 없음 + N시간 경과)
+    List<Party> findPartiesReadyForProvisionTimeout(@Param("thresholdHours") int thresholdHours);
 }

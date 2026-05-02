@@ -5,8 +5,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pbl2.sub119.backend.party.event.PartyProvisionSetupCompletedEvent;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.util.CryptoUtil;
 import pbl2.sub119.backend.party.common.entity.Party;
@@ -38,6 +40,7 @@ public class PartyProvisionCommandService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyProvisionMapper partyProvisionMapper;
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
+    private final ApplicationEventPublisher eventPublisher;
     private final CryptoUtil cryptoUtil;
 
     // 파티장이 provision 정보 최초 등록 또는 다시 저장
@@ -83,6 +86,9 @@ public class PartyProvisionCommandService {
 
             // 현재 provision 대상 멤버 초기화
             initializeMembers(provision.getId(), partyId, party.getHostUserId(), now);
+
+            // 파티장 provision 최초 등록 완료 → 파티원 결제 트리거
+            eventPublisher.publishEvent(new PartyProvisionSetupCompletedEvent(partyId));
 
             return new PartyProvisionSetupResponse(
                     provision.getId(),

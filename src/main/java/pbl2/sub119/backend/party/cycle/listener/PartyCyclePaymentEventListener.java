@@ -53,9 +53,6 @@ public class PartyCyclePaymentEventListener {
         log.info("결제 실패 이벤트 수신. partyId={}, partyCycleId={}, reason={}",
                 event.partyId(), event.partyCycleId(), event.reason());
 
-        // operationStatus 복구 불필요:
-        // AutoPaymentService는 결제 중 operationStatus를 변경하지 않으므로
-        // 첫 회차 실패 시 파티는 이미 WAITING_START 상태 유지.
         try {
             final String detail = objectMapper.writeValueAsString(Map.of(
                     "reason", event.reason(),
@@ -74,9 +71,8 @@ public class PartyCyclePaymentEventListener {
         }
     }
 
-    private void handleFirstCycleCompletion(Long partyId) {
-        // PENDING 멤버 ACTIVE 처리 + 멤버별 성공 히스토리 기록
-        List<PartyMember> pendingMembers = partyMemberMapper.findPendingMembers(partyId);
+    private void handleFirstCycleCompletion(final Long partyId) {
+        final List<PartyMember> pendingMembers = partyMemberMapper.findPendingMembers(partyId);
         for (PartyMember member : pendingMembers) {
             partyMemberMapper.updateStatusAndActivatedAt(member.getId(), PartyMemberStatus.ACTIVE);
             partyHistoryService.saveHistory(
@@ -88,15 +84,11 @@ public class PartyCyclePaymentEventListener {
             );
         }
 
-        // operationStatus ACTIVE 반영
         partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
-
-        // provision 시작 + current_member_count / recruit_status / vacancy_type 갱신
         partyCycleService.handleCycleStart(partyId);
     }
 
-    private void handleRecurringCycleCompletion(Long partyId) {
-        // 상태 전환 전 결제 대상(ACTIVE + LEAVE_RESERVED MEMBER)에 대해 먼저 히스토리 기록
+    private void handleRecurringCycleCompletion(final Long partyId) {
         partyMemberMapper.findMembersByPartyId(partyId).stream()
                 .filter(m -> m.getRole() == PartyRole.MEMBER)
                 .filter(m -> m.getStatus() == PartyMemberStatus.ACTIVE
@@ -109,9 +101,6 @@ public class PartyCyclePaymentEventListener {
                         member.getUserId()
                 ));
 
-        // LEAVE_RESERVED → LEFT, SWITCH_WAITING → ACTIVE
-        // + current_member_count / recruit_status / vacancy_type 갱신
-        // + provision 멤버 구성 변경 반영
-        partyCycleService.confirmRecurringCycleStart(partyId);
+        partyCycleService.handleCycleStart(partyId);
     }
 }
