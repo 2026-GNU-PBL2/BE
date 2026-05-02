@@ -34,11 +34,25 @@ public class PartyJoinCommandService {
             try {
                 partyJoinService.joinParty(targetParty.getId(), userId);
 
+                final LocalDateTime now = LocalDateTime.now();
+                final MatchWaitingQueue immediateQueue = MatchWaitingQueue.builder()
+                        .productId(productId)
+                        .userId(userId)
+                        .status(MatchWaitingStatus.MATCHED)
+                        .requestedAt(now)
+                        .matchedAt(now)
+                        .canceledAt(null)
+                        .targetPartyId(targetParty.getId())
+                        .createdAt(now)
+                        .updatedAt(now)
+                        .build();
+                matchWaitingQueueMapper.insertMatchWaitingQueue(immediateQueue);
+
                 return new PartyJoinApplyResponse(
                         true,
                         false,
                         targetParty.getId(),
-                        null,
+                        immediateQueue.getId(),
                         "즉시 참여가 완료되었습니다."
                 );
             } catch (PartyException e) {

@@ -1,6 +1,9 @@
 package pbl2.sub119.backend.party.cycle.listener;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -29,6 +32,7 @@ public class PartyCyclePaymentEventListener {
     private final PartyHistoryService partyHistoryService;
     private final PartyMapper partyMapper;
     private final PartyMemberMapper partyMemberMapper;
+    private final ObjectMapper objectMapper;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -52,15 +56,22 @@ public class PartyCyclePaymentEventListener {
         // operationStatus 복구 불필요:
         // AutoPaymentService는 결제 중 operationStatus를 변경하지 않으므로
         // 첫 회차 실패 시 파티는 이미 WAITING_START 상태 유지.
-        partyHistoryService.saveHistory(
-                event.partyId(),
-                null,
-                PartyHistoryEventType.PAYMENT_EXECUTION_FAILED,
-                "{\"reason\":\"" + event.reason() + "\""
-                        + ",\"failedCount\":" + event.failedMemberCount()
-                        + ",\"pendingCount\":" + event.pendingMemberCount() + "}",
-                null
-        );
+        try {
+            final String detail = objectMapper.writeValueAsString(Map.of(
+                    "reason", event.reason(),
+                    "failedCount", event.failedMemberCount(),
+                    "pendingCount", event.pendingMemberCount()
+            ));
+            partyHistoryService.saveHistory(
+                    event.partyId(),
+                    null,
+                    PartyHistoryEventType.PAYMENT_EXECUTION_FAILED,
+                    detail,
+                    null
+            );
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("결제 실패 이력 직렬화 오류. partyId=" + event.partyId(), e);
+        }
     }
 
     private void handleFirstCycleCompletion(Long partyId) {
