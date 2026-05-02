@@ -16,7 +16,17 @@ public class ProvisionTimeoutScheduler {
     @Scheduled(fixedDelay = 3_600_000) // 1시간마다 실행
     public void run() {
         log.info("provision 타임아웃 스케줄러 실행");
-        provisionTimeoutService.processHostTimeout();
-        provisionTimeoutService.processMemberTimeout();
+
+        try {
+            provisionTimeoutService.processHostTimeout();
+        } catch (Exception e) {
+            log.error("파티장 타임아웃 처리 중 오류 발생", e);
+        }
+
+        try {
+            provisionTimeoutService.processMemberTimeout();
+        } catch (Exception e) {
+            log.error("파티원 타임아웃 처리 중 오류 발생", e);
+        }
     }
 }

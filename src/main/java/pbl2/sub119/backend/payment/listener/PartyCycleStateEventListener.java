@@ -29,8 +29,13 @@ public class PartyCycleStateEventListener {
         log.info("결제 완료 → 사이클 상태 전환. partyCycleId={}, cycleNo={}",
                 event.partyCycleId(), event.cycleNo());
 
-        partyCycleMapper.compareAndUpdateStatus(
+        final int updated = partyCycleMapper.compareAndUpdateStatus(
                 event.partyCycleId(), PartyCycleStatus.PROCESSING, PartyCycleStatus.RUNNING);
+
+        if (updated == 0) {
+            log.warn("사이클 상태 전환 실패 — 정산 발행 중단. partyCycleId={}", event.partyCycleId());
+            return;
+        }
 
         if (event.cycleNo() > 1) {
             closePreviousCycle(event.partyId(), event.cycleNo());
