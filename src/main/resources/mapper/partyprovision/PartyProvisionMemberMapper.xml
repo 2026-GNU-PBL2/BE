@@ -33,6 +33,7 @@
             <arg column="party_member_id" javaType="java.lang.Long"/>
             <arg column="user_id" javaType="java.lang.Long"/>
             <arg column="nickname" javaType="java.lang.String"/>
+            <arg column="submate_email" javaType="java.lang.String"/>
             <arg column="member_status"
                  javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
             <arg column="invite_sent_at" javaType="java.time.LocalDateTime"/>
@@ -149,6 +150,7 @@
             pom.party_member_id,
             pom.user_id,
             u.nickname,
+            u.submate_email,
             pom.member_status,
             pom.invite_sent_at,
             pom.must_complete_by,

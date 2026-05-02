@@ -9,6 +9,7 @@ public record PartyProvisionMemberResponse(
         Long partyMemberId,
         Long userId,
         String nickname,
+        String submateEmail,
         ProvisionMemberStatus memberStatus,
         LocalDateTime inviteSentAt,
         LocalDateTime mustCompleteBy,
