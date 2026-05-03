@@ -180,4 +180,13 @@
           AND current_member_count &lt; capacity
     </update>
 
+    <!-- provision 타임아웃 시 파티 해체 -->
+    <update id="terminateParty">
+        UPDATE party
+        SET operation_status = 'TERMINATED',
+            terminated_at    = #{terminatedAt},
+            updated_at       = #{terminatedAt}
+        WHERE id = #{partyId}
+    </update>
+
 </mapper>

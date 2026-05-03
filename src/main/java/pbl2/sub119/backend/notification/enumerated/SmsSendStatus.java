@@ -1,4 +1,7 @@
 package pbl2.sub119.backend.notification.enumerated;
 
-public class SmsSendStatus {
+public enum SmsSendStatus {
+    SUCCESS,
+    FAILED,
+    SKIPPED
 }

@@ -75,5 +75,4 @@ solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}
   sender-number: ${SOLAPI_SENDER_NUMBER}
-  api-url: https://api.coolsms.co.kr
   enabled: true

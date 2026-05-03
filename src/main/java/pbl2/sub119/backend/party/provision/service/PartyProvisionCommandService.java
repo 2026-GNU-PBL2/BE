@@ -5,8 +5,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
+import pbl2.sub119.backend.notification.event.event.InviteLinkRequiredEvent;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.util.CryptoUtil;
 import pbl2.sub119.backend.party.common.entity.Party;
@@ -39,6 +44,7 @@ public class PartyProvisionCommandService {
     private final PartyProvisionMapper partyProvisionMapper;
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
     private final CryptoUtil cryptoUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 파티장이 provision 정보 최초 등록 또는 다시 저장
     public PartyProvisionSetupResponse setupProvision(
@@ -83,6 +89,8 @@ public class PartyProvisionCommandService {
 
             // 현재 provision 대상 멤버 초기화
             initializeMembers(provision.getId(), partyId, party.getHostUserId(), now);
+
+            publishProvisionRequiredEvent(partyId, provision.getId(), party.getHostUserId(), request.provisionType());
 
             return new PartyProvisionSetupResponse(
                     provision.getId(),
@@ -446,5 +454,37 @@ public class PartyProvisionCommandService {
         }
 
         return cryptoUtil.encrypt(request.sharedAccountPassword());
+    }
+
+    // provision 최초 등록 후 파티원에게 알림 이벤트 발행
+    private void publishProvisionRequiredEvent(
+            final Long partyId,
+            final Long provisionId,
+            final Long hostUserId,
+            final ProvisionType provisionType
+    ) {
+        final List<Long> memberUserIds = partyMemberMapper
+                .findProvisionTargetMembersByPartyId(partyId)
+                .stream()
+                .filter(m -> !m.getUserId().equals(hostUserId))
+                .map(PartyMember::getUserId)
+                .toList();
+
+        if (memberUserIds.isEmpty()) {
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                if (provisionType == ProvisionType.ACCOUNT_SHARED) {
+                    eventPublisher.publishEvent(
+                            new AccountSharedCredentialRequiredEvent(partyId, provisionId, memberUserIds));
+                } else if (provisionType == ProvisionType.INVITE_LINK) {
+                    eventPublisher.publishEvent(
+                            new InviteLinkRequiredEvent(partyId, provisionId, memberUserIds));
+                }
+            }
+        });
     }
 }

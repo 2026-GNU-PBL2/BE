@@ -1,4 +1,17 @@
 package pbl2.sub119.backend.notification.dto.response;
 
-public class NotificationResponse {
+import java.time.LocalDateTime;
+import pbl2.sub119.backend.notification.enumerated.NotificationStatus;
+import pbl2.sub119.backend.notification.enumerated.NotificationType;
+
+public record NotificationResponse(
+        Long id,
+        Long partyId,
+        NotificationType type,
+        String title,
+        String content,
+        NotificationStatus status,
+        LocalDateTime createdAt,
+        LocalDateTime readAt
+) {
 }

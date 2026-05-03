@@ -1,4 +1,10 @@
 package pbl2.sub119.backend.notification.mapper;
 
-public class SmsSendLogMapper {
+import org.apache.ibatis.annotations.Mapper;
+import pbl2.sub119.backend.notification.entity.SmsSendLog;
+
+@Mapper
+public interface SmsSendLogMapper {
+
+    void insert(SmsSendLog smsSendLog);
 }

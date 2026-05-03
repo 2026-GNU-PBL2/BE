@@ -169,4 +169,24 @@
           AND status = 'WAITING'
     </select>
 
+    <!-- 파티 해체 후 재대기 등록 — 이미 WAITING이면 삽입 생략 -->
+    <insert id="insertIfAbsent"
+            parameterType="pbl2.sub119.backend.party.common.entity.MatchWaitingQueue"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO match_waiting_queue (
+            product_id, user_id, status, requested_at,
+            matched_at, canceled_at, target_party_id, created_at, updated_at
+        )
+        SELECT #{productId}, #{userId}, #{status}, #{requestedAt},
+               #{matchedAt}, #{canceledAt}, #{targetPartyId}, #{createdAt}, #{updatedAt}
+        FROM dual
+        WHERE NOT EXISTS (
+            SELECT 1 FROM match_waiting_queue
+            WHERE product_id = #{productId}
+              AND user_id    = #{userId}
+              AND status     = 'WAITING'
+        )
+    </insert>
+
 </mapper>

@@ -1,4 +1,6 @@
 package pbl2.sub119.backend.notification.enumerated;
 
-public class NotificationStatus {
+public enum NotificationStatus {
+    UNREAD,
+    READ
 }
