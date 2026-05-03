@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.notification.mapper.SmsSendLogMapper">
+
+    <insert id="insert" parameterType="pbl2.sub119.backend.notification.entity.SmsSendLog"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sms_send_log (
+            notification_id, user_id, phone_number, content,
+            status, fail_reason, created_at
+        ) VALUES (
+            #{notificationId}, #{userId}, #{phoneNumber}, #{content},
+            #{status}, #{failReason}, #{createdAt}
+        )
+    </insert>
+
+</mapper>
