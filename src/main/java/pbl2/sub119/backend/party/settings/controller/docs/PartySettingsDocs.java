@@ -44,7 +44,7 @@ public interface PartySettingsDocs {
                             content = @Content(schema = @Schema(implementation = PartySettingsResponse.class))
                     ),
                     @ApiResponse(responseCode = "403", description = "해당 파티의 멤버가 아님"),
-                    @ApiResponse(responseCode = "404", description = "파티 또는 결제 사이클 없음")
+                    @ApiResponse(responseCode = "404", description = "파티, 서브상품 또는 결제 사이클 없음")
             }
     )
     @GetMapping("/{partyId}/settings")

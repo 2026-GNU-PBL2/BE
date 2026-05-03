@@ -161,7 +161,7 @@ public class PartySettingsQueryService {
 
     private PartyCycle getRunningCycle(final Long partyId) {
         final PartyCycle cycle = partyCycleMapper.findLatestPendingOrRunningCycle(
-                partyId, PartyCycleStatus.RUNNING, PartyCycleStatus.RUNNING
+                partyId, PartyCycleStatus.PAYMENT_PENDING, PartyCycleStatus.RUNNING
         );
         if (cycle == null) {
             throw new PartyException(ErrorCode.PAYMENT_CYCLE_NOT_FOUND);
