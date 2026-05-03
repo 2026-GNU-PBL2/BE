@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
+import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.InviteLinkRequiredEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionReminderEvent;
@@ -16,7 +17,9 @@ import pbl2.sub119.backend.notification.event.event.MemberProvisionTimeoutNotice
 import pbl2.sub119.backend.notification.event.event.PartyMatchedEvent;
 import pbl2.sub119.backend.notification.event.event.PartyTerminatedEvent;
 import pbl2.sub119.backend.notification.event.event.PaymentFailedEvent;
+import pbl2.sub119.backend.notification.event.event.PaymentSucceededEvent;
 import pbl2.sub119.backend.notification.event.event.SettlementCompletedEvent;
+import pbl2.sub119.backend.notification.event.event.TestCardPaymentNoticeEvent;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
 import pbl2.sub119.backend.party.common.entity.Party;
@@ -92,6 +95,28 @@ public class NotificationEventListener {
         for (final Long userId : event.memberUserIds()) {
             sendSafely(userId, event.partyId(), NotificationType.HOST_PROVISION_DELAYED_NOTICE, title, content);
         }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onPaymentSucceeded(final PaymentSucceededEvent event) {
+        final Party party = partyMapper.findById(event.partyId());
+        if (party == null) {
+            return;
+        }
+
+        final String productName = resolveProductName(party.getProductId());
+        final String title = template.getTitle(NotificationType.PAYMENT_SUCCEEDED);
+        final String content = template.paymentSucceeded(productName);
+
+        sendSafely(event.payerUserId(), event.partyId(), NotificationType.PAYMENT_SUCCEEDED, title, content);
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onTestCardPaymentNotice(final TestCardPaymentNoticeEvent event) {
+        final String title = template.getTitle(NotificationType.TEST_CARD_PAYMENT_NOTICE);
+        final String content = template.testCardPaymentNotice();
+
+        sendSafely(event.userId(), null, NotificationType.TEST_CARD_PAYMENT_NOTICE, title, content);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -227,6 +252,22 @@ public class NotificationEventListener {
             if (!userId.equals(party.getHostUserId())) {
                 sendSafely(userId, event.partyId(), NotificationType.PARTY_TERMINATED, memberTitle, memberContent);
             }
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onMemberAutoRematchStarted(final MemberAutoRematchStartedEvent event) {
+        final Party party = partyMapper.findById(event.partyId());
+        if (party == null) {
+            return;
+        }
+
+        final String productName = resolveProductName(party.getProductId());
+        final String title = template.getTitle(NotificationType.MEMBER_AUTO_REMATCH_STARTED);
+        final String content = template.memberAutoRematchStarted(productName);
+
+        for (final Long userId : event.requeuedUserIds()) {
+            sendSafely(userId, event.partyId(), NotificationType.MEMBER_AUTO_REMATCH_STARTED, title, content);
         }
     }
 

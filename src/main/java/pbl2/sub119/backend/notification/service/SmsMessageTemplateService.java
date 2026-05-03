@@ -130,10 +130,26 @@ public class SmsMessageTemplateService {
         );
     }
 
+    // 자동 재매칭 시작
+    public String memberAutoRematchStarted(final String productName) {
+        return String.format(
+                "[Submate] %s 파티가 해체되어 자동 재매칭이 시작됐어요.\n새 파티 매칭이 완료되면 다시 알려드릴게요.",
+                productName
+        );
+    }
+
     // 정산 완료
     public String settlementCompleted(final String productName) {
         return String.format(
                 "[Submate] %s 파티 정산이 완료됐어요.\n정산금, 정산일, 입금 계좌는 앱에서 확인해주세요.",
+                productName
+        );
+    }
+
+    // 결제 완료
+    public String paymentSucceeded(final String productName) {
+        return String.format(
+                "[Submate] %s 파티 결제가 완료됐어요.\n이용 내역은 앱에서 확인해주세요.",
                 productName
         );
     }

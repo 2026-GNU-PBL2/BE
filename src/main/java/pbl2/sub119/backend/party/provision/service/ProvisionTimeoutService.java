@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
+import java.util.ArrayList;
 import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
+import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionTimeoutNoticeEvent;
@@ -189,6 +191,7 @@ public class ProvisionTimeoutService {
 
         partyMapper.terminateParty(partyId, now);
 
+        final List<Long> requeuedUserIds = new ArrayList<>();
         for (final PartyMember member : members) {
             if (member.getStatus() != PartyMemberStatus.LEFT
                     && member.getStatus() != PartyMemberStatus.REMOVED) {
@@ -197,6 +200,7 @@ public class ProvisionTimeoutService {
                 // 파티원은 자동 재매칭 대기열 복귀
                 if (!member.getUserId().equals(party.getHostUserId())) {
                     requeue(party.getProductId(), member.getUserId(), now);
+                    requeuedUserIds.add(member.getUserId());
                 }
             }
         }
@@ -212,6 +216,10 @@ public class ProvisionTimeoutService {
         eventPublisher.publishEvent(
                 new PartyTerminatedEvent(partyId, memberUserIds, "파티장이 기한 내 이용 정보를 등록하지 않음")
         );
+
+        if (!requeuedUserIds.isEmpty()) {
+            eventPublisher.publishEvent(new MemberAutoRematchStartedEvent(partyId, requeuedUserIds));
+        }
 
         log.info("파티 해체 완료. partyId={}", partyId);
     }
