@@ -57,10 +57,11 @@ public class SmsMessageTemplateService {
 
     // 파티장 provision 리마인드
     public String hostProvisionReminder(final String productName, final int elapsedHours) {
+        final int remainingHours = 48 - elapsedHours;
         return String.format(
-                "[Submate] %s 이용 정보가 아직 등록되지 않았어요.\n모집 완료 후 %d시간이 지났습니다.\n기한 내 미등록 시 파티가 자동 해체됩니다.",
+                "[Submate] %s 이용 정보가 아직 등록되지 않았어요.\n등록 기한까지 %d시간 남았습니다.\n기한 내 미등록 시 파티가 자동 해체됩니다.",
                 productName,
-                elapsedHours
+                remainingHours
         );
     }
 
@@ -106,19 +107,21 @@ public class SmsMessageTemplateService {
 
     // 공유 계정 리마인드
     public String provisionAccountSharedReminder(final String productName, final int elapsedHours) {
+        final int remainingHours = 24 - elapsedHours;
         return String.format(
-                "[Submate] 아직 %s 이용 확인이 완료되지 않았어요.\n이용 정보 등록 후 %d시간이 지났습니다.\n미확인 기간은 환불 대상이 아닙니다.",
+                "[Submate] 아직 %s 이용 확인이 완료되지 않았어요.\n이용 확인 기한까지 %d시간 남았습니다.\n미확인 기간은 환불 대상이 아닙니다.",
                 productName,
-                elapsedHours
+                remainingHours
         );
     }
 
     // 초대 링크 리마인드
     public String provisionInviteAcceptRequired(final String productName, final int elapsedHours) {
+        final int remainingHours = 24 - elapsedHours;
         return String.format(
-                "[Submate] 아직 %s 초대 수락이 완료되지 않았어요.\n초대 링크 등록 후 %d시간이 지났습니다.\n늦게 수락하면 이용 기간이 줄어들 수 있어요.",
+                "[Submate] 아직 %s 초대 수락이 완료되지 않았어요.\n초대 수락 기한까지 %d시간 남았습니다.\n늦게 수락하면 이용 기간이 줄어들 수 있어요.",
                 productName,
-                elapsedHours
+                remainingHours
         );
     }
 

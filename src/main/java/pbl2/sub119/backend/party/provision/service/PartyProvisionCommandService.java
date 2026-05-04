@@ -27,8 +27,8 @@ import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
-import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 
 @Service
@@ -65,9 +65,9 @@ public class PartyProvisionCommandService {
 
         final String encryptedPassword = encryptSharedPasswordIfNeeded(request);
         final String normalizedInviteValue =
-                request.provisionType() == ProvisionType.INVITE_LINK ? request.inviteValue() : null;
+                request.provisionType() == OperationType.INVITE_CODE ? request.inviteValue() : null;
         final String normalizedSharedEmail =
-                request.provisionType() == ProvisionType.ACCOUNT_SHARED ? request.sharedAccountEmail() : null;
+                request.provisionType() == OperationType.ACCOUNT_SHARE ? request.sharedAccountEmail() : null;
         final String normalizedGuide = request.provisionGuide();
 
         // 최초 등록
@@ -430,13 +430,13 @@ public class PartyProvisionCommandService {
             throw new PartyException(ErrorCode.PARTY_OPERATION_TYPE_REQUIRED);
         }
 
-        if (request.provisionType() == ProvisionType.INVITE_LINK) {
+        if (request.provisionType() == OperationType.INVITE_CODE) {
             if (request.inviteValue() == null || request.inviteValue().isBlank()) {
                 throw new PartyException(ErrorCode.PARTY_OPERATION_INVITE_VALUE_REQUIRED);
             }
         }
 
-        if (request.provisionType() == ProvisionType.ACCOUNT_SHARED) {
+        if (request.provisionType() == OperationType.ACCOUNT_SHARE) {
             if (request.sharedAccountEmail() == null || request.sharedAccountEmail().isBlank()) {
                 throw new PartyException(ErrorCode.PARTY_OPERATION_SHARED_EMAIL_REQUIRED);
             }
@@ -449,7 +449,7 @@ public class PartyProvisionCommandService {
 
     // 공유계정형일 때만 비밀번호 암호화
     private String encryptSharedPasswordIfNeeded(final PartyProvisionSetupRequest request) {
-        if (request.provisionType() != ProvisionType.ACCOUNT_SHARED) {
+        if (request.provisionType() != OperationType.ACCOUNT_SHARE) {
             return null;
         }
 
@@ -461,7 +461,7 @@ public class PartyProvisionCommandService {
             final Long partyId,
             final Long provisionId,
             final Long hostUserId,
-            final ProvisionType provisionType
+            final OperationType provisionType
     ) {
         final List<Long> memberUserIds = partyMemberMapper
                 .findProvisionTargetMembersByPartyId(partyId)
@@ -477,10 +477,10 @@ public class PartyProvisionCommandService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                if (provisionType == ProvisionType.ACCOUNT_SHARED) {
+                if (provisionType == OperationType.ACCOUNT_SHARE) {
                     eventPublisher.publishEvent(
                             new AccountSharedCredentialRequiredEvent(partyId, provisionId, memberUserIds));
-                } else if (provisionType == ProvisionType.INVITE_LINK) {
+                } else if (provisionType == OperationType.INVITE_CODE) {
                     eventPublisher.publishEvent(
                             new InviteLinkRequiredEvent(partyId, provisionId, memberUserIds));
                 }

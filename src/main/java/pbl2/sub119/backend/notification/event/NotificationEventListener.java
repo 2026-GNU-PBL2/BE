@@ -25,8 +25,8 @@ import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.provision.entity.PartyProvision;
-import pbl2.sub119.backend.party.provision.enumerated.ProvisionType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.subproduct.entity.SubProduct;
 import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
 
@@ -198,7 +198,7 @@ public class NotificationEventListener {
         final String productName = resolveProductName(party.getProductId());
 
         // 공유계정형/초대링크형에 따라 문구와 타입 분기
-        if (provision.getOperationType() == ProvisionType.ACCOUNT_SHARED) {
+        if (provision.getOperationType() == OperationType.ACCOUNT_SHARE) {
             final String title = template.getTitle(NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER);
             final String content = template.provisionAccountSharedReminder(productName, event.elapsedHours());
 
