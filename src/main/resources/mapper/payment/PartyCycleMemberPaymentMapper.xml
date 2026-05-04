@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.payment.mapper.PartyCycleMemberPaymentMapper">
+
+    <resultMap id="MemberPaymentMap" type="pbl2.sub119.backend.payment.entity.PartyCycleMemberPayment">
+        <id     property="id"             column="id"/>
+        <result property="partyCycleId"   column="party_cycle_id"/>
+        <result property="partyId"        column="party_id"/>
+        <result property="partyMemberId"  column="party_member_id"/>
+        <result property="userId"         column="user_id"/>
+        <result property="amount"         column="amount"/>
+        <result property="status"         column="status"/>
+        <result property="failureReason"  column="failure_reason"/>
+        <result property="failureCode"    column="failure_code"/>
+        <result property="externalTxId"   column="external_tx_id"/>
+        <result property="idempotencyKey" column="idempotency_key"/>
+        <result property="paidAt"         column="paid_at"/>
+        <result property="failedAt"       column="failed_at"/>
+        <result property="createdAt"      column="created_at"/>
+        <result property="updatedAt"      column="updated_at"/>
+    </resultMap>
+
+    <insert id="insertIfAbsent"
+            parameterType="pbl2.sub119.backend.payment.entity.PartyCycleMemberPayment"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT IGNORE INTO party_cycle_member_payment (
+            party_cycle_id,
+            party_id,
+            party_member_id,
+            user_id,
+            amount,
+            status,
+            idempotency_key,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{partyCycleId},
+            #{partyId},
+            #{partyMemberId},
+            #{userId},
+            #{amount},
+            #{status},
+            #{idempotencyKey},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <update id="compareAndUpdateStatus">
+        UPDATE party_cycle_member_payment
+        SET status     = #{newStatus},
+            updated_at = NOW()
+        WHERE party_cycle_id  = #{partyCycleId}
+          AND party_member_id = #{partyMemberId}
+          AND status          = #{expectedStatus}
+    </update>
+
+    <update id="markPaid">
+        UPDATE party_cycle_member_payment
+        SET status         = 'PAID',
+            external_tx_id = #{externalTxId},
+            paid_at        = #{paidAt},
+            updated_at     = NOW()
+        WHERE party_cycle_id  = #{partyCycleId}
+          AND party_member_id = #{partyMemberId}
+          AND status          = 'PROCESSING'
+    </update>
+
+    <update id="markFailed">
+        UPDATE party_cycle_member_payment
+        SET status         = 'FAILED',
+            failure_reason = #{failureReason},
+            failure_code   = #{failureCode},
+            failed_at      = #{failedAt},
+            updated_at     = NOW()
+        WHERE party_cycle_id  = #{partyCycleId}
+          AND party_member_id = #{partyMemberId}
+          AND status          = 'PROCESSING'
+    </update>
+
+    <update id="bulkMarkFailedForDeadline">
+        UPDATE party_cycle_member_payment
+        SET status         = 'FAILED',
+            failure_reason = #{failureReason},
+            failure_code   = #{failureCode},
+            failed_at      = #{failedAt},
+            updated_at     = NOW()
+        WHERE party_cycle_id = #{partyCycleId}
+          AND status IN ('PAYMENT_PENDING', 'PROCESSING')
+    </update>
+
+    <!-- CANCELLED 는 정상 취소 — 완료 판정에서 제외 -->
+    <select id="countNonPaid" resultType="int">
+        SELECT COUNT(1)
+        FROM party_cycle_member_payment
+        WHERE party_cycle_id = #{partyCycleId}
+          AND status NOT IN ('PAID', 'CANCELLED')
+    </select>
+
+    <select id="countPendingOrProcessing" resultType="int">
+        SELECT COUNT(1)
+        FROM party_cycle_member_payment
+        WHERE party_cycle_id = #{partyCycleId}
+          AND status IN ('PAYMENT_PENDING', 'PROCESSING')
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(1)
+        FROM party_cycle_member_payment
+        WHERE party_cycle_id = #{partyCycleId}
+          AND status         = #{status}
+    </select>
+
+    <!-- 종료된 cycle 재처리 방지: pc.status 조건 포함 -->
+    <select id="findDeadlineExceededCycleIds" resultType="long">
+        SELECT DISTINCT pcmp.party_cycle_id
+        FROM party_cycle_member_payment pcmp
+                 INNER JOIN party_cycle pc ON pc.id = pcmp.party_cycle_id
+        WHERE pc.status   IN ('PAYMENT_PENDING', 'PROCESSING')
+          AND pc.billing_due_at &lt; #{deadline}
+          AND pcmp.status IN ('PAYMENT_PENDING', 'PROCESSING')
+    </select>
+
+    <!-- 재시도 전용: FAILED 레코드만 PAYMENT_PENDING으로 초기화, failure 필드 클리어 -->
+    <update id="resetFailedForRetry">
+        UPDATE party_cycle_member_payment
+        SET status         = 'PAYMENT_PENDING',
+            failure_reason = NULL,
+            failure_code   = NULL,
+            failed_at      = NULL,
+            updated_at     = NOW()
+        WHERE party_cycle_id = #{partyCycleId}
+          AND status         = 'FAILED'
+    </update>
+
+    <select id="findByCycleId" resultMap="MemberPaymentMap">
+        SELECT *
+        FROM party_cycle_member_payment
+        WHERE party_cycle_id = #{partyCycleId}
+        ORDER BY id ASC
+    </select>
+
+</mapper>

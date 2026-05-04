@@ -44,6 +44,7 @@ public class PartyJoinQueryService {
 
         return new PartyJoinMeResponse(
                 queue.getId(),
+                queue.getTargetPartyId(),
                 queue.getProductId(),
                 product.getServiceName(),
                 product.getThumbnailUrl(),

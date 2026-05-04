@@ -54,7 +54,7 @@ public class BankController implements BankDocs {
     @GetMapping("/authorize")
     public ResponseEntity<Void> authorize(
             @Auth final Accessor accessor,
-            @RequestParam Long productId
+            @RequestParam String productId
     ) {
         String state = bankAuthStateStore.create(accessor.getUserId(), productId);
 
@@ -159,7 +159,7 @@ public class BankController implements BankDocs {
     @GetMapping("/authorize-url")
     public BankAuthorizeUrlResponse authorizeUrl(
             @Auth final Accessor accessor,
-            @RequestParam Long productId
+            @RequestParam String productId
     ) {
         String state = bankAuthStateStore.create(accessor.getUserId(), productId);
 

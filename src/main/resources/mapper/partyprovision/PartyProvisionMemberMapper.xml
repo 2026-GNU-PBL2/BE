@@ -33,6 +33,7 @@
             <arg column="party_member_id" javaType="java.lang.Long"/>
             <arg column="user_id" javaType="java.lang.Long"/>
             <arg column="nickname" javaType="java.lang.String"/>
+            <arg column="submate_email" javaType="java.lang.String"/>
             <arg column="member_status"
                  javaType="pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus"/>
             <arg column="invite_sent_at" javaType="java.time.LocalDateTime"/>
@@ -149,6 +150,7 @@
             pom.party_member_id,
             pom.user_id,
             u.nickname,
+            u.submate_email,
             pom.member_status,
             pom.invite_sent_at,
             pom.must_complete_by,
@@ -186,6 +188,24 @@
         WHERE party_id = #{partyId}
           AND user_id = #{userId}
     </select>
+
+    <!-- confirm 미완료 타임아웃 대상 멤버 조회 (REQUIRED + N시간 경과, 미처리건만) -->
+    <select id="findRequiredMembersTimedOut" resultMap="partyOperationMemberResultMap">
+        SELECT
+        <include refid="partyOperationMemberColumns"/>
+        FROM party_operation_member
+        WHERE member_status = 'REQUIRED'
+          AND invite_sent_at &lt;= NOW() - INTERVAL #{thresholdHours} HOUR
+          AND penalty_applied = false
+    </select>
+
+    <!-- 멤버 타임아웃 처리 완료 마킹 -->
+    <update id="markPenaltyApplied">
+        UPDATE party_operation_member
+        SET penalty_applied = true,
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
 
     <!-- provision 완료 확인 처리 -->
     <update id="markActive">

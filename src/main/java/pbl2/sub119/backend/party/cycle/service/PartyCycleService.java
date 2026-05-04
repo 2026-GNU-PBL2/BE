@@ -24,28 +24,9 @@ public class PartyCycleService {
     private final PartyHistoryService partyHistoryService;
     private final PartyProvisionCommandService partyProvisionCommandService;
 
-    // 첫 회차 결제 성공 후 이용 주기 시작 시 서비스 상태 반영
+    // 회차 결제 성공 후 이용 주기 시작 시 서비스 상태 반영 (첫 회차 / 반복 회차 공통)
     @Transactional
     public void handleCycleStart(final Long partyId) {
-        final Party party = getPartyForUpdate(partyId);
-
-        final List<PartyMember> leaveReservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);
-        processLeaveReservedMembers(partyId, leaveReservedMembers);
-
-        final List<PartyMember> switchWaitingMembers = partyMemberMapper.findSwitchWaitingMembers(partyId);
-        processSwitchWaitingMembers(partyId, switchWaitingMembers);
-
-        refreshPartyState(partyId, party.getCapacity(), leaveReservedMembers);
-
-        partyProvisionCommandService.handleCycleStart(partyId);
-    }
-
-    // 반복 회차 시작 직전 상태 반영
-    // - LEAVE_RESERVED -> LEFT
-    // - SWITCH_WAITING -> ACTIVE
-    // - party current_member_count / recruit_status / vacancy_type 재반영
-    @Transactional
-    public void confirmRecurringCycleStart(final Long partyId) {
         final Party party = getPartyForUpdate(partyId);
 
         final List<PartyMember> leaveReservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);

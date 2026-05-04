@@ -11,6 +11,14 @@ import java.util.Optional;
 public interface BillingKeyMapper {
     void insert(BillingKeyEntity billingKey);
     Optional<BillingKeyEntity> findByUserId(@Param("userId") Long userId);
+    Optional<BillingKeyEntity> findAnyByUserId(@Param("userId") Long userId);
     List<BillingKeyEntity> findActiveByPartyId(@Param("partyId") Long partyId);
     void updateStatus(@Param("id") Long id, @Param("status") String status);
+
+    void updateBillingKeyInfo(
+            @Param("id") Long id,
+            @Param("billingKey") String billingKey,
+            @Param("cardCompany") String cardCompany,
+            @Param("maskedCardNumber") String maskedCardNumber
+    );
 }

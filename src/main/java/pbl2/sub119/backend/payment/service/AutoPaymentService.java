@@ -1,6 +1,5 @@
 package pbl2.sub119.backend.payment.service;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,22 +10,22 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import pbl2.sub119.backend.common.enumerated.BillingKeyStatus;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
-import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
-import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
-import pbl2.sub119.backend.party.common.mapper.PartyMapper;
-import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
-import pbl2.sub119.backend.party.common.service.PartyHistoryService;
-import pbl2.sub119.backend.party.cycle.service.PartyCycleService;
 import pbl2.sub119.backend.payment.dto.PaymentChargeTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
+import pbl2.sub119.backend.payment.entity.PartyCycleMemberPayment;
+import pbl2.sub119.backend.payment.enumerated.MemberPaymentStatus;
+import pbl2.sub119.backend.payment.event.PartyCyclePaymentCompletedEvent;
+import pbl2.sub119.backend.payment.event.PartyCyclePaymentFailedEvent;
+import pbl2.sub119.backend.payment.mapper.PartyCycleMemberPaymentMapper;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.mapper.PaymentExecutionQueryMapper;
-import pbl2.sub119.backend.notification.event.event.PartyMatchedEvent;
-import pbl2.sub119.backend.notification.event.event.PaymentFailedEvent;
-import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 import pbl2.sub119.backend.toss.client.TossPaymentClient;
 import pbl2.sub119.backend.toss.dto.request.TossBillingPaymentRequest;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -35,12 +34,9 @@ public class AutoPaymentService {
 
     private final PartyCycleMapper partyCycleMapper;
     private final PaymentExecutionQueryMapper paymentExecutionQueryMapper;
-    private final PartyMemberMapper partyMemberMapper;
-    private final PartyMapper partyMapper;
-    private final PartyHistoryService partyHistoryService;
+    private final PartyCycleMemberPaymentMapper memberPaymentMapper;
     private final TossPaymentClient tossPaymentClient;
     private final ApplicationEventPublisher eventPublisher;
-    private final PartyCycleService partyCycleService;
 
     @Transactional
     public void execute(Long partyId, Long partyCycleId) {
@@ -50,227 +46,175 @@ public class AutoPaymentService {
         }
 
         if (!claimCycle(partyCycleId)) {
-            log.info("자동결제 선점 실패 또는 이미 처리 중. partyId={}, partyCycleId={}", partyId, partyCycleId);
+            log.info("자동결제 선점 실패. partyId={}, partyCycleId={}", partyId, partyCycleId);
             return;
         }
 
-        partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
-
         if (cycle.getCycleNo() > 1) {
-            // 반복회차 정책:
-            // 1) 상태변이 먼저
-            // 2) 상태변이 후 ACTIVE MEMBER 수로 현재 cycle snapshot 재동기화
-            // 3) 그 다음 ACTIVE MEMBER만 결제
-            partyCycleService.confirmRecurringCycleStart(partyId);
             refreshRecurringSnapshot(partyId, partyCycleId);
         }
 
         PaymentTargets paymentTargets = resolvePaymentTargets(partyId, partyCycleId, cycle);
+
         if (paymentTargets.expectedMemberCount() == 0
                 || paymentTargets.targets().size() != paymentTargets.expectedMemberCount()) {
-            failCycle(cycle, partyId, partyCycleId, null, 0L, "INVALID_CHARGE_TARGET_COUNT");
+            failCycleAndPublish(partyId, partyCycleId, "INVALID_CHARGE_TARGET_COUNT");
             return;
         }
 
+        initMemberPayments(partyId, partyCycleId, paymentTargets.targets());
+
         for (PaymentChargeTarget target : paymentTargets.targets()) {
+            int claimed = memberPaymentMapper.compareAndUpdateStatus(
+                    partyCycleId, target.getMemberId(),
+                    MemberPaymentStatus.PAYMENT_PENDING, MemberPaymentStatus.PROCESSING);
+
+            if (claimed == 0) {
+                log.warn("멤버 결제 선점 실패(이미 처리됨). partyCycleId={}, memberId={}",
+                        partyCycleId, target.getMemberId());
+                continue;
+            }
+
             try {
-                tossPaymentClient.executeBillingPayment(
+                var response = tossPaymentClient.executeBillingPayment(
                         target.getBillingKey(),
                         new TossBillingPaymentRequest(
                                 target.getCustomerKey(),
                                 target.getAmount(),
                                 createOrderId(target),
-                                "Submate 파티 이용료"
-                        ),
+                                "Submate 파티 이용료"),
                         createIdempotencyKey(target)
                 );
 
-                if (paymentTargets.targetMemberStatus() == PartyMemberStatus.PENDING) {
-                    partyMemberMapper.updateStatusAndActivatedAt(
-                            target.getMemberId(),
-                            PartyMemberStatus.ACTIVE
-                    );
-                }
-
-                partyHistoryService.saveHistory(
-                        partyId,
-                        target.getMemberId(),
-                        PartyHistoryEventType.PAYMENT_EXECUTION_SUCCEEDED,
-                        "{\"userId\":" + target.getUserId() + "}",
-                        target.getUserId()
-                );
+                memberPaymentMapper.markPaid(
+                        partyCycleId, target.getMemberId(),
+                        response.paymentKey(), LocalDateTime.now());
 
             } catch (Exception e) {
-                log.error("자동결제 실패. partyId={}, partyCycleId={}, memberId={}, userId={}",
-                        partyId, partyCycleId, target.getMemberId(), target.getUserId(), e);
+                log.error("자동결제 실패. partyId={}, partyCycleId={}, memberId={}",
+                        partyId, partyCycleId, target.getMemberId(), e);
 
-                failCycle(
-                        cycle,
-                        partyId,
-                        partyCycleId,
-                        target.getMemberId(),
-                        target.getUserId(),
-                        "PAYMENT_API_FAILED"
-                );
+                memberPaymentMapper.markFailed(
+                        partyCycleId, target.getMemberId(),
+                        e.getMessage(), e.getClass().getSimpleName(), LocalDateTime.now());
+
+                failCycleAndPublish(partyId, partyCycleId, "PAYMENT_API_FAILED");
                 return;
             }
         }
 
-        int updated = partyCycleMapper.compareAndUpdateStatus(
-                partyCycleId,
-                PartyCycleStatus.PROCESSING,
-                PartyCycleStatus.RUNNING
+        // DB 기준 최종 완료 판정 (claimed==0 skip 케이스 포함)
+        int nonPaidCount = memberPaymentMapper.countNonPaid(partyCycleId);
+        if (nonPaidCount > 0) {
+            log.warn("미완료 멤버 존재. partyId={}, partyCycleId={}, nonPaidCount={}",
+                    partyId, partyCycleId, nonPaidCount);
+            failCycleAndPublish(partyId, partyCycleId, "INCOMPLETE_PAYMENT");
+            return;
+        }
+
+        // DB 기준 실제 PAID 카운트 (targets.size() 대신 DB 재조회)
+        int paidCount  = memberPaymentMapper.countByStatus(partyCycleId, MemberPaymentStatus.PAID);
+        int totalCount = paymentTargets.expectedMemberCount();
+        registerAfterCommit(() ->
+                eventPublisher.publishEvent(new PartyCyclePaymentCompletedEvent(
+                        partyId, partyCycleId, cycle.getCycleNo(), paidCount, totalCount))
         );
-        if (updated != 1) {
-            throw new IllegalStateException("party_cycle RUNNING 상태 전이 실패. partyCycleId=" + partyCycleId);
-        }
-
-        closePreviousCycleIfExists(cycle);
-
-        if (cycle.getCycleNo() == 1) {
-            partyCycleService.handleCycleStart(partyId);
-        }
-
-        partyMapper.updateOperationStatus(partyId, OperationStatus.ACTIVE);
-
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                log.info("정산 이벤트 발행(afterCommit). partyId={}, partyCycleId={}", partyId, partyCycleId);
-                eventPublisher.publishEvent(new SettlementRequestedEvent(partyId, partyCycleId));
-            }
-        });
 
         log.info("자동결제 전원 성공. partyId={}, partyCycleId={}", partyId, partyCycleId);
     }
 
+    private void initMemberPayments(Long partyId, Long partyCycleId,
+                                    List<PaymentChargeTarget> targets) {
+        LocalDateTime now = LocalDateTime.now();
+        for (PaymentChargeTarget target : targets) {
+            memberPaymentMapper.insertIfAbsent(
+                    PartyCycleMemberPayment.builder()
+                            .partyCycleId(partyCycleId)
+                            .partyId(partyId)
+                            .partyMemberId(target.getMemberId())
+                            .userId(target.getUserId())
+                            .amount(target.getAmount())
+                            .status(MemberPaymentStatus.PAYMENT_PENDING)
+                            .idempotencyKey(createIdempotencyKey(target))
+                            .createdAt(now)
+                            .updatedAt(now)
+                            .build()
+            );
+        }
+    }
+
     private void refreshRecurringSnapshot(Long partyId, Long partyCycleId) {
-        int billableMemberCount = partyCycleService.countRecurringBillableMembers(partyId);
+        int activeMemberCount = paymentExecutionQueryMapper.countActiveMembersByPartyId(partyId);
 
         int updated = partyCycleMapper.updateMemberCountSnapshot(
-                partyCycleId,
-                billableMemberCount,
-                PartyCycleStatus.PROCESSING
-        );
+                partyCycleId, activeMemberCount, PartyCycleStatus.PROCESSING);
 
         if (updated != 1) {
-            throw new IllegalStateException("party_cycle snapshot 갱신 실패. partyCycleId=" + partyCycleId);
+            throw new IllegalStateException(
+                    "party_cycle snapshot 갱신 실패. partyCycleId=" + partyCycleId);
         }
-
-        log.info("반복회차 snapshot 재동기화 완료. partyId={}, partyCycleId={}, memberCountSnapshot={}",
-                partyId, partyCycleId, billableMemberCount);
     }
 
+    // PAYMENT_PENDING → PROCESSING 만 허용 (FAILED → PROCESSING 자동 재시도 금지)
     private boolean claimCycle(Long partyCycleId) {
-        int claimed = partyCycleMapper.compareAndUpdateStatus(
-                partyCycleId,
-                PartyCycleStatus.PAYMENT_PENDING,
-                PartyCycleStatus.PROCESSING
-        );
-        if (claimed == 1) {
-            return true;
-        }
-
         return partyCycleMapper.compareAndUpdateStatus(
                 partyCycleId,
-                PartyCycleStatus.FAILED,
-                PartyCycleStatus.PROCESSING
-        ) == 1;
+                PartyCycleStatus.PAYMENT_PENDING,
+                PartyCycleStatus.PROCESSING) == 1;
     }
 
-    private PaymentTargets resolvePaymentTargets(Long partyId, Long partyCycleId, PartyCycle cycle) {
-        if (cycle.getCycleNo() == 1) {
-            PartyMemberStatus targetMemberStatus = PartyMemberStatus.PENDING;
-            int expectedMemberCount = paymentExecutionQueryMapper.countMembersByStatus(
-                    partyId,
-                    PartyRole.MEMBER,
-                    targetMemberStatus
-            );
-            List<PaymentChargeTarget> targets = paymentExecutionQueryMapper.findChargeTargets(
-                    partyId,
-                    partyCycleId,
-                    PartyRole.MEMBER,
-                    targetMemberStatus,
-                    BillingKeyStatus.ACTIVE
-            );
-            return new PaymentTargets(targetMemberStatus, expectedMemberCount, targets);
-        }
-
-        // 반복회차는 상태변이 이후 ACTIVE인 MEMBER만 결제 대상으로 조회한다.
-        int expectedMemberCount = paymentExecutionQueryMapper.countRecurringBillableMembers(
-                partyId,
-                PartyRole.MEMBER
-        );
-        List<PaymentChargeTarget> targets = paymentExecutionQueryMapper.findRecurringChargeTargets(
-                partyId,
-                partyCycleId,
-                PartyRole.MEMBER,
-                BillingKeyStatus.ACTIVE
-        );
-        return new PaymentTargets(null, expectedMemberCount, targets);
-    }
-
-    private void closePreviousCycleIfExists(PartyCycle currentCycle) {
-        if (currentCycle.getCycleNo() <= 1) {
-            return;
-        }
-
-        PartyCycle previousCycle = partyCycleMapper.findByPartyIdAndCycleNo(
-                currentCycle.getPartyId(),
-                currentCycle.getCycleNo() - 1
-        );
-
-        if (previousCycle == null) {
-            return;
-        }
-
-        int closed = partyCycleMapper.closeCycle(
-                previousCycle.getId(),
-                PartyCycleStatus.RUNNING,
-                PartyCycleStatus.CLOSED,
-                currentCycle.getBillingDueAt()
-        );
-
-        if (closed == 1) {
-            log.info("이전 cycle 종료 처리 완료. partyId={}, previousCycleId={}, currentCycleId={}",
-                    currentCycle.getPartyId(), previousCycle.getId(), currentCycle.getId());
-        }
-    }
-
-    private void failCycle(
-            PartyCycle cycle,
-            Long partyId,
-            Long partyCycleId,
-            Long memberId,
-            Long createdBy,
-            String reason
-    ) {
+    // CAS 성공(1회) 시에만 afterCommit 이벤트 등록 → 멱등성 보장
+    private void failCycleAndPublish(Long partyId, Long partyCycleId, String reason) {
         int updated = partyCycleMapper.compareAndUpdateStatus(
-                partyCycleId,
-                PartyCycleStatus.PROCESSING,
-                PartyCycleStatus.FAILED
-        );
+                partyCycleId, PartyCycleStatus.PROCESSING, PartyCycleStatus.FAILED);
+
         if (updated != 1) {
-            throw new IllegalStateException("party_cycle FAILED 상태 전이 실패. partyCycleId=" + partyCycleId);
+            log.warn("party_cycle FAILED 전이 실패(이미 처리됨). partyCycleId={}", partyCycleId);
+            return;
         }
 
-        if (cycle.getCycleNo() == 1) {
-            partyMapper.updateOperationStatus(partyId, OperationStatus.WAITING_START);
-        }
+        // failedCount/pendingCount: DB 재조회 기준 (루프 변수 금지)
+        // pendingCount: PAYMENT_PENDING + PROCESSING 합산 (장애 시 PROCESSING 잔존 포함)
+        int failedCount  = memberPaymentMapper.countByStatus(partyCycleId, MemberPaymentStatus.FAILED);
+        int pendingCount = memberPaymentMapper.countPendingOrProcessing(partyCycleId);
 
-        partyHistoryService.saveHistory(
-                partyId,
-                memberId,
-                PartyHistoryEventType.PAYMENT_EXECUTION_FAILED,
-                "{\"reason\":\"" + reason + "\"}",
-                createdBy
+        registerAfterCommit(() ->
+                eventPublisher.publishEvent(new PartyCyclePaymentFailedEvent(
+                        partyId, partyCycleId, failedCount, pendingCount, reason))
         );
+    }
+
+    private PaymentTargets resolvePaymentTargets(Long partyId, Long partyCycleId,
+                                                  PartyCycle cycle) {
+        if (cycle.getCycleNo() == 1) {
+            int expected = paymentExecutionQueryMapper.countMembersByStatus(
+                    partyId, PartyRole.MEMBER, PartyMemberStatus.PENDING);
+            List<PaymentChargeTarget> targets = paymentExecutionQueryMapper.findChargeTargets(
+                    partyId, partyCycleId, PartyRole.MEMBER,
+                    PartyMemberStatus.PENDING, BillingKeyStatus.ACTIVE);
+            return new PaymentTargets(expected, targets);
+        }
+
+        int expected = paymentExecutionQueryMapper.countActiveMembersByPartyId(partyId);
+        List<PaymentChargeTarget> targets = paymentExecutionQueryMapper.findRecurringChargeTargets(
+                partyId, partyCycleId, PartyRole.MEMBER, BillingKeyStatus.ACTIVE);
+        return new PaymentTargets(expected, targets);
+    }
+
+    private void registerAfterCommit(Runnable action) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                action.run();
+            }
+        });
     }
 
     private String createOrderId(PaymentChargeTarget target) {
         return "party-" + target.getPartyId()
                 + "-cycle-" + target.getPartyCycleId()
-                + "-user-" + target.getUserId();
+                + "-user-" + target.getUserId()
+                + "-" + UUID.randomUUID();
     }
 
     private String createIdempotencyKey(PaymentChargeTarget target) {
@@ -279,10 +223,5 @@ public class AutoPaymentService {
                 + ":user:" + target.getUserId();
     }
 
-    private record PaymentTargets(
-            PartyMemberStatus targetMemberStatus,
-            int expectedMemberCount,
-            List<PaymentChargeTarget> targets
-    ) {
-    }
+    private record PaymentTargets(int expectedMemberCount, List<PaymentChargeTarget> targets) {}
 }

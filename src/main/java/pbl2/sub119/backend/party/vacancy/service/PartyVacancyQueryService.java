@@ -18,12 +18,10 @@ public class PartyVacancyQueryService {
 
     private final PartyVacancyQueryMapper partyVacancyQueryMapper;
 
-    // 파티원 결원 예정/결원 파티 목록 조회
     public List<MemberVacancyPartyResponse> getMemberVacancyParties(final String productId) {
         return partyVacancyQueryMapper.findMemberVacancyParties(productId);
     }
 
-    // 파티원 결원 예정/결원 파티 상세 조회
     public PartyVacancyDetailResponse getMemberVacancyDetail(final Long partyId) {
         final PartyVacancyDetailResponse response =
                 partyVacancyQueryMapper.findMemberVacancyDetail(partyId);
@@ -35,8 +33,18 @@ public class PartyVacancyQueryService {
         return response;
     }
 
-    // 파티장 결원 예정/결원 파티 목록 조회
     public List<HostVacancyPartyResponse> getHostVacancyParties(final String productId) {
         return partyVacancyQueryMapper.findHostVacancyParties(productId);
+    }
+
+    public PartyVacancyDetailResponse getHostVacancyDetail(final Long partyId) {
+        final PartyVacancyDetailResponse response =
+                partyVacancyQueryMapper.findHostVacancyDetail(partyId);
+
+        if (response == null) {
+            throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
+        }
+
+        return response;
     }
 }

@@ -59,7 +59,7 @@ public interface PartyJoinDocs {
                     - 바로 참여 가능한 파티가 없으면 자동 매칭 대기 상태로 등록합니다.
 
                     상태값 안내
-                    - ACTIVE : 즉시 참여가 완료된 상태
+                    - MATCHED : 즉시 참여가 완료된 상태
                     - WAITING : 자동 매칭 대기열에 등록된 상태
                     - CANCELED : 사용자가 자동 매칭 신청을 취소한 상태
                     """,
