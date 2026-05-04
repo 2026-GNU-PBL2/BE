@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pbl2.sub119.backend.party.event.PartyProvisionSetupCompletedEvent;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
+import pbl2.sub119.backend.notification.event.event.InviteLinkRequiredEvent;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.common.util.CryptoUtil;
 import pbl2.sub119.backend.party.common.entity.Party;
@@ -24,8 +27,8 @@ import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
-import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
+import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 
 @Service
@@ -42,6 +45,7 @@ public class PartyProvisionCommandService {
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final CryptoUtil cryptoUtil;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 파티장이 provision 정보 최초 등록 또는 다시 저장
     public PartyProvisionSetupResponse setupProvision(
@@ -87,8 +91,7 @@ public class PartyProvisionCommandService {
             // 현재 provision 대상 멤버 초기화
             initializeMembers(provision.getId(), partyId, party.getHostUserId(), now);
 
-            // 파티장 provision 최초 등록 완료 → 파티원 결제 트리거
-            eventPublisher.publishEvent(new PartyProvisionSetupCompletedEvent(partyId));
+            publishProvisionRequiredEvent(partyId, provision.getId(), party.getHostUserId(), request.provisionType());
 
             return new PartyProvisionSetupResponse(
                     provision.getId(),
@@ -452,5 +455,37 @@ public class PartyProvisionCommandService {
         }
 
         return cryptoUtil.encrypt(request.sharedAccountPassword());
+    }
+
+    // provision 최초 등록 후 파티원에게 알림 이벤트 발행
+    private void publishProvisionRequiredEvent(
+            final Long partyId,
+            final Long provisionId,
+            final Long hostUserId,
+            final OperationType provisionType
+    ) {
+        final List<Long> memberUserIds = partyMemberMapper
+                .findProvisionTargetMembersByPartyId(partyId)
+                .stream()
+                .filter(m -> !m.getUserId().equals(hostUserId))
+                .map(PartyMember::getUserId)
+                .toList();
+
+        if (memberUserIds.isEmpty()) {
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                if (provisionType == OperationType.ACCOUNT_SHARE) {
+                    eventPublisher.publishEvent(
+                            new AccountSharedCredentialRequiredEvent(partyId, provisionId, memberUserIds));
+                } else if (provisionType == OperationType.INVITE_CODE) {
+                    eventPublisher.publishEvent(
+                            new InviteLinkRequiredEvent(partyId, provisionId, memberUserIds));
+                }
+            }
+        });
     }
 }

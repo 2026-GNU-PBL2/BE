@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.common.mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -59,6 +60,9 @@ public interface PartyMapper {
     // 빈자리 있는 경우에만 현재 멤버 증가
     int increaseCurrentMemberCountIfNotFull(Long partyId);
 
-    // provision 미등록 타임아웃 대상 파티 조회 (FULL + WAITING_START + provision 없음 + N시간 경과)
-    List<Party> findPartiesReadyForProvisionTimeout(@Param("thresholdHours") int thresholdHours);
+    // provision 타임아웃으로 파티 해체 처리
+    void terminateParty(
+            @Param("partyId") Long partyId,
+            @Param("terminatedAt") LocalDateTime terminatedAt
+    );
 }

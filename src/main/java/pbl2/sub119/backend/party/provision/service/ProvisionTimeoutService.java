@@ -5,22 +5,32 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
+import java.util.ArrayList;
+import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
+import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
+import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
+import pbl2.sub119.backend.notification.event.event.MemberProvisionReminderEvent;
+import pbl2.sub119.backend.notification.event.event.MemberProvisionTimeoutNoticeEvent;
+import pbl2.sub119.backend.notification.event.event.PartyTerminatedEvent;
 import pbl2.sub119.backend.party.common.entity.MatchWaitingQueue;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.enumerated.MatchWaitingStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
-import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
+import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
+import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 
 @Slf4j
@@ -28,69 +38,215 @@ import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 @RequiredArgsConstructor
 public class ProvisionTimeoutService {
 
-    private static final int WARN_HOURS = 24;
-    private static final int DISSOLVE_HOURS = 48;
-
     private final PartyMapper partyMapper;
     private final PartyMemberMapper partyMemberMapper;
+    private final PartyProvisionMapper partyProvisionMapper;
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final PartyHistoryService partyHistoryService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    // Spring AOP 자기 호출 우회: 파티별 독립 트랜잭션 실행을 위해 프록시를 통해 자신을 호출
     @Autowired
     @Lazy
     private ProvisionTimeoutService self;
 
-    // 파티장 provision 미등록 타임아웃 처리
-    public void processHostTimeout() {
-        final List<Party> dissolveTargets =
-                partyMapper.findPartiesReadyForProvisionTimeout(DISSOLVE_HOURS);
+    // 파티장 미등록 12h / 22h 리마인드
+    public void processHostProvisionReminders() {
+        publishHostProvisionReminders(12);
+        publishHostProvisionReminders(22);
+    }
 
-        for (Party party : dissolveTargets) {
+    // 파티장 미등록 24h 경과 시 파티원에게 지연 안내
+    public void processHostDelayedNotice() {
+        final List<PartyProvision> delayed = partyProvisionMapper.findHostProvisionDelayedNoticeDue(24);
+
+        for (final PartyProvision provision : delayed) {
             try {
-                self.dissolvePartyInIsolation(party);
+                self.publishHostDelayedNoticeInIsolation(provision);
             } catch (Exception e) {
-                log.error("파티 해체 처리 실패. partyId={}", party.getId(), e);
+                log.error("파티장 provision 지연 안내 실패. partyId={}", provision.getPartyId(), e);
             }
-        }
-
-        final List<Party> warnTargets =
-                partyMapper.findPartiesReadyForProvisionTimeout(WARN_HOURS);
-
-        for (Party party : warnTargets) {
-            if (dissolveTargets.stream().anyMatch(d -> d.getId().equals(party.getId()))) {
-                continue;
-            }
-            log.info("파티장 provision 24시간 미등록 → 알림 발송 예정. partyId={}", party.getId());
-            // TODO: 파티원/파티장 알림 발송 (알림 시스템 구현 후 연동)
         }
     }
 
-    // 파티원 provision confirm 미완료 타임아웃 처리 (소프트 데드라인)
-    public void processMemberTimeout() {
-        final List<PartyProvisionMember> timedOutMembers =
-                partyProvisionMemberMapper.findRequiredMembersTimedOut(WARN_HOURS);
+    // 파티장 미등록 48h 경과 시 파티 해체 + 자동 재매칭
+    public void processHostTimeout() {
+        final List<PartyProvision> timedOut = partyProvisionMapper.findTimedOutProvisions();
 
-        for (PartyProvisionMember member : timedOutMembers) {
+        for (final PartyProvision provision : timedOut) {
+            try {
+                self.dissolvePartyInIsolation(provision.getPartyId());
+            } catch (Exception e) {
+                log.error("파티 해체 처리 실패. partyId={}", provision.getPartyId(), e);
+            }
+        }
+    }
+
+    // 파티원 미확인 12h / 22h 리마인드
+    public void processMemberProvisionReminders() {
+        publishMemberProvisionReminders(12);
+        publishMemberProvisionReminders(22);
+    }
+
+    // 파티원 24h 초과: 강제 탈퇴 없음, 환불 없음, 이력 기록 + 안내
+    public void processMemberTimeout() {
+        final List<PartyProvisionMember> timedOut = partyProvisionMemberMapper.findRequiredMembersTimedOut();
+
+        for (final PartyProvisionMember member : timedOut) {
             try {
                 self.applyMemberTimeoutInIsolation(member);
             } catch (Exception e) {
-                log.error("멤버 타임아웃 처리 실패. partyId={}, userId={}",
-                        member.getPartyId(), member.getUserId(), e);
+                log.error("파티원 타임아웃 처리 실패. memberId={}", member.getId(), e);
             }
         }
     }
 
-    @Transactional
-    public void dissolvePartyInIsolation(final Party party) {
-        dissolveParty(party);
+    private void publishHostProvisionReminders(final int elapsedHours) {
+        final List<PartyProvision> provisions = partyProvisionMapper.findHostProvisionReminderDue(elapsedHours);
+
+        for (final PartyProvision provision : provisions) {
+            try {
+                self.publishHostProvisionReminderInIsolation(provision, elapsedHours);
+            } catch (Exception e) {
+                log.error("파티장 provision 리마인드 실패. partyId={}, elapsedHours={}",
+                        provision.getPartyId(), elapsedHours, e);
+            }
+        }
     }
 
-    @Transactional
+    private void publishMemberProvisionReminders(final int elapsedHours) {
+        final List<PartyProvisionMember> members =
+                partyProvisionMemberMapper.findRequiredMembersReminderDue(elapsedHours);
+
+        for (final PartyProvisionMember member : members) {
+            try {
+                self.publishMemberProvisionReminderInIsolation(member, elapsedHours);
+            } catch (Exception e) {
+                log.error("파티원 provision 리마인드 실패. memberId={}, elapsedHours={}",
+                        member.getId(), elapsedHours, e);
+            }
+        }
+    }
+
+    // 파티장 리마인드 이벤트 발행 — 각 파티별 독립 트랜잭션
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void publishHostProvisionReminderInIsolation(
+            final PartyProvision provision,
+            final int elapsedHours
+    ) {
+        final Party party = partyMapper.findById(provision.getPartyId());
+        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
+            return;
+        }
+
+        eventPublisher.publishEvent(
+                new HostProvisionReminderEvent(provision.getPartyId(), party.getHostUserId(), elapsedHours)
+        );
+
+        log.info("파티장 provision 리마인드 발행. partyId={}, elapsedHours={}",
+                provision.getPartyId(), elapsedHours);
+    }
+
+    // 파티원에게 파티장 등록 지연 안내 — 각 파티별 독립 트랜잭션
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void publishHostDelayedNoticeInIsolation(final PartyProvision provision) {
+        final Party party = partyMapper.findById(provision.getPartyId());
+        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
+            return;
+        }
+
+        final List<Long> memberUserIds = partyMemberMapper.findMembersByPartyId(provision.getPartyId())
+                .stream()
+                .filter(member -> !member.getUserId().equals(party.getHostUserId()))
+                .filter(member -> member.getStatus() != PartyMemberStatus.LEFT)
+                .filter(member -> member.getStatus() != PartyMemberStatus.REMOVED)
+                .map(PartyMember::getUserId)
+                .toList();
+
+        if (memberUserIds.isEmpty()) {
+            return;
+        }
+
+        eventPublisher.publishEvent(
+                new HostProvisionDelayedNoticeEvent(provision.getPartyId(), memberUserIds)
+        );
+
+        log.info("파티장 provision 24시간 지연 안내 발행. partyId={}", provision.getPartyId());
+    }
+
+    // 파티 해체 — 각 파티별 독립 트랜잭션
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void dissolvePartyInIsolation(final Long partyId) {
+        final Party party = partyMapper.findByIdForUpdate(partyId);
+        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
+            return;
+        }
+
+        final List<PartyMember> members = partyMemberMapper.findMembersByPartyId(partyId);
+        final List<Long> memberUserIds = members.stream()
+                .map(PartyMember::getUserId)
+                .toList();
+
+        final LocalDateTime now = LocalDateTime.now();
+
+        partyMapper.terminateParty(partyId, now);
+
+        final List<Long> requeuedUserIds = new ArrayList<>();
+        for (final PartyMember member : members) {
+            if (member.getStatus() != PartyMemberStatus.LEFT
+                    && member.getStatus() != PartyMemberStatus.REMOVED) {
+                partyMemberMapper.updateStatusAndLeftAt(member.getId(), PartyMemberStatus.LEFT);
+
+                // 파티원은 자동 재매칭 대기열 복귀
+                if (!member.getUserId().equals(party.getHostUserId())) {
+                    requeue(party.getProductId(), member.getUserId(), now);
+                    requeuedUserIds.add(member.getUserId());
+                }
+            }
+        }
+
+        partyHistoryService.saveHistory(
+                partyId,
+                null,
+                PartyHistoryEventType.PARTY_PROVISION_DISSOLVED,
+                "{\"reason\":\"host_provision_timeout\"}",
+                party.getHostUserId()
+        );
+
+        eventPublisher.publishEvent(
+                new PartyTerminatedEvent(partyId, memberUserIds, "파티장이 기한 내 이용 정보를 등록하지 않음")
+        );
+
+        if (!requeuedUserIds.isEmpty()) {
+            eventPublisher.publishEvent(new MemberAutoRematchStartedEvent(partyId, requeuedUserIds));
+        }
+
+        log.info("파티 해체 완료. partyId={}", partyId);
+    }
+
+    // 파티원 리마인드 이벤트 발행 — 각 멤버별 독립 트랜잭션
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void publishMemberProvisionReminderInIsolation(
+            final PartyProvisionMember member,
+            final int elapsedHours
+    ) {
+        eventPublisher.publishEvent(
+                new MemberProvisionReminderEvent(
+                        member.getPartyId(),
+                        member.getPartyOperationId(),
+                        member.getUserId(),
+                        elapsedHours
+                )
+        );
+
+        log.info("파티원 provision 리마인드 발행. userId={}, partyId={}, elapsedHours={}",
+                member.getUserId(), member.getPartyId(), elapsedHours);
+    }
+
+    // 파티원 타임아웃 — 강제 탈퇴 없이 이력 기록 + 안내
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void applyMemberTimeoutInIsolation(final PartyProvisionMember member) {
-        log.info("파티원 provision 24시간 미완료. partyId={}, userId={}",
-                member.getPartyId(), member.getUserId());
+        partyProvisionMemberMapper.markPenaltyApplied(member.getId(), LocalDateTime.now());
 
         partyHistoryService.saveHistory(
                 member.getPartyId(),
@@ -100,45 +256,23 @@ public class ProvisionTimeoutService {
                 member.getUserId()
         );
 
-        partyProvisionMemberMapper.markPenaltyApplied(member.getId(), LocalDateTime.now());
-        // TODO: 파티원 알림 재발송 (알림 시스템 구현 후 연동)
-    }
-
-    private void dissolveParty(final Party party) {
-        final Long partyId = party.getId();
-        final LocalDateTime now = LocalDateTime.now();
-
-        partyMapper.updateOperationStatus(partyId, OperationStatus.TERMINATED);
-
-        final List<PartyMember> members = partyMemberMapper.findMembersByPartyId(partyId);
-        for (PartyMember member : members) {
-            partyMemberMapper.updateStatusAndLeftAt(member.getId(), PartyMemberStatus.LEFT);
-
-            if (member.getRole() == PartyRole.MEMBER) {
-                requeue(party.getProductId(), member.getUserId(), now);
-            }
-        }
-
-        partyHistoryService.saveHistory(
-                partyId,
-                null,
-                PartyHistoryEventType.HOST_PROVISION_TIMEOUT,
-                "{\"hostUserId\":" + party.getHostUserId() + "}",
-                party.getHostUserId()
+        eventPublisher.publishEvent(
+                new MemberProvisionTimeoutNoticeEvent(
+                        member.getPartyId(),
+                        member.getPartyOperationId(),
+                        member.getUserId()
+                )
         );
 
-        partyHistoryService.saveHistory(
-                partyId,
-                null,
-                PartyHistoryEventType.PARTY_TERMINATED,
-                "{\"reason\":\"HOST_PROVISION_TIMEOUT\"}",
-                null
-        );
-
-        // TODO: 파티원/파티장 알림 발송 (알림 시스템 구현 후 연동)
+        log.info("파티원 provision 타임아웃 처리 완료. userId={}, partyId={}",
+                member.getUserId(), member.getPartyId());
     }
 
-    private void requeue(final String productId, final Long userId, final LocalDateTime now) {
+    private void requeue(
+            final String productId,
+            final Long userId,
+            final LocalDateTime now
+    ) {
         final MatchWaitingQueue queue = MatchWaitingQueue.builder()
                 .productId(productId)
                 .userId(userId)

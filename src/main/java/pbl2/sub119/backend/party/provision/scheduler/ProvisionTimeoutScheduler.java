@@ -13,20 +13,41 @@ public class ProvisionTimeoutScheduler {
 
     private final ProvisionTimeoutService provisionTimeoutService;
 
-    @Scheduled(fixedDelay = 3_600_000) // 1시간마다 실행
-    public void run() {
-        log.info("provision 타임아웃 스케줄러 실행");
+    // provision 정책 체크
+    // - 파티장 미등록 12h / 22h / 24h / 48h
+    // - 파티원 미확인 12h / 22h / 24h
+    @Scheduled(fixedDelay = 60 * 60 * 1000L)
+    public void checkProvisionStatus() {
+        log.info("provision 정책 스케줄러 실행");
+
+        try {
+            provisionTimeoutService.processHostProvisionReminders();
+        } catch (Exception e) {
+            log.error("파티장 provision 리마인드 처리 중 오류 발생", e);
+        }
+
+        try {
+            provisionTimeoutService.processHostDelayedNotice();
+        } catch (Exception e) {
+            log.error("파티장 provision 지연 안내 처리 중 오류 발생", e);
+        }
 
         try {
             provisionTimeoutService.processHostTimeout();
         } catch (Exception e) {
-            log.error("파티장 타임아웃 처리 중 오류 발생", e);
+            log.error("파티장 provision 타임아웃 해체 처리 중 오류 발생", e);
+        }
+
+        try {
+            provisionTimeoutService.processMemberProvisionReminders();
+        } catch (Exception e) {
+            log.error("파티원 provision 리마인드 처리 중 오류 발생", e);
         }
 
         try {
             provisionTimeoutService.processMemberTimeout();
         } catch (Exception e) {
-            log.error("파티원 타임아웃 처리 중 오류 발생", e);
+            log.error("파티원 provision 타임아웃 처리 중 오류 발생", e);
         }
     }
 }

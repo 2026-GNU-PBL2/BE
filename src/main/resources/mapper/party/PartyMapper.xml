@@ -180,16 +180,13 @@
           AND current_member_count &lt; capacity
     </update>
 
-    <!-- provision 미등록 타임아웃 대상 파티 조회 (FULL + WAITING_START + provision 없음 + N시간 경과) -->
-    <select id="findPartiesReadyForProvisionTimeout" resultMap="partyResultMap">
-        SELECT p.id, p.product_id, p.host_user_id, p.capacity, p.current_member_count,
-               p.recruit_status, p.operation_status, p.vacancy_type,
-               p.created_at, p.updated_at, p.terminated_at, p.price_per_member_snapshot
-        FROM party p
-        WHERE p.recruit_status = 'FULL'
-          AND p.operation_status = 'WAITING_START'
-          AND NOT EXISTS (SELECT 1 FROM party_operation po WHERE po.party_id = p.id)
-          AND p.updated_at &lt;= NOW() - INTERVAL #{thresholdHours} HOUR
-    </select>
+    <!-- provision 타임아웃 시 파티 해체 -->
+    <update id="terminateParty">
+        UPDATE party
+        SET operation_status = 'TERMINATED',
+            terminated_at    = #{terminatedAt},
+            updated_at       = #{terminatedAt}
+        WHERE id = #{partyId}
+    </update>
 
 </mapper>

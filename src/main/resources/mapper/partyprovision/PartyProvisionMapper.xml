@@ -5,7 +5,8 @@
 
 <mapper namespace="pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper">
 
-    <resultMap id="partyOperationResultMap" type="pbl2.sub119.backend.party.provision.entity.PartyProvision">
+    <resultMap id="partyOperationResultMap"
+               type="pbl2.sub119.backend.party.provision.entity.PartyProvision">
         <id property="id" column="id"/>
         <result property="partyId" column="party_id"/>
         <result property="operationType" column="operation_type"
@@ -39,128 +40,36 @@
         updated_at
     </sql>
 
-    <!-- 파티 기준 현재 운영 정보 단건 조회 -->
-    <select id="findByPartyId" resultMap="partyOperationResultMap">
+    <!-- 48시간 초과 → 파티 해체 -->
+    <select id="findTimedOutProvisions" resultMap="partyOperationResultMap">
         SELECT
         <include refid="partyOperationColumns"/>
         FROM party_operation
-        WHERE party_id = #{partyId}
-        LIMIT 1
+        WHERE operation_status != 'ACTIVE'
+        AND operation_started_at IS NULL
+        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= 48
     </select>
 
-    <!--운영 상태 갱신 시 동시성 제어-->
-    <select id="findByPartyIdForUpdate" resultMap="partyOperationResultMap">
+    <!-- 12시간 / 22시간 → 파티장 리마인드 -->
+    <select id="findHostProvisionReminderDue" resultMap="partyOperationResultMap">
         SELECT
         <include refid="partyOperationColumns"/>
         FROM party_operation
-        WHERE party_id = #{partyId}
-        LIMIT 1
-        FOR UPDATE
+        WHERE operation_status != 'ACTIVE'
+        AND operation_started_at IS NULL
+        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= #{elapsedHours}
+        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
     </select>
 
-    <!-- 파티장이 파티 운영 정보 최초 생성 -->
-    <insert id="insert"
-            parameterType="pbl2.sub119.backend.party.provision.entity.PartyProvision"
-            useGeneratedKeys="true"
-            keyProperty="id">
-        INSERT INTO party_operation
-        (
-            party_id,
-            operation_type,
-            operation_status,
-            invite_value,
-            shared_account_email,
-            shared_account_password_encrypted,
-            operation_guide,
-            operation_started_at,
-            operation_completed_at,
-            last_reset_at,
-            created_at,
-            updated_at
-        )
-        VALUES
-            (
-                #{partyId},
-                #{operationType},
-                #{operationStatus},
-                #{inviteValue},
-                #{sharedAccountEmail},
-                #{sharedAccountPasswordEncrypted},
-                #{operationGuide},
-                #{operationStartedAt},
-                #{operationCompletedAt},
-                #{lastResetAt},
-                #{createdAt},
-                #{updatedAt}
-            )
-    </insert>
-
-    <!-- 파티장이 운영 정보 등록 및 수정 -->
-    <update id="updateSetup">
-        UPDATE party_operation
-        SET
-            operation_type = #{operationType},
-            operation_status = #{operationStatus},
-            invite_value = #{inviteValue},
-            shared_account_email = #{sharedAccountEmail},
-            shared_account_password_encrypted = #{sharedAccountPasswordEncrypted},
-            operation_guide = #{operationGuide},
-            operation_started_at = #{operationStartedAt},
-            operation_completed_at = NULL,
-            updated_at = #{updatedAt}
-        WHERE id = #{id}
-    </update>
-
-    <!-- 멤버 진행 상황에 따라 운영 상태만 갱신 -->
-    <update id="updateStatus">
-        UPDATE party_operation
-        SET
-            operation_status = #{operationStatus},
-            updated_at = #{updatedAt}
-        WHERE id = #{id}
-    </update>
-
-    <!--동시 confirm 상황에서 ACTIVE인 상태 IN_PROGRESS로 되돌리는 문제 방지-->
-    <update id="updateStatusIfNotActive">
-        UPDATE party_operation
-        SET
-            operation_status = #{operationStatus},
-            updated_at = #{updatedAt}
-        WHERE id = #{id}
-          AND operation_status &lt;&gt; 'ACTIVE'
-    </update>
-
-    <!-- 전원 완료 시 운영 상태 ACTIVE + 완료 시각 기록 -->
-    <update id="updateStatusAndCompletedAt">
-        UPDATE party_operation
-        SET
-            operation_status = #{operationStatus},
-            operation_completed_at = #{operationCompletedAt},
-            updated_at = #{updatedAt}
-        WHERE id = #{id}
-    </update>
-
-    <!-- 재초대/비밀번호 변경 등으로 운영 재설정 처리 -->
-    <update id="markResetRequired">
-        UPDATE party_operation
-        SET
-            operation_status = #{operationStatus},
-            last_reset_at = #{lastResetAt},
-            operation_completed_at = NULL,
-            updated_at = #{updatedAt}
-        WHERE id = #{id}
-    </update>
-
-    <!-- cycle start 이후 멤버 변경 발생 시 운영 재설정 처리 -->
-    <update id="updateCycleStartResetState">
-        UPDATE party_operation
-        SET
-            operation_status = #{operationStatus},
-            operation_started_at = #{operationStartedAt},
-            operation_completed_at = NULL,
-            last_reset_at = #{lastResetAt},
-            updated_at = #{updatedAt}
-        WHERE id = #{id}
-    </update>
+    <!-- 24시간 → 파티원에게 지연 안내 -->
+    <select id="findHostProvisionDelayedNoticeDue" resultMap="partyOperationResultMap">
+        SELECT
+        <include refid="partyOperationColumns"/>
+        FROM party_operation
+        WHERE operation_status != 'ACTIVE'
+        AND operation_started_at IS NULL
+        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= #{elapsedHours}
+        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
+    </select>
 
 </mapper>

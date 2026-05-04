@@ -64,6 +64,8 @@ dependencies {
 	implementation platform('software.amazon.awssdk:bom:2.25.11')
 	implementation 'software.amazon.awssdk:s3'
 
+	//solapi
+	implementation 'com.solapi:sdk:1.0.3'
 }
 
 tasks.named('test') {

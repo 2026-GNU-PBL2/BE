@@ -63,4 +63,16 @@ public interface PartyProvisionMemberMapper {
             @Param("lastResetAt") LocalDateTime lastResetAt,
             @Param("updatedAt") LocalDateTime updatedAt
     );
+
+    void markPenaltyApplied(
+            @Param("id") Long id,
+            @Param("updatedAt") LocalDateTime updatedAt
+    );
+
+    // 24시간 초과 미확인 파티원 조회
+    List<PartyProvisionMember> findRequiredMembersTimedOut();
+
+
+    // 12시간 / 22시간 미확인 파티원 리마인드 조회
+    List<PartyProvisionMember> findRequiredMembersReminderDue(@Param("elapsedHours") int elapsedHours);
 }

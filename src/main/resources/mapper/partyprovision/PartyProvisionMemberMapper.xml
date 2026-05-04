@@ -233,4 +233,36 @@
         WHERE party_operation_id = #{partyOperationId}
     </update>
 
+    <!-- 타임아웃 패널티 적용 완료 표시 -->
+    <update id="markPenaltyApplied">
+        UPDATE party_operation_member
+        SET
+            penalty_applied = TRUE,
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 24시간 초과 미확인 파티원 조회 -->
+    <select id="findRequiredMembersTimedOut" resultMap="partyOperationMemberResultMap">
+        SELECT
+        <include refid="partyOperationMemberColumns"/>
+        FROM party_operation_member
+        WHERE member_status = 'REQUIRED'
+        AND penalty_applied = FALSE
+        AND must_complete_by IS NOT NULL
+        AND must_complete_by <![CDATA[<=]]> NOW()
+    </select>
+
+    <!-- 12시간 / 22시간 미확인 파티원 리마인드 조회 -->
+    <select id="findRequiredMembersReminderDue" resultMap="partyOperationMemberResultMap">
+        SELECT
+        <include refid="partyOperationMemberColumns"/>
+        FROM party_operation_member
+        WHERE member_status = 'REQUIRED'
+        AND penalty_applied = FALSE
+        AND invite_sent_at IS NOT NULL
+        AND TIMESTAMPDIFF(HOUR, invite_sent_at, NOW()) >= #{elapsedHours}
+        AND TIMESTAMPDIFF(HOUR, invite_sent_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
+    </select>
+
 </mapper>
