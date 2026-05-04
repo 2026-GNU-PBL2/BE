@@ -8,5 +8,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class BankAuthState {
     private Long userId;
-    private Long productId;
+    private String productId;
 }

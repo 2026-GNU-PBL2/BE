@@ -1,8 +1,10 @@
 package pbl2.sub119.backend.party.vacancy.dto.response;
 
 import java.time.LocalDateTime;
+import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
+import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.common.enumerated.VacancyType;
 
-// 결원 파티 상세 응답
 public record PartyVacancyDetailResponse(
         Long partyId,
         String productId,
@@ -15,9 +17,9 @@ public record PartyVacancyDetailResponse(
         Long monthlyPaymentAmount,
         LocalDateTime nextPaymentDate,
         String operationType,
-        String partyStatusLabel,
-        Boolean joinAvailable,
-        String joinButtonLabel,
-        String description
+        RecruitStatus recruitStatus,
+        OperationStatus operationStatus,
+        VacancyType vacancyType,
+        Boolean joinAvailable
 ) {
 }

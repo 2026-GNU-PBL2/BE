@@ -19,12 +19,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionDashboardResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMeResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRevealResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
+import pbl2.sub119.backend.party.provision.dto.response.*;
 
 @Tag(name = "Party Provision API", description = "파티 이용 정보 등록, 확인, 조회 API")
 public interface PartyProvisionDocs {
@@ -35,8 +30,8 @@ public interface PartyProvisionDocs {
                     파티장이 결제 완료 후 파티 이용에 필요한 정보를 등록합니다.
 
                     이용 정보 제공 방식
-                    - ACCOUNT_SHARED : 파티장이 공유 계정 이메일과 비밀번호를 등록하는 방식입니다.
-                    - INVITE_LINK : 파티장이 OTT 추가 회원 초대 링크를 등록하는 방식입니다.
+                    - ACCOUNT_SHARE : 파티장이 공유 계정 이메일과 비밀번호를 등록하는 방식입니다.
+                    - INVITE_CODE : 파티장이 OTT 추가 회원 초대 링크를 등록하는 방식입니다.
 
                     request body 입력 안내
                     - 공유계정형이면 sharedAccountEmail, sharedAccountPassword 를 입력합니다.
@@ -59,7 +54,7 @@ public interface PartyProvisionDocs {
                                             summary = "공유 계정 이메일/비밀번호 제공 방식",
                                             value = """
                                                     {
-                                                      "provisionType": "ACCOUNT_SHARED",
+                                                      "provisionType": "ACCOUNT_SHARE",
                                                       "inviteValue": null,
                                                       "sharedAccountEmail": "submate.test@gmail.com",
                                                       "sharedAccountPassword": "Test1234!",
@@ -72,7 +67,7 @@ public interface PartyProvisionDocs {
                                             summary = "OTT 추가 회원 초대 링크 제공 방식",
                                             value = """
                                                     {
-                                                      "provisionType": "INVITE_LINK",
+                                                      "provisionType": "INVITE_CODE",
                                                       "inviteValue": "https://www.netflix.com/invite/example",
                                                       "sharedAccountEmail": null,
                                                       "sharedAccountPassword": null,
@@ -282,7 +277,7 @@ public interface PartyProvisionDocs {
                     사용 조건
                     - provision 대상 멤버만 조회할 수 있습니다.
                     - WAITING 상태 멤버는 조회할 수 없습니다.
-                    - ACCOUNT_SHARED 방식인 경우에만 조회할 수 있습니다.
+                    - ACCOUNT_SHARE 방식인 경우에만 조회할 수 있습니다.
 
                     보안 정책
                     - 기본 이용 정보 조회 API에서는 평문 비밀번호를 내려주지 않습니다.
@@ -299,6 +294,32 @@ public interface PartyProvisionDocs {
     @PostMapping("/{partyId}/provision/me/password")
     ResponseEntity<PartyProvisionPasswordRevealResponse> getMyProvisionPassword(
             @Parameter(hidden = true) @Auth Accessor accessor,
+            @PathVariable Long partyId
+    );
+
+    @Operation(
+            summary = "파티 모집 완료 여부 조회",
+            description = """
+                    파티의 모집 완료 여부를 조회합니다.
+
+                    이 API는 아래 화면에서 사용합니다.
+                    - 모집 중 화면
+                    - 모집 완료 후 이용 정보 등록/조회 진입 분기 화면
+
+                    응답값 안내
+                    - recruitCompleted : 모집 완료 여부입니다.
+                    - provisionAvailable : 이용 정보 등록/조회 가능 여부입니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "파티 모집 완료 여부 조회 성공",
+                            content = @Content(schema = @Schema(implementation = PartyRecruitStatusResponse.class))
+                    )
+            }
+    )
+    @GetMapping("/{partyId}/provision/recruit-status")
+    ResponseEntity<PartyRecruitStatusResponse> getRecruitStatus(
             @PathVariable Long partyId
     );
 }

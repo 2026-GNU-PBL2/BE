@@ -11,6 +11,9 @@ public interface MatchWaitingQueueMapper {
     // [자동 매칭 신청] 대기열 저장
     int insertMatchWaitingQueue(MatchWaitingQueue queue);
 
+    // [파티 해체 재대기] 동일 상품 WAITING 없을 때만 원자적 삽입
+    int insertIfAbsent(MatchWaitingQueue queue);
+
     // [중복 신청 방지] 같은 상품에 이미 대기중인지 조회
     MatchWaitingQueue findWaitingByProductIdAndUserId(
             @Param("productId") String productId,

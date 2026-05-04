@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
+import pbl2.sub119.backend.toss.dto.response.BillingKeyInfoResponse;
 
 import java.util.Map;
 
@@ -81,6 +82,67 @@ public interface PaymentDocs {
     ResponseEntity<Void> issueBillingKey(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @Parameter(description = "빌링키 발급 요청 정보", required = true)
+            @Valid @RequestBody BillingKeyIssueRequest request
+    );
+
+    @Operation(
+            summary = "내 결제수단 조회",
+            description = """
+                    현재 로그인한 사용자의 ACTIVE 결제수단 메타데이터를 조회합니다.
+                    등록된 결제수단이 없으면 hasBillingKey=false로 응답합니다.
+                    billingKey 원문은 반환하지 않습니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공 (결제수단 없을 경우 hasBillingKey=false)"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증 필요",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/billing/me")
+    ResponseEntity<BillingKeyInfoResponse> getBillingInfo(
+            @Parameter(hidden = true) @Auth Accessor accessor
+    );
+
+    @Operation(
+            summary = "결제수단 변경",
+            description = """
+                    기존 등록된 결제수단을 새 카드로 교체합니다.
+                    프론트에서 토스 SDK 카드 등록 후 받은 authKey를 전달하면,
+                    Toss API로 새 빌링키를 발급받아 기존 row를 UPDATE합니다.
+                    Toss 호출 실패 시 DB는 변경되지 않습니다.
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "결제수단 변경 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "잘못된 요청 또는 Toss 빌링키 발급 실패",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증 필요",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "등록된 결제수단 없음",
+                            content = @Content
+                    )
+            }
+    )
+    @PostMapping("/billing/change")
+    ResponseEntity<Void> changeBillingKey(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "새 카드 authKey", required = true)
             @Valid @RequestBody BillingKeyIssueRequest request
     );
 }

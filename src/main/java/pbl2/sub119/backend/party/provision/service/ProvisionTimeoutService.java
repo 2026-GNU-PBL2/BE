@@ -83,7 +83,7 @@ public class ProvisionTimeoutService {
 
     // 파티원 24h 초과: 강제 탈퇴 없음, 환불 없음, 이력 기록 + 안내
     public void processMemberTimeout() {
-        final List<PartyProvisionMember> timedOut = partyProvisionMemberMapper.findRequiredMembersTimedOut();
+        final List<PartyProvisionMember> timedOut = partyProvisionMemberMapper.findRequiredMembersTimedOut(24);
 
         for (final PartyProvisionMember member : timedOut) {
             try {
@@ -209,11 +209,7 @@ public class ProvisionTimeoutService {
     // 파티원 타임아웃 — 강제 탈퇴 없이 이력 기록 + 안내
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void applyMemberTimeoutInIsolation(final PartyProvisionMember member) {
-        final int updated = partyProvisionMemberMapper.markPenaltyApplied(member.getId(), LocalDateTime.now());
-        if (updated == 0) {
-            log.info("패널티 이미 적용됨 — 건너뜀. memberId={}", member.getId());
-            return;
-        }
+        partyProvisionMemberMapper.markPenaltyApplied(member.getId(), LocalDateTime.now());
 
         partyHistoryService.saveHistory(
                 member.getPartyId(),

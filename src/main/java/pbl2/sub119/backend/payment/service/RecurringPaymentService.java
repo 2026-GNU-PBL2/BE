@@ -6,13 +6,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
-import pbl2.sub119.backend.party.cycle.service.PartyCycleService;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
+import pbl2.sub119.backend.payment.mapper.PaymentExecutionQueryMapper;
 import pbl2.sub119.backend.payment.mapper.RecurringPaymentQueryMapper;
 
 import java.time.LocalDateTime;
@@ -25,8 +27,8 @@ public class RecurringPaymentService {
 
     private final RecurringPaymentQueryMapper recurringPaymentQueryMapper;
     private final PartyCycleMapper partyCycleMapper;
+    private final PaymentExecutionQueryMapper paymentExecutionQueryMapper;
     private final ApplicationEventPublisher eventPublisher;
-    private final PartyCycleService partyCycleService;
 
     @Transactional
     public void processDueCycles() {
@@ -64,7 +66,7 @@ public class RecurringPaymentService {
 
         LocalDateTime now = LocalDateTime.now();
         // 다음 회차 snapshot은 반복회차 실제 과금 대상과 동일하게 ACTIVE MEMBER 수로 저장한다.
-        int billableMemberCount = partyCycleService.countRecurringBillableMembers(target.getPartyId());
+        int billableMemberCount = paymentExecutionQueryMapper.countActiveMembersByPartyId(target.getPartyId());
 
         PartyCycle nextCycle = PartyCycle.builder()
                 .partyId(target.getPartyId())
@@ -91,8 +93,13 @@ public class RecurringPaymentService {
         log.info("다음 회차 cycle 생성 완료. partyId={}, partyCycleId={}, cycleNo={}",
                 target.getPartyId(), nextCycle.getId(), nextCycleNo);
 
-        eventPublisher.publishEvent(
-                new PaymentExecutionRequestedEvent(target.getPartyId(), nextCycle.getId())
-        );
+        Long partyId = target.getPartyId();
+        Long partyCycleId = nextCycle.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                eventPublisher.publishEvent(new PaymentExecutionRequestedEvent(partyId, partyCycleId));
+            }
+        });
     }
 }

@@ -49,4 +49,7 @@ public interface PartyCycleMapper {
     );
 
     int save(PartyCycle partyCycle);
+
+    // deadline 전용: PAYMENT_PENDING / PROCESSING 상태 cycle을 FAILED로 전이
+    int failIfPendingOrProcessing(@Param("partyCycleId") Long partyCycleId);
 }

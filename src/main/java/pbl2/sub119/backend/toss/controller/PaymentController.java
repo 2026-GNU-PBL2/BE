@@ -8,6 +8,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.toss.controller.docs.PaymentDocs;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
+import pbl2.sub119.backend.toss.dto.response.BillingKeyInfoResponse;
 import pbl2.sub119.backend.toss.service.BillingKeyService;
 
 import java.util.Map;
@@ -37,6 +38,20 @@ public class PaymentController implements PaymentDocs {
             @Auth final Accessor accessor) {
         String customerKey = "submate-" + accessor.getUserId();
         return ResponseEntity.ok(Map.of("customerKey", customerKey));
+    }
+
+    @GetMapping("/billing/me")
+    public ResponseEntity<BillingKeyInfoResponse> getBillingInfo(
+            @Auth final Accessor accessor) {
+        return ResponseEntity.ok(billingKeyService.getBillingInfo(accessor));
+    }
+
+    @PostMapping("/billing/change")
+    public ResponseEntity<Void> changeBillingKey(
+            @Auth final Accessor accessor,
+            @Valid @RequestBody BillingKeyIssueRequest request) {
+        billingKeyService.changeBillingKey(accessor, request);
+        return ResponseEntity.ok().build();
     }
 
 }

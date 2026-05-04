@@ -43,6 +43,7 @@ public class PartyProvisionCommandService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyProvisionMapper partyProvisionMapper;
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
+    private final ApplicationEventPublisher eventPublisher;
     private final CryptoUtil cryptoUtil;
     private final ApplicationEventPublisher eventPublisher;
 

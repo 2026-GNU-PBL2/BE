@@ -18,6 +18,26 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <!-- 파티 해체 재대기: 동일 상품 WAITING 없을 때만 원자적 삽입 -->
+    <insert id="insertIfAbsent"
+            parameterType="pbl2.sub119.backend.party.common.entity.MatchWaitingQueue"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO match_waiting_queue (
+            product_id, user_id, status, requested_at, matched_at, canceled_at,
+            target_party_id, created_at, updated_at
+        )
+        SELECT #{productId}, #{userId}, #{status}, #{requestedAt}, #{matchedAt}, #{canceledAt},
+               #{targetPartyId}, #{createdAt}, #{updatedAt}
+        FROM dual
+        WHERE NOT EXISTS (
+            SELECT 1 FROM match_waiting_queue
+            WHERE product_id = #{productId}
+              AND user_id = #{userId}
+              AND status = 'WAITING'
+        )
+    </insert>
+
     <!-- 대기 신청 저장 -->
     <insert id="insertMatchWaitingQueue"
             parameterType="pbl2.sub119.backend.party.common.entity.MatchWaitingQueue"
