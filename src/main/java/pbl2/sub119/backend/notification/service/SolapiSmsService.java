@@ -47,7 +47,7 @@ public class SolapiSmsService {
             final Long notificationId
     ) {
         if (!solapiProperties.isEnabled() || messageService == null) {
-            saveLog(notificationId, userId, to, content, SmsSendStatus.SKIPPED, "SOLAPI disabled");
+            saveLog(notificationId, userId, maskPhoneNumber(to), content, SmsSendStatus.SKIPPED, "SOLAPI disabled");
             return SmsSendStatus.SKIPPED;
         }
 
@@ -59,24 +59,31 @@ public class SolapiSmsService {
 
             MultipleDetailMessageSentResponse response = messageService.send(message);
 
-            saveLog(notificationId, userId, to, content, SmsSendStatus.SUCCESS, null);
+            saveLog(notificationId, userId, maskPhoneNumber(to), content, SmsSendStatus.SUCCESS, null);
             log.info("SMS 발송 성공. userId={}, notificationId={}, response={}", userId, notificationId, response);
 
             return SmsSendStatus.SUCCESS;
         } catch (SolapiMessageNotReceivedException e) {
-            saveLog(notificationId, userId, to, content, SmsSendStatus.FAILED, e.getMessage());
+            saveLog(notificationId, userId, maskPhoneNumber(to), content, SmsSendStatus.FAILED, e.getMessage());
             log.error("SMS 접수 실패. userId={}, notificationId={}, failedMessages={}",
                     userId, notificationId, e.getFailedMessageList(), e);
             return SmsSendStatus.FAILED;
         } catch (SolapiUnknownException | SolapiEmptyResponseException e) {
-            saveLog(notificationId, userId, to, content, SmsSendStatus.FAILED, e.getMessage());
+            saveLog(notificationId, userId, maskPhoneNumber(to), content, SmsSendStatus.FAILED, e.getMessage());
             log.error("SOLAPI 응답 실패. userId={}, notificationId={}", userId, notificationId, e);
             return SmsSendStatus.FAILED;
         } catch (Exception e) {
-            saveLog(notificationId, userId, to, content, SmsSendStatus.FAILED, e.getMessage());
+            saveLog(notificationId, userId, maskPhoneNumber(to), content, SmsSendStatus.FAILED, e.getMessage());
             log.error("SMS 발송 실패. userId={}, notificationId={}", userId, notificationId, e);
             return SmsSendStatus.FAILED;
         }
+    }
+
+    private String maskPhoneNumber(final String phone) {
+        if (phone == null || phone.length() < 4) {
+            return "****";
+        }
+        return "****" + phone.substring(phone.length() - 4);
     }
 
     private String normalizePhoneNumber(String phoneNumber) {

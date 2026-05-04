@@ -56,7 +56,7 @@ public interface PartyProvisionMemberMapper {
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
-    void markPenaltyApplied(
+    int markPenaltyApplied(
             @Param("id") Long id,
             @Param("updatedAt") LocalDateTime updatedAt
     );

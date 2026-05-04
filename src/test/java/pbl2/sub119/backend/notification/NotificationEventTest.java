@@ -49,7 +49,7 @@ class NotificationEventTest {
         jdbcTemplate.update("""
             INSERT INTO users (id, phone_number, role, status, created_at, updated_at)
             VALUES
-            (1, NULL, 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+            (1, '01047290968', 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             (2, NULL, 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             (3, NULL, 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
             (4, NULL, 'CUSTOMER', 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -113,14 +113,14 @@ class NotificationEventTest {
 
     @AfterEach
     void cleanup() {
-        /*jdbcTemplate.update("DELETE FROM sms_send_log");
+        jdbcTemplate.update("DELETE FROM sms_send_log");
         jdbcTemplate.update("DELETE FROM notification");
         jdbcTemplate.update("DELETE FROM party_cycle");
         jdbcTemplate.update("DELETE FROM party_member");
         jdbcTemplate.update("DELETE FROM party_history");
         jdbcTemplate.update("DELETE FROM party");
         jdbcTemplate.update("DELETE FROM sub_product");
-        jdbcTemplate.update("DELETE FROM users");*/
+        jdbcTemplate.update("DELETE FROM users");
     }
 
     private List<NotificationType> types(Long userId) {

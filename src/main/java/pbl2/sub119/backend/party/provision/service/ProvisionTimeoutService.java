@@ -50,21 +50,15 @@ public class ProvisionTimeoutService {
     @Lazy
     private ProvisionTimeoutService self;
 
-    // 파티장 미등록 12h / 22h 리마인드
-    public void processHostProvisionReminders() {
-        publishHostProvisionReminders(12);
-        publishHostProvisionReminders(22);
-    }
+    // 파티장 미등록 24h: 파티장 리마인드 + 파티원 지연 안내 동시 발행
+    public void processHostProvisionAt24h() {
+        final List<PartyProvision> due = partyProvisionMapper.findHostProvisionAt24hDue(24);
 
-    // 파티장 미등록 24h 경과 시 파티원에게 지연 안내
-    public void processHostDelayedNotice() {
-        final List<PartyProvision> delayed = partyProvisionMapper.findHostProvisionDelayedNoticeDue(24);
-
-        for (final PartyProvision provision : delayed) {
+        for (final PartyProvision provision : due) {
             try {
-                self.publishHostDelayedNoticeInIsolation(provision);
+                self.publishHostAt24hInIsolation(provision);
             } catch (Exception e) {
-                log.error("파티장 provision 지연 안내 실패. partyId={}", provision.getPartyId(), e);
+                log.error("파티장 provision 24시간 안내 실패. partyId={}", provision.getPartyId(), e);
             }
         }
     }
@@ -82,10 +76,9 @@ public class ProvisionTimeoutService {
         }
     }
 
-    // 파티원 미확인 12h / 22h 리마인드
+    // 파티원 미확인 24h 리마인드
     public void processMemberProvisionReminders() {
-        publishMemberProvisionReminders(12);
-        publishMemberProvisionReminders(22);
+        publishMemberProvisionReminders(24);
     }
 
     // 파티원 24h 초과: 강제 탈퇴 없음, 환불 없음, 이력 기록 + 안내
@@ -97,19 +90,6 @@ public class ProvisionTimeoutService {
                 self.applyMemberTimeoutInIsolation(member);
             } catch (Exception e) {
                 log.error("파티원 타임아웃 처리 실패. memberId={}", member.getId(), e);
-            }
-        }
-    }
-
-    private void publishHostProvisionReminders(final int elapsedHours) {
-        final List<PartyProvision> provisions = partyProvisionMapper.findHostProvisionReminderDue(elapsedHours);
-
-        for (final PartyProvision provision : provisions) {
-            try {
-                self.publishHostProvisionReminderInIsolation(provision, elapsedHours);
-            } catch (Exception e) {
-                log.error("파티장 provision 리마인드 실패. partyId={}, elapsedHours={}",
-                        provision.getPartyId(), elapsedHours, e);
             }
         }
     }
@@ -128,32 +108,17 @@ public class ProvisionTimeoutService {
         }
     }
 
-    // 파티장 리마인드 이벤트 발행 — 각 파티별 독립 트랜잭션
+    // 파티장 24h: 파티장 리마인드 + 파티원 지연 안내 동시 발행 — 각 파티별 독립 트랜잭션
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void publishHostProvisionReminderInIsolation(
-            final PartyProvision provision,
-            final int elapsedHours
-    ) {
+    public void publishHostAt24hInIsolation(final PartyProvision provision) {
         final Party party = partyMapper.findById(provision.getPartyId());
         if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
             return;
         }
 
         eventPublisher.publishEvent(
-                new HostProvisionReminderEvent(provision.getPartyId(), party.getHostUserId(), elapsedHours)
+                new HostProvisionReminderEvent(provision.getPartyId(), party.getHostUserId(), 24)
         );
-
-        log.info("파티장 provision 리마인드 발행. partyId={}, elapsedHours={}",
-                provision.getPartyId(), elapsedHours);
-    }
-
-    // 파티원에게 파티장 등록 지연 안내 — 각 파티별 독립 트랜잭션
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void publishHostDelayedNoticeInIsolation(final PartyProvision provision) {
-        final Party party = partyMapper.findById(provision.getPartyId());
-        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
-            return;
-        }
 
         final List<Long> memberUserIds = partyMemberMapper.findMembersByPartyId(provision.getPartyId())
                 .stream()
@@ -163,15 +128,13 @@ public class ProvisionTimeoutService {
                 .map(PartyMember::getUserId)
                 .toList();
 
-        if (memberUserIds.isEmpty()) {
-            return;
+        if (!memberUserIds.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new HostProvisionDelayedNoticeEvent(provision.getPartyId(), memberUserIds)
+            );
         }
 
-        eventPublisher.publishEvent(
-                new HostProvisionDelayedNoticeEvent(provision.getPartyId(), memberUserIds)
-        );
-
-        log.info("파티장 provision 24시간 지연 안내 발행. partyId={}", provision.getPartyId());
+        log.info("파티장 provision 24시간 안내 발행. partyId={}", provision.getPartyId());
     }
 
     // 파티 해체 — 각 파티별 독립 트랜잭션
@@ -246,7 +209,11 @@ public class ProvisionTimeoutService {
     // 파티원 타임아웃 — 강제 탈퇴 없이 이력 기록 + 안내
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void applyMemberTimeoutInIsolation(final PartyProvisionMember member) {
-        partyProvisionMemberMapper.markPenaltyApplied(member.getId(), LocalDateTime.now());
+        final int updated = partyProvisionMemberMapper.markPenaltyApplied(member.getId(), LocalDateTime.now());
+        if (updated == 0) {
+            log.info("패널티 이미 적용됨 — 건너뜀. memberId={}", member.getId());
+            return;
+        }
 
         partyHistoryService.saveHistory(
                 member.getPartyId(),

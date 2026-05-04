@@ -24,8 +24,6 @@ class ProvisionTimeoutNotificationTest {
     private static final Long HOST_USER_ID = 1L;
     private static final Long MEMBER_USER_ID = 2L;
     private static final Long PROVISION_ID = 1L;
-    private static final Long HOST_PARTY_MEMBER_ID = 1L;
-    private static final Long MEMBER_PARTY_MEMBER_ID = 2L;
     private static final Long PROVISION_MEMBER_ID = 1L;
 
     private static final String SUB_PRODUCT_ID = "11111111-1111-1111-1111-111111111111";
@@ -112,7 +110,7 @@ class ProvisionTimeoutNotificationTest {
                 1, 1, 2, 1, 2,
                 'REQUIRED',
                 CURRENT_TIMESTAMP,
-                DATEADD('HOUR', 24, CURRENT_TIMESTAMP),
+                DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 24 HOUR),
                 NULL, NULL, NULL, NULL,
                 FALSE, NULL,
                 CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
@@ -156,61 +154,24 @@ class ProvisionTimeoutNotificationTest {
     }
 
     @Test
-    @DisplayName("파티장 provision 12h 리마인드 — HOST_PROVISION_REMINDER")
-    void hostProvisionReminder12h() {
+    @DisplayName("파티장 24h 미등록 → 파티장 HOST_PROVISION_REMINDER + 파티원 HOST_PROVISION_DELAYED_NOTICE 동시 발행")
+    void hostProvisionAt24h() {
         // given
         jdbcTemplate.update("""
             UPDATE party_operation
-            SET created_at = DATEADD('HOUR', -12, CURRENT_TIMESTAMP)
+            SET created_at = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 25 HOUR)
             WHERE id = ?
         """, PROVISION_ID);
 
         // when
-        provisionTimeoutService.processHostProvisionReminders();
+        provisionTimeoutService.processHostProvisionAt24h();
 
         waitAsync();
 
         // then
         assertThat(typesOf(HOST_USER_ID))
                 .contains(NotificationType.HOST_PROVISION_REMINDER);
-    }
 
-    @Test
-    @DisplayName("파티장 provision 22h 리마인드 — HOST_PROVISION_REMINDER")
-    void hostProvisionReminder22h() {
-        // given
-        jdbcTemplate.update("""
-            UPDATE party_operation
-            SET created_at = DATEADD('HOUR', -22, CURRENT_TIMESTAMP)
-            WHERE id = ?
-        """, PROVISION_ID);
-
-        // when
-        provisionTimeoutService.processHostProvisionReminders();
-
-        waitAsync();
-
-        // then
-        assertThat(typesOf(HOST_USER_ID))
-                .contains(NotificationType.HOST_PROVISION_REMINDER);
-    }
-
-    @Test
-    @DisplayName("파티장 24h 미등록 → 파티원 HOST_PROVISION_DELAYED_NOTICE")
-    void hostDelayedNotice() {
-        // given
-        jdbcTemplate.update("""
-            UPDATE party_operation
-            SET created_at = DATEADD('HOUR', -25, CURRENT_TIMESTAMP)
-            WHERE id = ?
-        """, PROVISION_ID);
-
-        // when
-        provisionTimeoutService.processHostDelayedNotice();
-
-        waitAsync();
-
-        // then
         assertThat(typesOf(MEMBER_USER_ID))
                 .contains(NotificationType.HOST_PROVISION_DELAYED_NOTICE);
     }
@@ -221,7 +182,7 @@ class ProvisionTimeoutNotificationTest {
         // given
         jdbcTemplate.update("""
             UPDATE party_operation
-            SET created_at = DATEADD('HOUR', -49, CURRENT_TIMESTAMP)
+            SET created_at = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 49 HOUR)
             WHERE id = ?
         """, PROVISION_ID);
 
@@ -258,35 +219,12 @@ class ProvisionTimeoutNotificationTest {
     }
 
     @Test
-    @DisplayName("파티원 provision 12h 리마인드")
-    void memberProvisionReminder12h() {
+    @DisplayName("파티원 provision 24h 리마인드")
+    void memberProvisionReminder24h() {
         // given
         jdbcTemplate.update("""
             UPDATE party_operation_member
-            SET invite_sent_at = DATEADD('HOUR', -12, CURRENT_TIMESTAMP)
-            WHERE id = ?
-        """, PROVISION_MEMBER_ID);
-
-        // when
-        provisionTimeoutService.processMemberProvisionReminders();
-
-        waitAsync();
-
-        // then
-        assertThat(typesOf(MEMBER_USER_ID))
-                .containsAnyOf(
-                        NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER,
-                        NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED
-                );
-    }
-
-    @Test
-    @DisplayName("파티원 provision 22h 리마인드")
-    void memberProvisionReminder22h() {
-        // given
-        jdbcTemplate.update("""
-            UPDATE party_operation_member
-            SET invite_sent_at = DATEADD('HOUR', -22, CURRENT_TIMESTAMP)
+            SET invite_sent_at = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 24 HOUR)
             WHERE id = ?
         """, PROVISION_MEMBER_ID);
 
@@ -309,7 +247,7 @@ class ProvisionTimeoutNotificationTest {
         // given
         jdbcTemplate.update("""
             UPDATE party_operation_member
-            SET must_complete_by = DATEADD('HOUR', -1, CURRENT_TIMESTAMP)
+            SET must_complete_by = DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)
             WHERE id = ?
         """, PROVISION_MEMBER_ID);
 

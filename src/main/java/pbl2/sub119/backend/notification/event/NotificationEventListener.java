@@ -175,11 +175,11 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.PROVISION_INVITE_LINK_REQUIRED);
+        final String title = template.getTitle(NotificationType.PROVISION_INVITE_CODE_REQUIRED);
         final String content = template.provisionInviteLinkRequired(productName);
 
         for (final Long userId : event.memberUserIds()) {
-            sendSafely(userId, event.partyId(), NotificationType.PROVISION_INVITE_LINK_REQUIRED, title, content);
+            sendSafely(userId, event.partyId(), NotificationType.PROVISION_INVITE_CODE_REQUIRED, title, content);
         }
     }
 
@@ -200,7 +200,7 @@ public class NotificationEventListener {
         // 공유계정형/초대링크형에 따라 문구와 타입 분기
         if (provision.getOperationType() == OperationType.ACCOUNT_SHARE) {
             final String title = template.getTitle(NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER);
-            final String content = template.provisionAccountSharedReminder(productName, event.elapsedHours());
+            final String content = template.provisionAccountSharedReminder(productName);
 
             sendSafely(event.memberUserId(), event.partyId(),
                     NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER, title, content);
@@ -208,7 +208,7 @@ public class NotificationEventListener {
         }
 
         final String title = template.getTitle(NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED);
-        final String content = template.provisionInviteAcceptRequired(productName, event.elapsedHours());
+        final String content = template.provisionInviteAcceptRequired(productName);
 
         sendSafely(event.memberUserId(), event.partyId(),
                 NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED, title, content);

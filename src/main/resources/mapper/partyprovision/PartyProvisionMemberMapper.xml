@@ -213,36 +213,77 @@
         WHERE party_operation_id = #{partyOperationId}
     </update>
 
-    <!-- 타임아웃 패널티 적용 완료 표시 -->
+    <!-- 타임아웃 패널티 적용 완료 표시 (중복 방지: penalty_applied = FALSE 조건) -->
     <update id="markPenaltyApplied">
         UPDATE party_operation_member
         SET
             penalty_applied = TRUE,
             updated_at = #{updatedAt}
         WHERE id = #{id}
+        AND penalty_applied = FALSE
     </update>
 
-    <!-- 24시간 초과 미확인 파티원 조회 -->
+    <!-- 24시간 초과 미확인 파티원 조회 (종료된 파티 제외) -->
     <select id="findRequiredMembersTimedOut" resultMap="partyOperationMemberResultMap">
         SELECT
-        <include refid="partyOperationMemberColumns"/>
-        FROM party_operation_member
-        WHERE member_status = 'REQUIRED'
-        AND penalty_applied = FALSE
-        AND must_complete_by IS NOT NULL
-        AND must_complete_by <![CDATA[<=]]> NOW()
+            pom.id,
+            pom.party_operation_id,
+            pom.party_member_id,
+            pom.party_id,
+            pom.user_id,
+            pom.member_status,
+            pom.invite_sent_at,
+            pom.must_complete_by,
+            pom.confirmed_at,
+            pom.completed_at,
+            pom.activated_at,
+            pom.last_reset_at,
+            pom.penalty_applied,
+            pom.operation_message,
+            pom.created_at,
+            pom.updated_at
+        FROM party_operation_member pom
+        INNER JOIN party p ON p.id = pom.party_id
+        WHERE pom.member_status = 'REQUIRED'
+        AND pom.penalty_applied = FALSE
+        AND pom.must_complete_by IS NOT NULL
+        AND pom.must_complete_by <![CDATA[<=]]> NOW()
+        AND p.operation_status != 'TERMINATED'
     </select>
 
-    <!-- 12시간 / 22시간 미확인 파티원 리마인드 조회 -->
+    <!-- 24시간 미확인 파티원 리마인드 조회 (종료된 파티 제외, 이미 알림 받은 멤버 제외) -->
     <select id="findRequiredMembersReminderDue" resultMap="partyOperationMemberResultMap">
         SELECT
-        <include refid="partyOperationMemberColumns"/>
-        FROM party_operation_member
-        WHERE member_status = 'REQUIRED'
-        AND penalty_applied = FALSE
-        AND invite_sent_at IS NOT NULL
-        AND TIMESTAMPDIFF(HOUR, invite_sent_at, NOW()) >= #{elapsedHours}
-        AND TIMESTAMPDIFF(HOUR, invite_sent_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
+            pom.id,
+            pom.party_operation_id,
+            pom.party_member_id,
+            pom.party_id,
+            pom.user_id,
+            pom.member_status,
+            pom.invite_sent_at,
+            pom.must_complete_by,
+            pom.confirmed_at,
+            pom.completed_at,
+            pom.activated_at,
+            pom.last_reset_at,
+            pom.penalty_applied,
+            pom.operation_message,
+            pom.created_at,
+            pom.updated_at
+        FROM party_operation_member pom
+        INNER JOIN party p ON p.id = pom.party_id
+        WHERE pom.member_status = 'REQUIRED'
+        AND pom.penalty_applied = FALSE
+        AND pom.invite_sent_at IS NOT NULL
+        AND TIMESTAMPDIFF(HOUR, pom.invite_sent_at, NOW()) >= #{elapsedHours}
+        AND TIMESTAMPDIFF(HOUR, pom.invite_sent_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
+        AND p.operation_status != 'TERMINATED'
+        AND NOT EXISTS (
+            SELECT 1 FROM notification n
+            WHERE n.party_id = pom.party_id
+            AND n.user_id = pom.user_id
+            AND n.type IN ('PROVISION_ACCOUNT_SHARED_REMINDER', 'PROVISION_INVITE_ACCEPT_REQUIRED')
+        )
     </select>
 
 </mapper>

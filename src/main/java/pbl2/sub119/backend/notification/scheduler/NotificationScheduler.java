@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import pbl2.sub119.backend.notification.entity.Notification;
-import pbl2.sub119.backend.notification.mapper.NotificationMapper;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 
 @Slf4j
@@ -15,15 +14,14 @@ import pbl2.sub119.backend.notification.service.NotificationCommandService;
 @RequiredArgsConstructor
 public class NotificationScheduler {
 
-    private final NotificationMapper notificationMapper;
     private final NotificationCommandService notificationCommandService;
 
     @Scheduled(fixedDelay = 60000)
     public void sendScheduledNotifications() {
         final LocalDateTime now = LocalDateTime.now();
-        final List<Notification> notifications = notificationMapper.findPendingScheduledNotifications(now);
+        final List<Notification> claimed = notificationCommandService.claimPendingScheduledNotifications(now);
 
-        for (final Notification notification : notifications) {
+        for (final Notification notification : claimed) {
             try {
                 notificationCommandService.sendScheduled(notification);
             } catch (Exception e) {
