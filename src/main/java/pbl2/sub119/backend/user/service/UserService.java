@@ -38,7 +38,7 @@ public class UserService {
             throw new IllegalArgumentException("이미 회원가입이 완료된 회원입니다.");
         }
 
-        if (!phoneVerificationService.isVerified(request.phoneNumber())) {
+        if (!phoneVerificationService.isVerified(accessor.getUserId(), request.phoneNumber())) {
             throw new BusinessException(ErrorCode.PHONE_NOT_VERIFIED);
         }
 
@@ -59,7 +59,7 @@ public class UserService {
                 UserStatus.ACTIVE.name()
         );
 
-        phoneVerificationService.consumeVerification(request.phoneNumber());
+        phoneVerificationService.consumeVerification(accessor.getUserId(), request.phoneNumber());
 
         final UserEntity updatedUser = findActiveUserOrThrow(user.getId());
         return UserSignUpResponse.from(updatedUser);
@@ -108,15 +108,21 @@ public class UserService {
         userMapper.withdraw(user.getId(), UserStatus.WITHDRAWN.name());
     }
 
-    public DuplicateCheckResponse checkEmail(final String emailId) {
+    public DuplicateCheckResponse checkEmail(final Long currentUserId, final String emailId) {
         final String fullEmail = buildSubmateEmail(emailId);
         final UserEntity existing = userMapper.findBySubmateEmail(fullEmail);
-        return existing == null ? DuplicateCheckResponse.ofAvailable() : DuplicateCheckResponse.ofUnavailable();
+        if (existing == null || existing.getId().equals(currentUserId)) {
+            return DuplicateCheckResponse.ofAvailable();
+        }
+        return DuplicateCheckResponse.ofUnavailable();
     }
 
-    public DuplicateCheckResponse checkNickname(final String nickname) {
+    public DuplicateCheckResponse checkNickname(final Long currentUserId, final String nickname) {
         final UserEntity existing = userMapper.findByNickname(nickname);
-        return existing == null ? DuplicateCheckResponse.ofAvailable() : DuplicateCheckResponse.ofUnavailable();
+        if (existing == null || existing.getId().equals(currentUserId)) {
+            return DuplicateCheckResponse.ofAvailable();
+        }
+        return DuplicateCheckResponse.ofUnavailable();
     }
 
     private UserEntity findUserOrThrow(final Long userId) {

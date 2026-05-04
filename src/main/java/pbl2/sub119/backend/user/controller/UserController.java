@@ -69,7 +69,7 @@ public class UserController implements UserDocs {
             @Auth final Accessor accessor,
             @RequestParam final String email
     ) {
-        return ResponseEntity.ok(userService.checkEmail(email));
+        return ResponseEntity.ok(userService.checkEmail(accessor.getUserId(), email));
     }
 
     @Override
@@ -78,7 +78,7 @@ public class UserController implements UserDocs {
             @Auth final Accessor accessor,
             @RequestParam final String nickname
     ) {
-        return ResponseEntity.ok(userService.checkNickname(nickname));
+        return ResponseEntity.ok(userService.checkNickname(accessor.getUserId(), nickname));
     }
 
     @Override
@@ -97,7 +97,7 @@ public class UserController implements UserDocs {
             @Auth final Accessor accessor,
             @RequestBody @Valid final PhoneVerificationConfirmRequest request
     ) {
-        phoneVerificationService.confirm(request.phoneNumber(), request.code());
+        phoneVerificationService.confirm(accessor.getUserId(), request.phoneNumber(), request.code());
         return ResponseEntity.ok().build();
     }
 }

@@ -111,7 +111,9 @@ public enum ErrorCode {
     // Phone OTP
     PHONE_OTP_NOT_FOUND(HttpStatus.BAD_REQUEST, "OTP001", "인증번호 요청 내역이 없거나 만료되었습니다. 다시 요청해 주세요."),
     PHONE_OTP_MISMATCH(HttpStatus.BAD_REQUEST, "OTP002", "인증번호가 일치하지 않습니다."),
-    PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "OTP003", "휴대폰 인증을 먼저 완료해 주세요.");
+    PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "OTP003", "휴대폰 인증을 먼저 완료해 주세요."),
+    PHONE_OTP_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "OTP004", "인증번호 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."),
+    PHONE_OTP_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "OTP005", "인증번호 입력 횟수를 초과했습니다. 인증번호를 다시 요청해 주세요.");
 
     private final HttpStatus status;
     private final String code;

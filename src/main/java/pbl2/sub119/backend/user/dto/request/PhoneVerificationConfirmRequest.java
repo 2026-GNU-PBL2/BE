@@ -11,7 +11,7 @@ public record PhoneVerificationConfirmRequest(
         @Schema(description = "휴대폰 번호", example = "01012345678")
         @NotBlank(message = UserConstant.PHONE_NUMBER_REQUIRED_MESSAGE)
         @Pattern(
-                regexp = "^01[0-9]{8,9}$",
+                regexp = UserConstant.PHONE_NUMBER_REGEXP,
                 message = UserConstant.PHONE_NUMBER_PATTERN_MESSAGE
         )
         String phoneNumber,
