@@ -40,6 +40,33 @@ public class SolapiSmsService {
         );
     }
 
+    public SmsSendStatus sendOtp(final Long userId, final String to, final String content) {
+        if (!solapiProperties.isEnabled() || messageService == null) {
+            saveLog(null, userId, maskPhoneNumber(to), "[OTP 발송 내용 비공개]", SmsSendStatus.SKIPPED, "SOLAPI disabled");
+            return SmsSendStatus.SKIPPED;
+        }
+
+        try {
+            Message message = new Message();
+            message.setFrom(normalizePhoneNumber(solapiProperties.getSenderNumber()));
+            message.setTo(normalizePhoneNumber(to));
+            message.setText(content);
+
+            messageService.send(message);
+            saveLog(null, userId, maskPhoneNumber(to), "[OTP 발송 내용 비공개]", SmsSendStatus.SUCCESS, null);
+            return SmsSendStatus.SUCCESS;
+        } catch (SolapiMessageNotReceivedException e) {
+            saveLog(null, userId, maskPhoneNumber(to), "[OTP 발송 내용 비공개]", SmsSendStatus.FAILED, e.getMessage());
+            return SmsSendStatus.FAILED;
+        } catch (SolapiUnknownException | SolapiEmptyResponseException e) {
+            saveLog(null, userId, maskPhoneNumber(to), "[OTP 발송 내용 비공개]", SmsSendStatus.FAILED, e.getMessage());
+            return SmsSendStatus.FAILED;
+        } catch (Exception e) {
+            saveLog(null, userId, maskPhoneNumber(to), "[OTP 발송 내용 비공개]", SmsSendStatus.FAILED, e.getMessage());
+            return SmsSendStatus.FAILED;
+        }
+    }
+
     public SmsSendStatus send(
             final Long userId,
             final String to,
