@@ -40,6 +40,10 @@ public class SolapiSmsService {
         );
     }
 
+    public SmsSendStatus sendOtp(final Long userId, final String to, final String content) {
+        return send(userId, to, content, null);
+    }
+
     public SmsSendStatus send(
             final Long userId,
             final String to,

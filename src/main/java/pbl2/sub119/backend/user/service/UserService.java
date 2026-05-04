@@ -5,7 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.common.enumerated.UserStatus;
+import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.common.exception.BusinessException;
 import pbl2.sub119.backend.user.dto.request.UserRequest;
+import pbl2.sub119.backend.user.dto.response.DuplicateCheckResponse;
 import pbl2.sub119.backend.user.dto.response.UserResponse;
 import pbl2.sub119.backend.user.dto.response.UserSignUpResponse;
 import pbl2.sub119.backend.user.dto.response.UserUpdateResponse;
@@ -23,6 +26,7 @@ public class UserService {
     private static final String SUBMATE_EMAIL_DOMAIN = "@submate.cloud";
 
     private final UserMapper userMapper;
+    private final PhoneVerificationService phoneVerificationService;
 
     @Transactional
     public UserSignUpResponse signUp(final Accessor accessor, final UserRequest request) {
@@ -32,6 +36,10 @@ public class UserService {
 
         if (user.getStatus() != UserStatus.PENDING_SIGNUP) {
             throw new IllegalArgumentException("이미 회원가입이 완료된 회원입니다.");
+        }
+
+        if (!phoneVerificationService.isVerified(request.phoneNumber())) {
+            throw new BusinessException(ErrorCode.PHONE_NOT_VERIFIED);
         }
 
         validateNicknameDuplication(user.getId(), request.nickname());
@@ -50,6 +58,8 @@ public class UserService {
                 pinHash,
                 UserStatus.ACTIVE.name()
         );
+
+        phoneVerificationService.consumeVerification(request.phoneNumber());
 
         final UserEntity updatedUser = findActiveUserOrThrow(user.getId());
         return UserSignUpResponse.from(updatedUser);
@@ -98,6 +108,17 @@ public class UserService {
         userMapper.withdraw(user.getId(), UserStatus.WITHDRAWN.name());
     }
 
+    public DuplicateCheckResponse checkEmail(final String emailId) {
+        final String fullEmail = buildSubmateEmail(emailId);
+        final UserEntity existing = userMapper.findBySubmateEmail(fullEmail);
+        return existing == null ? DuplicateCheckResponse.ofAvailable() : DuplicateCheckResponse.ofUnavailable();
+    }
+
+    public DuplicateCheckResponse checkNickname(final String nickname) {
+        final UserEntity existing = userMapper.findByNickname(nickname);
+        return existing == null ? DuplicateCheckResponse.ofAvailable() : DuplicateCheckResponse.ofUnavailable();
+    }
+
     private UserEntity findUserOrThrow(final Long userId) {
         final UserEntity user = userMapper.findById(userId);
 
@@ -128,7 +149,7 @@ public class UserService {
         final UserEntity existingUser = userMapper.findByNickname(nickname);
 
         if (existingUser != null && !existingUser.getId().equals(currentUserId)) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
+            throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
         }
     }
 
@@ -136,7 +157,7 @@ public class UserService {
         final UserEntity existingUser = userMapper.findByPhoneNumber(phoneNumber);
 
         if (existingUser != null && !existingUser.getId().equals(currentUserId)) {
-            throw new IllegalArgumentException("이미 사용 중인 전화번호입니다.");
+            throw new BusinessException(ErrorCode.USER_PHONE_DUPLICATE);
         }
     }
 
@@ -144,7 +165,7 @@ public class UserService {
         final UserEntity existingUser = userMapper.findBySubmateEmail(submateEmail);
 
         if (existingUser != null && !existingUser.getId().equals(currentUserId)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new BusinessException(ErrorCode.USER_EMAIL_DUPLICATE);
         }
     }
 

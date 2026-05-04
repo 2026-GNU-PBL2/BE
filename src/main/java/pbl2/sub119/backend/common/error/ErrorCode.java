@@ -101,7 +101,17 @@ public enum ErrorCode {
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION001", "알림을 찾을 수 없거나 접근 권한이 없습니다."),
 
     // admin
-    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "존재하지 않는 회원입니다.");
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "존재하지 않는 회원입니다."),
+
+    // User
+    USER_EMAIL_DUPLICATE(HttpStatus.CONFLICT, "USER002", "이미 사용 중인 이메일입니다."),
+    USER_NICKNAME_DUPLICATE(HttpStatus.CONFLICT, "USER003", "이미 사용 중인 닉네임입니다."),
+    USER_PHONE_DUPLICATE(HttpStatus.CONFLICT, "USER004", "이미 사용 중인 전화번호입니다."),
+
+    // Phone OTP
+    PHONE_OTP_NOT_FOUND(HttpStatus.BAD_REQUEST, "OTP001", "인증번호 요청 내역이 없거나 만료되었습니다. 다시 요청해 주세요."),
+    PHONE_OTP_MISMATCH(HttpStatus.BAD_REQUEST, "OTP002", "인증번호가 일치하지 않습니다."),
+    PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "OTP003", "휴대폰 인증을 먼저 완료해 주세요.");
 
     private final HttpStatus status;
     private final String code;

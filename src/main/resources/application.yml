@@ -7,6 +7,10 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 mybatis:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -75,4 +79,4 @@ solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}
   sender-number: ${SOLAPI_SENDER_NUMBER}
-  enabled: false
+  enabled: true
