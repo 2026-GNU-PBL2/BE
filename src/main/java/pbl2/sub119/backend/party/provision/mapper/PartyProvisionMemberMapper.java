@@ -48,9 +48,6 @@ public interface PartyProvisionMemberMapper {
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
-    // confirm 미완료 타임아웃 대상 멤버 조회 (REQUIRED + N시간 경과, 미처리건만)
-    List<PartyProvisionMember> findRequiredMembersTimedOut(@Param("thresholdHours") int thresholdHours);
-
     void markPenaltyApplied(
             @Param("id") Long id,
             @Param("updatedAt") LocalDateTime updatedAt
@@ -64,15 +61,7 @@ public interface PartyProvisionMemberMapper {
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
-    int markPenaltyApplied(
-            @Param("id") Long id,
-            @Param("updatedAt") LocalDateTime updatedAt
-    );
+    List<PartyProvisionMember> findRequiredMembersTimedOut(@Param("thresholdHours") int thresholdHours);
 
-    // 24시간 초과 미확인 파티원 조회
-    List<PartyProvisionMember> findRequiredMembersTimedOut();
-
-
-    // 12시간 / 22시간 미확인 파티원 리마인드 조회
     List<PartyProvisionMember> findRequiredMembersReminderDue(@Param("elapsedHours") int elapsedHours);
 }

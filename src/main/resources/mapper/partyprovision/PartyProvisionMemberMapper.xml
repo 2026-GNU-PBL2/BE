@@ -209,10 +209,10 @@
             pom.created_at,
             pom.updated_at
         FROM party_operation_member pom
-        INNER JOIN party p ON p.id = pom.party_id
+                 INNER JOIN party p ON p.id = pom.party_id
         WHERE pom.member_status = 'REQUIRED'
           AND pom.invite_sent_at IS NOT NULL
-          AND pom.invite_sent_at <![CDATA[<=]]> NOW() - INTERVAL #{thresholdHours} HOUR
+          AND pom.invite_sent_at <![CDATA[<=]]> DATEADD('HOUR', -#{thresholdHours}, NOW())
           AND pom.penalty_applied = FALSE
           AND p.operation_status != 'TERMINATED'
     </select>

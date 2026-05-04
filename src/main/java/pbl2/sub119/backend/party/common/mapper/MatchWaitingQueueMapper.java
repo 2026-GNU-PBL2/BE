@@ -44,6 +44,4 @@ public interface MatchWaitingQueueMapper {
     // [대기 인원 확인] 상품 기준 현재 대기 수 조회
     int countWaitingByProductId(@Param("productId") String productId);
 
-    // [파티 해체 후 재대기] 조건 확인과 삽입을 단일 SQL로 처리해 중복 삽입 방지
-    int insertIfAbsent(MatchWaitingQueue queue);
 }

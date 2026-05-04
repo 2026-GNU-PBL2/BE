@@ -367,6 +367,29 @@ CREATE TABLE notification (
 CREATE INDEX idx_notification_user_id ON notification(user_id);
 CREATE INDEX idx_notification_status_scheduled_at ON notification(status, scheduled_at);
 
+-- party_cycle_member_payment (2026.04 / kyh)
+CREATE TABLE party_cycle_member_payment (
+    id              BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_cycle_id  BIGINT          NOT NULL,
+    party_id        BIGINT          NOT NULL,
+    party_member_id BIGINT          NOT NULL,
+    user_id         BIGINT          NOT NULL,
+    amount          INT             NOT NULL,
+    status          VARCHAR(30)     NOT NULL,
+    failure_reason  VARCHAR(255)    NULL,
+    failure_code    VARCHAR(100)    NULL,
+    external_tx_id  VARCHAR(255)    NULL,
+    idempotency_key VARCHAR(255)    NOT NULL,
+    paid_at         DATETIME        NULL,
+    failed_at       DATETIME        NULL,
+    created_at      DATETIME        NOT NULL,
+    updated_at      DATETIME        NOT NULL,
+    UNIQUE KEY uk_pcmp_idempotency (idempotency_key)
+);
+
+CREATE INDEX idx_pcmp_party_cycle_id ON party_cycle_member_payment(party_cycle_id);
+CREATE INDEX idx_pcmp_user_id ON party_cycle_member_payment(user_id);
+
 -- sms_send_log (2026.04.28 / khj)
 CREATE TABLE sms_send_log (
                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
