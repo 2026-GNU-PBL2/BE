@@ -35,4 +35,6 @@ public interface NotificationMapper {
     );
 
     List<Notification> findPendingScheduledNotifications(@Param("now") LocalDateTime now);
+
+    List<Notification> findPendingScheduledNotificationsForUpdate(@Param("now") LocalDateTime now);
 }

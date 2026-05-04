@@ -39,7 +39,7 @@ public interface NotificationDocs {
                     - HOST_PROVISION_REQUIRED : 파티장 이용 정보 등록 요청 (24시간 제한)
                     - HOST_PROVISION_REMINDER : 파티장 등록 기한 임박
                     - PROVISION_ACCOUNT_SHARED_REQUIRED : 공유 계정 확인 필요
-                    - PROVISION_INVITE_LINK_REQUIRED : 초대 링크 수락 필요
+                    - PROVISION_INVITE_CODE_REQUIRED : 초대 링크 수락 필요
                     - PROVISION_ACCOUNT_SHARED_REMINDER : 계정 확인 리마인드
                     - PROVISION_INVITE_ACCEPT_REQUIRED : 초대 수락 리마인드
 

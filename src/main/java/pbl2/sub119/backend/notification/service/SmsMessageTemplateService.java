@@ -21,7 +21,7 @@ public class SmsMessageTemplateService {
             case HOST_PROVISION_TIMEOUT_TERMINATED -> "파티 해체 안내";
 
             case PROVISION_ACCOUNT_SHARED_REQUIRED -> "공유 계정 확인 필요";
-            case PROVISION_INVITE_LINK_REQUIRED -> "초대 링크 수락 필요";
+            case PROVISION_INVITE_CODE_REQUIRED -> "초대 링크 수락 필요";
             case PROVISION_ACCOUNT_SHARED_REMINDER -> "공유 계정 확인 리마인드";
             case PROVISION_INVITE_ACCEPT_REQUIRED -> "초대 수락 리마인드";
             case MEMBER_PROVISION_TIMEOUT_NOTICE -> "이용 확인 지연 안내";
@@ -106,22 +106,18 @@ public class SmsMessageTemplateService {
     }
 
     // 공유 계정 리마인드
-    public String provisionAccountSharedReminder(final String productName, final int elapsedHours) {
-        final int remainingHours = 24 - elapsedHours;
+    public String provisionAccountSharedReminder(final String productName) {
         return String.format(
-                "[Submate] 아직 %s 이용 확인이 완료되지 않았어요.\n이용 확인 기한까지 %d시간 남았습니다.\n미확인 기간은 환불 대상이 아닙니다.",
-                productName,
-                remainingHours
+                "[Submate] %s 이용 확인 기한이 지났어요.\n지금 바로 앱에서 계정 정보를 확인해주세요.\n미확인 기간은 환불 대상이 아닙니다.",
+                productName
         );
     }
 
     // 초대 링크 리마인드
-    public String provisionInviteAcceptRequired(final String productName, final int elapsedHours) {
-        final int remainingHours = 24 - elapsedHours;
+    public String provisionInviteAcceptRequired(final String productName) {
         return String.format(
-                "[Submate] 아직 %s 초대 수락이 완료되지 않았어요.\n초대 수락 기한까지 %d시간 남았습니다.\n늦게 수락하면 이용 기간이 줄어들 수 있어요.",
-                productName,
-                remainingHours
+                "[Submate] %s 초대 수락 기한이 지났어요.\n지금 바로 앱에서 초대를 수락해주세요.\n늦게 수락하면 이용 기간이 줄어들 수 있어요.",
+                productName
         );
     }
 

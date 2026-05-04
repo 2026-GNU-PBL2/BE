@@ -50,26 +50,35 @@
         AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= 48
     </select>
 
-    <!-- 12시간 / 22시간 → 파티장 리마인드 -->
-    <select id="findHostProvisionReminderDue" resultMap="partyOperationResultMap">
+    <!-- 24시간 → 파티장 리마인드 + 파티원 지연 안내 (이미 알림 발송된 파티 제외) -->
+    <select id="findHostProvisionAt24hDue" resultMap="partyOperationResultMap">
         SELECT
-        <include refid="partyOperationColumns"/>
-        FROM party_operation
-        WHERE operation_status != 'ACTIVE'
-        AND operation_started_at IS NULL
-        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= #{elapsedHours}
-        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
-    </select>
-
-    <!-- 24시간 → 파티원에게 지연 안내 -->
-    <select id="findHostProvisionDelayedNoticeDue" resultMap="partyOperationResultMap">
-        SELECT
-        <include refid="partyOperationColumns"/>
-        FROM party_operation
-        WHERE operation_status != 'ACTIVE'
-        AND operation_started_at IS NULL
-        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= #{elapsedHours}
-        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
+            po.id,
+            po.party_id,
+            po.operation_type,
+            po.operation_status,
+            po.invite_value,
+            po.shared_account_email,
+            po.shared_account_password_encrypted,
+            po.operation_guide,
+            po.operation_started_at,
+            po.operation_completed_at,
+            po.last_reset_at,
+            po.created_at,
+            po.updated_at
+        FROM party_operation po
+        INNER JOIN party p ON p.id = po.party_id
+        WHERE po.operation_status != 'ACTIVE'
+        AND po.operation_started_at IS NULL
+        AND p.operation_status != 'TERMINATED'
+        AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) >= #{elapsedHours}
+        AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
+        AND NOT EXISTS (
+            SELECT 1 FROM notification n
+            WHERE n.party_id = po.party_id
+            AND n.user_id = p.host_user_id
+            AND n.type = 'HOST_PROVISION_REMINDER'
+        )
     </select>
 
 </mapper>

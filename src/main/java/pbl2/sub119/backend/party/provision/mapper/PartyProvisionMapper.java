@@ -66,9 +66,6 @@ public interface PartyProvisionMapper {
     // 48시간 초과 → 파티 해체 대상
     List<PartyProvision> findTimedOutProvisions();
 
-    // 12시간 / 22시간 → 파티장 리마인드
-    List<PartyProvision> findHostProvisionReminderDue(@Param("elapsedHours") int elapsedHours);
-
-    // 24시간 → 파티원에게 지연 안내
-    List<PartyProvision> findHostProvisionDelayedNoticeDue(@Param("elapsedHours") int elapsedHours);
+    // 24시간 → 파티장 리마인드 + 파티원 지연 안내
+    List<PartyProvision> findHostProvisionAt24hDue(@Param("elapsedHours") int elapsedHours);
 }

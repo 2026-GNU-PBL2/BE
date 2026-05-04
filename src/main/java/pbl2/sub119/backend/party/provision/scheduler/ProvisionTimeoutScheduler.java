@@ -14,22 +14,16 @@ public class ProvisionTimeoutScheduler {
     private final ProvisionTimeoutService provisionTimeoutService;
 
     // provision 정책 체크
-    // - 파티장 미등록 12h / 22h / 24h / 48h
-    // - 파티원 미확인 12h / 22h / 24h
-    @Scheduled(fixedDelay = 60 * 60 * 1000L)
+    // - 파티장 미등록 24h (리마인드 + 파티원 지연 안내 동시) / 48h (파티 해체)
+    // - 파티원 미확인 24h (리마인드)
+    @Scheduled(fixedRate = 60 * 60 * 1000L)
     public void checkProvisionStatus() {
         log.info("provision 정책 스케줄러 실행");
 
         try {
-            provisionTimeoutService.processHostProvisionReminders();
+            provisionTimeoutService.processHostProvisionAt24h();
         } catch (Exception e) {
-            log.error("파티장 provision 리마인드 처리 중 오류 발생", e);
-        }
-
-        try {
-            provisionTimeoutService.processHostDelayedNotice();
-        } catch (Exception e) {
-            log.error("파티장 provision 지연 안내 처리 중 오류 발생", e);
+            log.error("파티장 provision 24시간 안내 처리 중 오류 발생", e);
         }
 
         try {
