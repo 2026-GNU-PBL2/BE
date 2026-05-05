@@ -18,7 +18,7 @@ public class WebMessageTemplateService {
     }
 
     public String hostProvisionReminder(final String productName, final int elapsedHours) {
-        final int remaining = 48 - elapsedHours;
+        final int remaining = Math.max(0, 48 - elapsedHours);
         return String.format("%s 이용 정보 등록 기한까지 %d시간 남았어요.", productName, remaining);
     }
 
