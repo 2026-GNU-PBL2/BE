@@ -6,11 +6,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.payment.dto.response.PaymentHistoryItem;
+import pbl2.sub119.backend.payment.service.PaymentHistoryQueryService;
 import pbl2.sub119.backend.toss.controller.docs.PaymentDocs;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
 import pbl2.sub119.backend.toss.dto.response.BillingKeyInfoResponse;
 import pbl2.sub119.backend.toss.service.BillingKeyService;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -19,12 +22,8 @@ import java.util.Map;
 public class PaymentController implements PaymentDocs {
 
     private final BillingKeyService billingKeyService;
+    private final PaymentHistoryQueryService paymentHistoryQueryService;
 
-    /**
-     * 빌링키 발급
-     * 프론트에서 토스 결제창 띄운 후 authKey 받아서 여기로 전달
-     * POST /api/v1/payments/billing/authorize
-     */
     @PostMapping("/billing/authorize")
     public ResponseEntity<Void> issueBillingKey(
             @Auth final Accessor accessor,
@@ -54,4 +53,13 @@ public class PaymentController implements PaymentDocs {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/me/history")
+    public ResponseEntity<List<PaymentHistoryItem>> getMyPaymentHistory(
+            @Auth final Accessor accessor,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(
+                paymentHistoryQueryService.getMyPaymentHistory(accessor.getUserId(), page, size)
+        );
+    }
 }

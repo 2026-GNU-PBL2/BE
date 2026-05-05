@@ -118,6 +118,15 @@
           AND status IN ('PAYMENT_PENDING', 'PROCESSING')
     </update>
 
+    <!-- 초기 결제(cycle_no=1)가 FAILED 상태인지 확인 — 반복회차 실패는 제외 -->
+    <select id="existsFailedInitialCycle" resultType="boolean">
+        SELECT CASE WHEN COUNT(1) > 0 THEN TRUE ELSE FALSE END
+        FROM party_cycle
+        WHERE party_id = #{partyId}
+          AND cycle_no  = 1
+          AND status    = 'FAILED'
+    </select>
+
     <insert id="save"
             parameterType="pbl2.sub119.backend.payment.entity.PartyCycle"
             useGeneratedKeys="true"

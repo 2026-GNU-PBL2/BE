@@ -27,7 +27,7 @@ public interface PartyProvisionDocs {
     @Operation(
             summary = "파티 이용 정보 등록",
             description = """
-                    파티장이 결제 완료 후 파티 이용에 필요한 정보를 등록합니다.
+                    파티장이 결제 전 또는 결제 준비 단계에서 파티 이용에 필요한 정보를 등록합니다.
 
                     이용 정보 제공 방식
                     - ACCOUNT_SHARE : 파티장이 공유 계정 이메일과 비밀번호를 등록하는 방식입니다.
@@ -43,6 +43,12 @@ public interface PartyProvisionDocs {
                     - REQUIRED : 파티원이 아직 이용 확인을 하지 않아 확인이 필요한 상태입니다.
                     - ACTIVE : 파티원이 이용 확인까지 완료하여 현재 정상 이용 중인 상태입니다.
                     - RESET_REQUIRED : 파티장이 이용 정보를 다시 변경하여 파티원이 다시 확인해야 하는 상태입니다.
+
+                    결제 트리거 정책 안내
+                    - 이 API는 운영 정보 등록/수정 전용입니다. 결제 재시도 수단이 아닙니다.
+                    - 최초 provision 등록 시, 모집 완료 + 전원 빌링키 보유 조건을 충족하면 초기 결제가 자동 트리거됩니다.
+                    - 단, 이미 결제 실패(FAILED) 이력이 있는 경우 이 API로 결제가 재시도되지 않습니다.
+                    - 결제 실패 복구는 관리자 명시적 retry API(POST /api/v1/admin/payments/cycles/{id}/retry)를 통해서만 가능합니다.
                     """,
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,

@@ -33,6 +33,8 @@ public class PaymentRetryService {
 
     @Transactional
     public void retry(Long partyCycleId, Long adminId) {
+        final LocalDateTime requestedAt = LocalDateTime.now();
+
         PartyCycle cycle = partyCycleMapper.findById(partyCycleId);
         if (cycle == null) {
             throw new BusinessException(ErrorCode.PAYMENT_CYCLE_NOT_FOUND);
@@ -42,7 +44,7 @@ public class PaymentRetryService {
             throw new BusinessException(ErrorCode.PAYMENT_CYCLE_RETRY_NOT_ALLOWED);
         }
 
-        if (cycle.getBillingDueAt().plusDays(RETRY_DEADLINE_DAYS).isBefore(LocalDateTime.now())) {
+        if (cycle.getBillingDueAt().plusDays(RETRY_DEADLINE_DAYS).isBefore(requestedAt)) {
             throw new BusinessException(ErrorCode.PAYMENT_CYCLE_RETRY_DEADLINE_EXCEEDED);
         }
 
@@ -56,14 +58,15 @@ public class PaymentRetryService {
         // FAILED 멤버만 PAYMENT_PENDING으로 초기화 (PAID/CANCELLED 유지)
         memberPaymentMapper.resetFailedForRetry(partyCycleId);
 
+        final Long partyId = cycle.getPartyId();
+
         partyHistoryService.saveHistory(
-                cycle.getPartyId(), null,
+                partyId, null,
                 PartyHistoryEventType.PAYMENT_RETRY_REQUESTED,
-                buildPayload(partyCycleId, cycle.getCycleNo()),
+                buildPayload(partyCycleId, cycle.getCycleNo(), partyId, adminId, requestedAt),
                 adminId
         );
 
-        Long partyId = cycle.getPartyId();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
@@ -71,10 +74,15 @@ public class PaymentRetryService {
             }
         });
 
-        log.info("결제 재시도 요청. partyCycleId={}, partyId={}, adminId={}", partyCycleId, partyId, adminId);
+        log.info("결제 재시도 요청. partyCycleId={}, partyId={}, adminId={}, requestedAt={}",
+                partyCycleId, partyId, adminId, requestedAt);
     }
 
-    private String buildPayload(Long partyCycleId, int cycleNo) {
-        return "{\"partyCycleId\":" + partyCycleId + ",\"cycleNo\":" + cycleNo + "}";
+    private String buildPayload(Long partyCycleId, int cycleNo, Long partyId, Long adminId, LocalDateTime requestedAt) {
+        return "{\"partyCycleId\":" + partyCycleId
+                + ",\"cycleNo\":" + cycleNo
+                + ",\"partyId\":" + partyId
+                + ",\"adminId\":" + adminId
+                + ",\"requestedAt\":\"" + requestedAt + "\"}";
     }
 }
