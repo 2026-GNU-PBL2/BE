@@ -344,16 +344,21 @@ public interface AdminDocs {
                 summary = "결제 사이클 수동 재시도",
                 description = """
                         FAILED 상태인 결제 사이클을 관리자가 수동으로 재시도합니다.
+                        결제 실패 복구는 이 API를 통한 어드민 명시적 액션만 허용됩니다.
 
                         이 API는 아래 화면에서 사용합니다.
                         - 관리자 결제 실패 관리 페이지
+
+                        결제 재시도 정책:
+                        - 자동 재트리거는 허용되지 않습니다. provision 수정(setupProvision) 또는 빌링키 재등록만으로는 실패한 결제가 재시도되지 않습니다.
+                        - 결제 실패 복구는 반드시 이 API를 통해 어드민이 명시적으로 요청해야 합니다.
+                        - 재시도 요청은 감사 로그(party_history: PAYMENT_RETRY_REQUESTED)에 partyId, partyCycleId, adminId, requestedAt 과 함께 기록됩니다.
 
                         처리 기준:
                         - 대상 사이클의 status 가 FAILED 이어야 합니다.
                         - billing_due_at 기준 7일 이내에만 재시도할 수 있습니다.
                         - FAILED 상태인 멤버 결제 레코드만 PAYMENT_PENDING 으로 초기화합니다.
                           (PAID / CANCELLED 레코드는 유지됩니다.)
-                        - 재시도 요청은 party_history 에 PAYMENT_RETRY_REQUESTED 로 기록됩니다.
                         - 실제 결제 실행은 PaymentExecutionRequestedEvent 를 통해 비동기로 처리됩니다.
 
                         에러 안내:

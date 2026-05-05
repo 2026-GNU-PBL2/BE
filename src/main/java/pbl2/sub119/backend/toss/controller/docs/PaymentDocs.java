@@ -11,11 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.payment.dto.response.PaymentHistoryItem;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
 import pbl2.sub119.backend.toss.dto.response.BillingKeyInfoResponse;
 
+import java.util.List;
 import java.util.Map;
 
 @Tag(
@@ -144,5 +147,32 @@ public interface PaymentDocs {
             @Parameter(hidden = true) @Auth Accessor accessor,
             @Parameter(description = "새 카드 authKey", required = true)
             @Valid @RequestBody BillingKeyIssueRequest request
+    );
+
+    @Operation(
+            summary = "내 결제내역 조회",
+            description = """
+                    현재 로그인한 사용자의 결제내역을 최신순으로 조회합니다.
+                    page(0-based), size 파라미터로 페이징을 제어합니다.
+                    실패 건은 failureReason / failureCode 필드를 포함합니다.
+                    상태값: PAYMENT_PENDING / PROCESSING / PAID / FAILED / CANCELLED
+                    """,
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "조회 성공"
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "인증 필요",
+                            content = @Content
+                    )
+            }
+    )
+    @GetMapping("/me/history")
+    ResponseEntity<List<PaymentHistoryItem>> getMyPaymentHistory(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @Parameter(description = "페이지 번호 (0-based, 기본값 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기 (기본값 20, 최대 100)") @RequestParam(defaultValue = "20") int size
     );
 }

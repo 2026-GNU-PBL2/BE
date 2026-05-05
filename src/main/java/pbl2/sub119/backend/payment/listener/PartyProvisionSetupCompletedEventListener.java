@@ -11,6 +11,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.party.event.PartyProvisionSetupCompletedEvent;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
+import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.service.InitialPaymentCycleService;
 import pbl2.sub119.backend.payment.service.PartyPaymentReadinessService;
 
@@ -21,6 +22,7 @@ public class PartyProvisionSetupCompletedEventListener {
 
     private final PartyPaymentReadinessService partyPaymentReadinessService;
     private final InitialPaymentCycleService initialPaymentCycleService;
+    private final PartyCycleMapper partyCycleMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -30,6 +32,12 @@ public class PartyProvisionSetupCompletedEventListener {
 
         if (!partyPaymentReadinessService.isReady(partyId)) {
             log.info("파티 결제 준비 미완료. partyId={}", partyId);
+            return;
+        }
+
+        // 초기 결제(cycle_no=1)가 이미 FAILED인 경우 자동 재트리거 차단 — 어드민 명시적 retry만 허용
+        if (partyCycleMapper.existsFailedInitialCycle(partyId)) {
+            log.warn("초기 결제 자동 재트리거 차단. partyId={}, reason=FAILED_INITIAL_CYCLE_EXISTS", partyId);
             return;
         }
 

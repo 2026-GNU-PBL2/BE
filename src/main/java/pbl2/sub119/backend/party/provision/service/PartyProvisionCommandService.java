@@ -13,6 +13,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
 import pbl2.sub119.backend.notification.event.event.InviteLinkRequiredEvent;
 import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.party.event.PartyProvisionSetupCompletedEvent;
 import pbl2.sub119.backend.common.util.CryptoUtil;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
@@ -91,6 +92,7 @@ public class PartyProvisionCommandService {
             initializeMembers(provision.getId(), partyId, party.getHostUserId(), now);
 
             publishProvisionRequiredEvent(partyId, provision.getId(), party.getHostUserId(), request.provisionType());
+            publishProvisionSetupCompletedEvent(partyId);
 
             return new PartyProvisionSetupResponse(
                     provision.getId(),
@@ -115,6 +117,7 @@ public class PartyProvisionCommandService {
 
         // 다시 저장하면 기존 멤버는 처음부터 다시 확인
         resetMemberRows(existingProvision.getId(), partyId, party.getHostUserId(), now);
+        publishProvisionSetupCompletedEvent(partyId);
 
         return new PartyProvisionSetupResponse(
                 existingProvision.getId(),
@@ -454,6 +457,11 @@ public class PartyProvisionCommandService {
         }
 
         return cryptoUtil.encrypt(request.sharedAccountPassword());
+    }
+
+    // provision 설정 완료 이벤트 발행 - 리스너가 @TransactionalEventListener(AFTER_COMMIT)이므로 트랜잭션 커밋 후 실행 보장
+    private void publishProvisionSetupCompletedEvent(final Long partyId) {
+        eventPublisher.publishEvent(new PartyProvisionSetupCompletedEvent(partyId));
     }
 
     // provision 최초 등록 후 파티원에게 알림 이벤트 발행

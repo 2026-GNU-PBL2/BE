@@ -52,4 +52,7 @@ public interface PartyCycleMapper {
 
     // deadline 전용: PAYMENT_PENDING / PROCESSING 상태 cycle을 FAILED로 전이
     int failIfPendingOrProcessing(@Param("partyCycleId") Long partyCycleId);
+
+    // 초기 결제(cycle_no=1) FAILED 여부만 확인 — 반복회차 실패와 구분
+    boolean existsFailedInitialCycle(@Param("partyId") Long partyId);
 }

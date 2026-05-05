@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.payment.mapper.UserPaymentHistoryQueryMapper">
+
+    <resultMap id="PaymentHistoryItemMap" type="pbl2.sub119.backend.payment.dto.response.PaymentHistoryItem">
+        <result property="partyId"       column="party_id"/>
+        <result property="partyCycleId"  column="party_cycle_id"/>
+        <result property="serviceName"   column="service_name"/>
+        <result property="amount"        column="amount"/>
+        <result property="status"        column="status"/>
+        <result property="paidAt"        column="paid_at"/>
+        <result property="failedAt"      column="failed_at"/>
+        <result property="failureReason" column="failure_reason"/>
+        <result property="failureCode"   column="failure_code"/>
+        <result property="createdAt"     column="created_at"/>
+    </resultMap>
+
+    <select id="findByUserId" resultMap="PaymentHistoryItemMap">
+        SELECT
+            pcmp.party_id,
+            pcmp.party_cycle_id,
+            sp.service_name,
+            pcmp.amount,
+            pcmp.status,
+            pcmp.paid_at,
+            pcmp.failed_at,
+            pcmp.failure_reason,
+            pcmp.failure_code,
+            pcmp.created_at
+        FROM party_cycle_member_payment pcmp
+        INNER JOIN party p ON p.id = pcmp.party_id
+        LEFT JOIN sub_product sp ON sp.id = p.product_id
+        WHERE pcmp.user_id = #{userId}
+        ORDER BY pcmp.created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+</mapper>
