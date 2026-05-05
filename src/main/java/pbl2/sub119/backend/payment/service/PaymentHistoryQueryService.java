@@ -18,8 +18,15 @@ public class PaymentHistoryQueryService {
 
     @Transactional(readOnly = true)
     public List<PaymentHistoryItem> getMyPaymentHistory(Long userId, int page, int size) {
+        int normalizedPage = Math.max(page, 0);
         int normalizedSize = Math.min(Math.max(size, 1), MAX_SIZE);
-        int offset = Math.max(page, 0) * normalizedSize;
+
+        long offsetLong = (long) normalizedPage * normalizedSize;
+        if (offsetLong > Integer.MAX_VALUE) {
+            offsetLong = Integer.MAX_VALUE; // 또는 예외 처리
+        }
+
+        int offset = (int) offsetLong;
         return userPaymentHistoryQueryMapper.findByUserId(userId, normalizedSize, offset);
     }
 }
