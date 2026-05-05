@@ -50,6 +50,34 @@ public class NotificationCommandService {
     }
 
     @Transactional
+    public void notifyWithWebContent(
+            final Long userId,
+            final Long partyId,
+            final NotificationType type,
+            final String title,
+            final String smsContent,
+            final String webContent
+    ) {
+        final LocalDateTime now = LocalDateTime.now();
+
+        final Notification notification = Notification.builder()
+                .userId(userId)
+                .partyId(partyId)
+                .type(type)
+                .title(title)
+                .content(smsContent)
+                .webContent(webContent)
+                .status(NotificationStatus.UNREAD)
+                .read(false)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        notificationMapper.insert(notification);
+        sendSms(notification);
+    }
+
+    @Transactional
     public void schedule(
             final Long userId,
             final Long partyId,

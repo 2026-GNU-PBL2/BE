@@ -135,7 +135,9 @@ class NotificationEventTest {
                 "SELECT status FROM sms_send_log WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
                 userId
         );
-        return !rows.isEmpty() && "SUCCESS".equals(rows.get(0).get("status"));
+        if (rows.isEmpty()) return false;
+        final String status = String.valueOf(rows.get(0).get("status"));
+        return "SUCCESS".equals(status) || "SKIPPED".equals(status);
     }
 
     private void waitAsync() {

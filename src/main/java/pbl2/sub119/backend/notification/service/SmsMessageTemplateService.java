@@ -34,7 +34,7 @@ public class SmsMessageTemplateService {
     // 파티원 매칭 완료 안내
     public String memberPartyMatched(final String productName) {
         return String.format(
-                "[Submate] %s 파티 매칭이 완료됐어요.\n파티장이 이용 정보를 등록하면 결제가 진행되고 이용이 시작됩니다.\n진행 상태는 앱에서 확인해주세요.",
+                "[Submate] %s 파티 매칭이 완료됐어요.\n파티장이 이용 정보를 등록하면 결제가 진행되고 이용이 시작됩니다.\n진행 상태는 웹에서 확인해주세요.",
                 productName
         );
     }
@@ -92,7 +92,7 @@ public class SmsMessageTemplateService {
     // 공유 계정 확인 요청
     public String provisionAccountSharedRequired(final String productName) {
         return String.format(
-                "[Submate] %s 공유 계정 정보가 등록됐어요.\n앱에서 계정 정보를 확인하고 이용 확인을 완료해주세요.\n미확인 기간은 환불 대상이 아닙니다.",
+                "[Submate] %s 공유 계정 정보가 등록됐어요.\n웹에서 계정 정보를 확인하고 이용 확인을 완료해주세요.\n미확인 기간은 환불 대상이 아닙니다.",
                 productName
         );
     }
@@ -100,7 +100,7 @@ public class SmsMessageTemplateService {
     // 초대 링크 수락 요청
     public String provisionInviteLinkRequired(final String productName) {
         return String.format(
-                "[Submate] %s 파티 초대 링크가 도착했어요.\n초대 수락이 늦어지면 이용 가능 기간이 줄어들 수 있어요.\n앱에서 수락해주세요.",
+                "[Submate] %s 파티 초대 링크가 도착했어요.\n초대 수락이 늦어지면 이용 가능 기간이 줄어들 수 있어요.\n웹에서 수락해주세요.",
                 productName
         );
     }
@@ -108,7 +108,7 @@ public class SmsMessageTemplateService {
     // 공유 계정 리마인드
     public String provisionAccountSharedReminder(final String productName) {
         return String.format(
-                "[Submate] %s 이용 확인 기한이 지났어요.\n지금 바로 앱에서 계정 정보를 확인해주세요.\n미확인 기간은 환불 대상이 아닙니다.",
+                "[Submate] %s 이용 확인 기한이 지났어요.\n지금 바로 웹에서 계정 정보를 확인해주세요.\n미확인 기간은 환불 대상이 아닙니다.",
                 productName
         );
     }
@@ -116,7 +116,7 @@ public class SmsMessageTemplateService {
     // 초대 링크 리마인드
     public String provisionInviteAcceptRequired(final String productName) {
         return String.format(
-                "[Submate] %s 초대 수락 기한이 지났어요.\n지금 바로 앱에서 초대를 수락해주세요.\n늦게 수락하면 이용 기간이 줄어들 수 있어요.",
+                "[Submate] %s 초대 수락 기한이 지났어요.\n지금 바로 웹에서 초대를 수락해주세요.\n늦게 수락하면 이용 기간이 줄어들 수 있어요.",
                 productName
         );
     }
@@ -124,7 +124,7 @@ public class SmsMessageTemplateService {
     // 파티원 24시간 초과 안내
     public String memberProvisionTimeoutNotice(final String productName) {
         return String.format(
-                "[Submate] %s 이용 확인 기한이 지났어요.\n파티는 유지되며, 미확인 기간은 환불 대상이 아닙니다.\n앱에서 언제든 확인할 수 있어요.",
+                "[Submate] %s 이용 확인 기한이 지났어요.\n파티는 유지되며, 미확인 기간은 환불 대상이 아닙니다.\n웹에서 언제든 확인할 수 있어요.",
                 productName
         );
     }
@@ -140,7 +140,7 @@ public class SmsMessageTemplateService {
     // 정산 완료
     public String settlementCompleted(final String productName) {
         return String.format(
-                "[Submate] %s 파티 정산이 완료됐어요.\n정산금, 정산일, 입금 계좌는 앱에서 확인해주세요.",
+                "[Submate] %s 파티 정산이 완료됐어요.\n정산금, 정산일, 입금 계좌는 웹에서 확인해주세요.",
                 productName
         );
     }
@@ -148,7 +148,7 @@ public class SmsMessageTemplateService {
     // 결제 완료
     public String paymentSucceeded(final String productName) {
         return String.format(
-                "[Submate] %s 파티 결제가 완료됐어요.\n이용 내역은 앱에서 확인해주세요.",
+                "[Submate] %s 파티 결제가 완료됐어요.\n이용 내역은 웹에서 확인해주세요.",
                 productName
         );
     }
@@ -156,7 +156,7 @@ public class SmsMessageTemplateService {
     // 결제 실패
     public String paymentFailed(final String productName) {
         return String.format(
-                "[Submate] %s 자동 결제에 실패했어요.\n결제 정보를 확인하지 않으면 이용이 제한될 수 있어요.\n앱에서 확인해주세요.",
+                "[Submate] %s 자동 결제에 실패했어요.\n결제 정보를 확인하지 않으면 이용이 제한될 수 있어요.\n웹에서 확인해주세요.",
                 productName
         );
     }

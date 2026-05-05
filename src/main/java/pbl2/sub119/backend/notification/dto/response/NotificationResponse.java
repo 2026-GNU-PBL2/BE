@@ -10,7 +10,9 @@ public record NotificationResponse(
         NotificationType type,
         String title,
         String content,
+        String webContent,
         NotificationStatus status,
+        boolean isRead,
         LocalDateTime createdAt,
         LocalDateTime readAt
 ) {

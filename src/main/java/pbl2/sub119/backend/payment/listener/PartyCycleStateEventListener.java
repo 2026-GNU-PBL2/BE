@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.payment.listener;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -10,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
+import pbl2.sub119.backend.notification.event.event.PartyMatchedEvent;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
+import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PartyCyclePaymentCompletedEvent;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
@@ -21,6 +25,7 @@ import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 public class PartyCycleStateEventListener {
 
     private final PartyCycleMapper partyCycleMapper;
+    private final PartyMemberMapper partyMemberMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -37,7 +42,14 @@ public class PartyCycleStateEventListener {
             return;
         }
 
-        if (event.cycleNo() > 1) {
+        if (event.cycleNo() == 1) {
+            final List<Long> memberUserIds = partyMemberMapper.findMembersByPartyId(event.partyId())
+                    .stream()
+                    .filter(m -> m.getRole() == PartyRole.MEMBER)
+                    .map(m -> m.getUserId())
+                    .toList();
+            eventPublisher.publishEvent(new PartyMatchedEvent(event.partyId(), event.partyCycleId(), memberUserIds));
+        } else {
             closePreviousCycle(event.partyId(), event.cycleNo());
         }
 

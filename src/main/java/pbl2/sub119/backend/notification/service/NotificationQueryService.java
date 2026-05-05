@@ -52,7 +52,9 @@ public class NotificationQueryService {
                 n.getType(),
                 n.getTitle(),
                 n.getContent(),
+                n.getWebContent(),
                 n.getStatus(),
+                n.isRead(),
                 n.getCreatedAt(),
                 n.getReadAt()
         );

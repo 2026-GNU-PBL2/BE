@@ -13,6 +13,7 @@
                 javaType="pbl2.sub119.backend.notification.enumerated.NotificationType"/>
         <result property="title" column="title"/>
         <result property="content" column="content"/>
+        <result property="webContent" column="web_content"/>
         <result property="status" column="status"
                 javaType="pbl2.sub119.backend.notification.enumerated.NotificationStatus"/>
         <result property="read" column="is_read"/>
@@ -26,18 +27,18 @@
     <insert id="insert" parameterType="pbl2.sub119.backend.notification.entity.Notification"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO notification (
-            user_id, party_id, type, title, content,
+            user_id, party_id, type, title, content, web_content,
             status, is_read, scheduled_at, sent_at, read_at,
             created_at, updated_at
         ) VALUES (
-            #{userId}, #{partyId}, #{type}, #{title}, #{content},
+            #{userId}, #{partyId}, #{type}, #{title}, #{content}, #{webContent},
             #{status}, #{read}, #{scheduledAt}, #{sentAt}, #{readAt},
             #{createdAt}, #{updatedAt}
         )
     </insert>
 
     <select id="findByUserId" resultMap="notificationResultMap">
-        SELECT id, user_id, party_id, type, title, content, status, is_read,
+        SELECT id, user_id, party_id, type, title, content, web_content, status, is_read,
                scheduled_at, sent_at, read_at, created_at, updated_at
         FROM notification
         WHERE user_id = #{userId}
@@ -79,7 +80,7 @@
     </update>
 
     <select id="findPendingScheduledNotifications" resultMap="notificationResultMap">
-        SELECT id, user_id, party_id, type, title, content, status, is_read,
+        SELECT id, user_id, party_id, type, title, content, web_content, status, is_read,
                scheduled_at, sent_at, read_at, created_at, updated_at
         FROM notification
         WHERE scheduled_at IS NOT NULL
@@ -90,7 +91,7 @@
     </select>
 
     <select id="findPendingScheduledNotificationsForUpdate" resultMap="notificationResultMap">
-        SELECT id, user_id, party_id, type, title, content, status, is_read,
+        SELECT id, user_id, party_id, type, title, content, web_content, status, is_read,
                scheduled_at, sent_at, read_at, created_at, updated_at
         FROM notification
         WHERE scheduled_at IS NOT NULL
