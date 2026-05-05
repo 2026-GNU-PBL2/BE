@@ -38,9 +38,9 @@ public class UserService {
             throw new IllegalArgumentException("이미 회원가입이 완료된 회원입니다.");
         }
 
-//        if (!phoneVerificationService.isVerified(accessor.getUserId(), request.phoneNumber())) {
-//            throw new BusinessException(ErrorCode.PHONE_NOT_VERIFIED);
-//        }
+        if (!phoneVerificationService.isVerified(accessor.getUserId(), request.phoneNumber())) {
+            throw new BusinessException(ErrorCode.PHONE_NOT_VERIFIED);
+        }
 
         validateNicknameDuplication(user.getId(), request.nickname());
         validatePhoneNumberDuplication(user.getId(), request.phoneNumber());
@@ -59,7 +59,7 @@ public class UserService {
                 UserStatus.ACTIVE.name()
         );
 
-        // phoneVerificationService.consumeVerification(accessor.getUserId(), request.phoneNumber());
+        phoneVerificationService.consumeVerification(accessor.getUserId(), request.phoneNumber());
 
         final UserEntity updatedUser = findActiveUserOrThrow(user.getId());
         return UserSignUpResponse.from(updatedUser);
