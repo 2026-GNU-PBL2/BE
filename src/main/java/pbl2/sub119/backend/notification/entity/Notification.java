@@ -21,6 +21,7 @@ public class Notification {
     private NotificationType type;
     private String title;
     private String content;
+    private String webContent;
     private NotificationStatus status;
     private boolean read;
     private LocalDateTime scheduledAt;
