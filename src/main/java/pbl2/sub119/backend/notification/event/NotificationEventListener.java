@@ -22,6 +22,7 @@ import pbl2.sub119.backend.notification.event.event.SettlementCompletedEvent;
 import pbl2.sub119.backend.notification.event.event.TestCardPaymentNoticeEvent;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
+import pbl2.sub119.backend.notification.service.WebMessageTemplateService;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.provision.entity.PartyProvision;
@@ -38,7 +39,8 @@ public class NotificationEventListener {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd HH:mm");
 
     private final NotificationCommandService notificationCommandService;
-    private final SmsMessageTemplateService template;
+    private final SmsMessageTemplateService smsTemplate;
+    private final WebMessageTemplateService webTemplate;
     private final PartyMapper partyMapper;
     private final SubProductMapper subProductMapper;
     private final PartyProvisionMapper partyProvisionMapper;
@@ -52,19 +54,17 @@ public class NotificationEventListener {
 
         final String productName = resolveProductName(party.getProductId());
 
-        // 파티원에게는 아직 이용 시작이 아니라 "매칭 완료"로 안내
-        final String memberTitle = template.getTitle(NotificationType.PARTY_MATCHED);
-        final String memberContent = template.memberPartyMatched(productName);
-
+        final String memberTitle = smsTemplate.getTitle(NotificationType.PARTY_MATCHED);
         for (final Long userId : event.memberUserIds()) {
-            sendSafely(userId, event.partyId(), NotificationType.PARTY_MATCHED, memberTitle, memberContent);
+            sendSafely(userId, event.partyId(), NotificationType.PARTY_MATCHED, memberTitle,
+                    smsTemplate.memberPartyMatched(productName),
+                    webTemplate.memberPartyMatched(productName));
         }
 
-        // 파티장에게는 이용 정보 등록 요청 안내
-        final String hostTitle = template.getTitle(NotificationType.HOST_PARTY_MATCHED);
-        final String hostContent = template.hostPartyMatched(productName);
-
-        sendSafely(party.getHostUserId(), event.partyId(), NotificationType.HOST_PARTY_MATCHED, hostTitle, hostContent);
+        final String hostTitle = smsTemplate.getTitle(NotificationType.HOST_PARTY_MATCHED);
+        sendSafely(party.getHostUserId(), event.partyId(), NotificationType.HOST_PARTY_MATCHED, hostTitle,
+                smsTemplate.hostPartyMatched(productName),
+                webTemplate.hostPartyMatched(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -75,10 +75,10 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.HOST_PROVISION_REMINDER);
-        final String content = template.hostProvisionReminder(productName, event.elapsedHours());
-
-        sendSafely(event.hostUserId(), event.partyId(), NotificationType.HOST_PROVISION_REMINDER, title, content);
+        final String title = smsTemplate.getTitle(NotificationType.HOST_PROVISION_REMINDER);
+        sendSafely(event.hostUserId(), event.partyId(), NotificationType.HOST_PROVISION_REMINDER, title,
+                smsTemplate.hostProvisionReminder(productName, event.elapsedHours()),
+                webTemplate.hostProvisionReminder(productName, event.elapsedHours()));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -89,11 +89,11 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.HOST_PROVISION_DELAYED_NOTICE);
-        final String content = template.hostProvisionDelayedNotice(productName);
-
+        final String title = smsTemplate.getTitle(NotificationType.HOST_PROVISION_DELAYED_NOTICE);
         for (final Long userId : event.memberUserIds()) {
-            sendSafely(userId, event.partyId(), NotificationType.HOST_PROVISION_DELAYED_NOTICE, title, content);
+            sendSafely(userId, event.partyId(), NotificationType.HOST_PROVISION_DELAYED_NOTICE, title,
+                    smsTemplate.hostProvisionDelayedNotice(productName),
+                    webTemplate.hostProvisionDelayedNotice(productName));
         }
     }
 
@@ -105,18 +105,18 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.PAYMENT_SUCCEEDED);
-        final String content = template.paymentSucceeded(productName);
-
-        sendSafely(event.payerUserId(), event.partyId(), NotificationType.PAYMENT_SUCCEEDED, title, content);
+        final String title = smsTemplate.getTitle(NotificationType.PAYMENT_SUCCEEDED);
+        sendSafely(event.payerUserId(), event.partyId(), NotificationType.PAYMENT_SUCCEEDED, title,
+                smsTemplate.paymentSucceeded(productName),
+                webTemplate.paymentSucceeded(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onTestCardPaymentNotice(final TestCardPaymentNoticeEvent event) {
-        final String title = template.getTitle(NotificationType.TEST_CARD_PAYMENT_NOTICE);
-        final String content = template.testCardPaymentNotice();
-
-        sendSafely(event.userId(), null, NotificationType.TEST_CARD_PAYMENT_NOTICE, title, content);
+        final String title = smsTemplate.getTitle(NotificationType.TEST_CARD_PAYMENT_NOTICE);
+        sendSafely(event.userId(), null, NotificationType.TEST_CARD_PAYMENT_NOTICE, title,
+                smsTemplate.testCardPaymentNotice(),
+                webTemplate.testCardPaymentNotice());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -131,10 +131,10 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.PAYMENT_FAILED);
-        final String content = template.paymentFailed(productName);
-
-        sendSafely(event.failedUserId(), event.partyId(), NotificationType.PAYMENT_FAILED, title, content);
+        final String title = smsTemplate.getTitle(NotificationType.PAYMENT_FAILED);
+        sendSafely(event.failedUserId(), event.partyId(), NotificationType.PAYMENT_FAILED, title,
+                smsTemplate.paymentFailed(productName),
+                webTemplate.paymentFailed(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -145,10 +145,10 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.SETTLEMENT_COMPLETED);
-        final String content = template.settlementCompleted(productName);
-
-        sendSafely(event.hostUserId(), event.partyId(), NotificationType.SETTLEMENT_COMPLETED, title, content);
+        final String title = smsTemplate.getTitle(NotificationType.SETTLEMENT_COMPLETED);
+        sendSafely(event.hostUserId(), event.partyId(), NotificationType.SETTLEMENT_COMPLETED, title,
+                smsTemplate.settlementCompleted(productName),
+                webTemplate.settlementCompleted(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -159,11 +159,11 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.PROVISION_ACCOUNT_SHARED_REQUIRED);
-        final String content = template.provisionAccountSharedRequired(productName);
-
+        final String title = smsTemplate.getTitle(NotificationType.PROVISION_ACCOUNT_SHARED_REQUIRED);
         for (final Long userId : event.memberUserIds()) {
-            sendSafely(userId, event.partyId(), NotificationType.PROVISION_ACCOUNT_SHARED_REQUIRED, title, content);
+            sendSafely(userId, event.partyId(), NotificationType.PROVISION_ACCOUNT_SHARED_REQUIRED, title,
+                    smsTemplate.provisionAccountSharedRequired(productName),
+                    webTemplate.provisionAccountSharedRequired(productName));
         }
     }
 
@@ -175,11 +175,11 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.PROVISION_INVITE_CODE_REQUIRED);
-        final String content = template.provisionInviteLinkRequired(productName);
-
+        final String title = smsTemplate.getTitle(NotificationType.PROVISION_INVITE_CODE_REQUIRED);
         for (final Long userId : event.memberUserIds()) {
-            sendSafely(userId, event.partyId(), NotificationType.PROVISION_INVITE_CODE_REQUIRED, title, content);
+            sendSafely(userId, event.partyId(), NotificationType.PROVISION_INVITE_CODE_REQUIRED, title,
+                    smsTemplate.provisionInviteLinkRequired(productName),
+                    webTemplate.provisionInviteLinkRequired(productName));
         }
     }
 
@@ -197,21 +197,20 @@ public class NotificationEventListener {
 
         final String productName = resolveProductName(party.getProductId());
 
-        // 공유계정형/초대링크형에 따라 문구와 타입 분기
         if (provision.getOperationType() == OperationType.ACCOUNT_SHARE) {
-            final String title = template.getTitle(NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER);
-            final String content = template.provisionAccountSharedReminder(productName);
-
+            final String title = smsTemplate.getTitle(NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER);
             sendSafely(event.memberUserId(), event.partyId(),
-                    NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER, title, content);
+                    NotificationType.PROVISION_ACCOUNT_SHARED_REMINDER, title,
+                    smsTemplate.provisionAccountSharedReminder(productName),
+                    webTemplate.provisionAccountSharedReminder(productName));
             return;
         }
 
-        final String title = template.getTitle(NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED);
-        final String content = template.provisionInviteAcceptRequired(productName);
-
+        final String title = smsTemplate.getTitle(NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED);
         sendSafely(event.memberUserId(), event.partyId(),
-                NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED, title, content);
+                NotificationType.PROVISION_INVITE_ACCEPT_REQUIRED, title,
+                smsTemplate.provisionInviteAcceptRequired(productName),
+                webTemplate.provisionInviteAcceptRequired(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -222,10 +221,10 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.MEMBER_PROVISION_TIMEOUT_NOTICE);
-        final String content = template.memberProvisionTimeoutNotice(productName);
-
-        sendSafely(event.memberUserId(), event.partyId(), NotificationType.MEMBER_PROVISION_TIMEOUT_NOTICE, title, content);
+        final String title = smsTemplate.getTitle(NotificationType.MEMBER_PROVISION_TIMEOUT_NOTICE);
+        sendSafely(event.memberUserId(), event.partyId(), NotificationType.MEMBER_PROVISION_TIMEOUT_NOTICE, title,
+                smsTemplate.memberProvisionTimeoutNotice(productName),
+                webTemplate.memberProvisionTimeoutNotice(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
@@ -237,20 +236,18 @@ public class NotificationEventListener {
 
         final String productName = resolveProductName(party.getProductId());
 
-        // 파티장에게 해체 사유 안내
-        final String hostTitle = template.getTitle(NotificationType.HOST_PROVISION_TIMEOUT_TERMINATED);
-        final String hostContent = template.hostProvisionTimeoutTerminatedForHost(productName);
-
+        final String hostTitle = smsTemplate.getTitle(NotificationType.HOST_PROVISION_TIMEOUT_TERMINATED);
         sendSafely(party.getHostUserId(), event.partyId(),
-                NotificationType.HOST_PROVISION_TIMEOUT_TERMINATED, hostTitle, hostContent);
+                NotificationType.HOST_PROVISION_TIMEOUT_TERMINATED, hostTitle,
+                smsTemplate.hostProvisionTimeoutTerminatedForHost(productName),
+                webTemplate.hostProvisionTimeoutTerminatedForHost(productName));
 
-        // 파티원에게 자동 재매칭 안내
-        final String memberTitle = template.getTitle(NotificationType.PARTY_TERMINATED);
-        final String memberContent = template.hostProvisionTimeoutTerminatedForMember(productName);
-
+        final String memberTitle = smsTemplate.getTitle(NotificationType.PARTY_TERMINATED);
         for (final Long userId : event.memberUserIds()) {
             if (!userId.equals(party.getHostUserId())) {
-                sendSafely(userId, event.partyId(), NotificationType.PARTY_TERMINATED, memberTitle, memberContent);
+                sendSafely(userId, event.partyId(), NotificationType.PARTY_TERMINATED, memberTitle,
+                        smsTemplate.hostProvisionTimeoutTerminatedForMember(productName),
+                        webTemplate.hostProvisionTimeoutTerminatedForMember(productName));
             }
         }
     }
@@ -263,11 +260,11 @@ public class NotificationEventListener {
         }
 
         final String productName = resolveProductName(party.getProductId());
-        final String title = template.getTitle(NotificationType.MEMBER_AUTO_REMATCH_STARTED);
-        final String content = template.memberAutoRematchStarted(productName);
-
+        final String title = smsTemplate.getTitle(NotificationType.MEMBER_AUTO_REMATCH_STARTED);
         for (final Long userId : event.requeuedUserIds()) {
-            sendSafely(userId, event.partyId(), NotificationType.MEMBER_AUTO_REMATCH_STARTED, title, content);
+            sendSafely(userId, event.partyId(), NotificationType.MEMBER_AUTO_REMATCH_STARTED, title,
+                    smsTemplate.memberAutoRematchStarted(productName),
+                    webTemplate.memberAutoRematchStarted(productName));
         }
     }
 
@@ -276,10 +273,11 @@ public class NotificationEventListener {
             final Long partyId,
             final NotificationType type,
             final String title,
-            final String content
+            final String smsContent,
+            final String webContent
     ) {
         try {
-            notificationCommandService.notify(userId, partyId, type, title, content);
+            notificationCommandService.notifyWithWebContent(userId, partyId, type, title, smsContent, webContent);
         } catch (Exception e) {
             log.error("알림 발송 실패. userId={}, partyId={}, type={}", userId, partyId, type, e);
         }
