@@ -355,6 +355,7 @@ CREATE TABLE notification (
                               type VARCHAR(80) NOT NULL,
                               title VARCHAR(255) NOT NULL,
                               content TEXT NOT NULL,
+                              web_content TEXT NULL,
                               status VARCHAR(30) NOT NULL,
                               is_read BOOLEAN NOT NULL DEFAULT FALSE,
                               scheduled_at DATETIME NULL,
