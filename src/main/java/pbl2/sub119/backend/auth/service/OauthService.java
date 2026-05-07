@@ -43,10 +43,10 @@ public class OauthService {
         final OauthUserInfo userInfo = provider.getUserInfo(oauthAccessToken);
 
         final OauthUserEntity oauthUser = findOrCreateOauthUser(provider.getProvider(), userInfo);
-        final Long userId = getOrCreateServiceUser(oauthUser);
+        final UserEntity user = getOrCreateServiceUser(oauthUser);
 
         return AuthTokenDto.of(
-                jwtProvider.createAccessToken(userId, oauthUser.getSocialId(), oauthUser.getUserRole())
+                jwtProvider.createAccessToken(user.getId(), oauthUser.getSocialId(), user.getRole())
         );
     }
 
@@ -80,7 +80,7 @@ public class OauthService {
                 socialProvider
         );
 
-        final OauthUserEntity newOauthUser = OauthUserEntity.createFromOAuth(oauthInfo, DEFAULT_USER_ROLE);
+        final OauthUserEntity newOauthUser = OauthUserEntity.createFromOAuth(oauthInfo);
         oauthUserMapper.insert(newOauthUser);
 
         log.info("New oauth user created. oauthUser.id={}", newOauthUser.getId());
@@ -88,7 +88,7 @@ public class OauthService {
         return newOauthUser;
     }
 
-    private Long getOrCreateServiceUser(final OauthUserEntity oauthUser) {
+    private UserEntity getOrCreateServiceUser(final OauthUserEntity oauthUser) {
         final Long linkedUserId = oauthUser.getUserId();
 
         if (linkedUserId != null) {
@@ -96,7 +96,7 @@ public class OauthService {
 
             if (linkedUser != null) {
                 if (linkedUser.getDeletedAt() == null) {
-                    return linkedUserId;
+                    return linkedUser;
                 }
 
                 userMapper.restoreForResignup(
@@ -104,7 +104,7 @@ public class OauthService {
                         UserStatus.PENDING_SIGNUP.name(),
                         UserStatus.WITHDRAWN.name()
                 );
-                return linkedUserId;
+                return linkedUser;
             }
         }
 
@@ -113,6 +113,6 @@ public class OauthService {
         oauthUserMapper.updateUserId(oauthUser.getId(), newUser.getId());
         oauthUser.connectUser(newUser.getId());
 
-        return newUser.getId();
+        return newUser;
     }
 }

@@ -1,15 +1,12 @@
 package pbl2.sub119.backend.auth.entity;
 
 import pbl2.sub119.backend.auth.enumerated.SocialProvider;
-import pbl2.sub119.backend.common.enumerated.UserRole;
 
 
 public interface OauthUser {
     Long getId();
 
     OauthInfo getOauthInfo();
-
-    UserRole getUserRole();
 
     default String getEmail() {
         return getOauthInfo().getEmail();

@@ -7,7 +7,6 @@
 
     <resultMap id="OauthUserEntityMap" type="pbl2.sub119.backend.auth.entity.OauthUserEntity">
         <id property="id" column="id"/>
-        <result property="userRole" column="user_role"/>
         <result property="userId" column="user_id"/>
 
         <association property="oauthInfo" javaType="pbl2.sub119.backend.auth.entity.OauthInfo">
@@ -21,7 +20,6 @@
     <select id="findByProviderAndSocialId" resultMap="OauthUserEntityMap">
         SELECT
         id,
-        user_role,
         user_id,
         email,
         name,
@@ -52,10 +50,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO oauth_user
-        (user_role, email, name, social_id, social_provider)
+        (email, name, social_id, social_provider)
         VALUES
-        (#{userRole},
-        #{oauthInfo.email},
+        (#{oauthInfo.email},
         #{oauthInfo.name},
         #{oauthInfo.socialId},
         #{oauthInfo.socialProvider})

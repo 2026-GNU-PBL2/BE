@@ -71,7 +71,6 @@ CREATE TABLE oauth_user (
                             email VARCHAR(255) NULL,
                             name VARCHAR(100) NULL,
                             profile_image_url VARCHAR(500) NULL,
-                            user_role VARCHAR(20) NOT NULL,
                             user_id BIGINT NULL,
                             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
