@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import pbl2.sub119.backend.auth.aop.LoginArgumentResolver;
+import pbl2.sub119.backend.auth.interceptor.LoginRateLimitInterceptor;
 import pbl2.sub119.backend.auth.jwt.JwtInterceptor;
 
 import java.util.List;
@@ -21,6 +22,7 @@ import static org.springframework.data.web.config.EnableSpringDataWebSupport.Pag
 public class WebConfig implements WebMvcConfigurer {
 
     private final JwtInterceptor jwtInterceptor;
+    private final LoginRateLimitInterceptor loginRateLimitInterceptor;
     private final LoginArgumentResolver loginArgumentResolver;
 
 
@@ -36,6 +38,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loginRateLimitInterceptor)
+                .addPathPatterns("/api/v1/auth/login");
+
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**", "/internal/**")
                 .excludePathPatterns(
