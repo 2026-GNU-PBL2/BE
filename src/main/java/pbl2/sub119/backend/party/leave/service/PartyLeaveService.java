@@ -1,16 +1,23 @@
 package pbl2.sub119.backend.party.leave.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
+import pbl2.sub119.backend.party.common.entity.MatchWaitingQueue;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
+import pbl2.sub119.backend.party.common.enumerated.MatchWaitingStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
+import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
 import pbl2.sub119.backend.party.common.enumerated.VacancyType;
+import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.cycle.service.SubscriptionCycleWindowValidator;
 import pbl2.sub119.backend.party.common.exception.PartyException;
@@ -27,6 +34,8 @@ public class PartyLeaveService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
     private final SubscriptionCycleWindowValidator subscriptionCycleWindowValidator;
+    private final MatchWaitingQueueMapper matchWaitingQueueMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 다음 결제일 기준 탈퇴 예약
     @Transactional
@@ -60,6 +69,7 @@ public class PartyLeaveService {
                 member.getRole() == PartyRole.HOST ? VacancyType.HOST : VacancyType.MEMBER;
 
         partyMapper.updateVacancyType(partyId, vacancyType);
+        partyMapper.updateRecruitStatus(partyId, RecruitStatus.RECRUITING);
 
         final PartyMember updatedMember = partyMemberMapper.findByPartyIdAndUserId(partyId, userId);
 
@@ -100,30 +110,65 @@ public class PartyLeaveService {
             throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
         }
 
-        final int updated = partyMemberMapper.clearLeaveReserved(partyId, userId);
-        if (updated == 0) {
-            throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
-        }
-
-        final List<PartyMember> reservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);
         final List<PartyMember> switchWaitingMembers = partyMemberMapper.findSwitchWaitingMembers(partyId);
 
-        if (reservedMembers.isEmpty() && switchWaitingMembers.isEmpty()) {
-            partyMapper.updateVacancyType(partyId, VacancyType.NONE);
+        if (switchWaitingMembers.isEmpty()) {
+            // Case A: 입장 대기자 없음 → 탈퇴 예약 취소
+            final int updated = partyMemberMapper.clearLeaveReserved(partyId, userId);
+            if (updated == 0) {
+                throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
+            }
+
+            final List<PartyMember> reservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);
+            if (reservedMembers.isEmpty()) {
+                partyMapper.updateVacancyType(partyId, VacancyType.NONE);
+                final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
+                partyMapper.updateRecruitStatus(partyId,
+                        occupiedCount >= party.getCapacity() ? RecruitStatus.FULL : RecruitStatus.RECRUITING);
+            } else {
+                final boolean hasHostReservation = reservedMembers.stream()
+                        .anyMatch(m -> m.getRole() == PartyRole.HOST);
+                partyMapper.updateVacancyType(partyId, hasHostReservation ? VacancyType.HOST : VacancyType.MEMBER);
+            }
+
+            partyHistoryService.saveHistory(
+                    partyId,
+                    member.getId(),
+                    PartyHistoryEventType.LEAVE_RESERVATION_CANCELED,
+                    "{\"userId\":" + userId + "}",
+                    userId
+            );
         } else {
-            final boolean hasHostReservation = reservedMembers.stream()
-                    .anyMatch(reservedMember -> reservedMember.getRole() == PartyRole.HOST);
+            // Case B: 입장 대기자 있음 → 탈퇴 강제 실행 + 탈퇴자 재매칭
+            partyMemberMapper.updateStatusAndLeftAt(member.getId(), PartyMemberStatus.LEFT);
+            requeueMember(party.getProductId(), userId);
+            eventPublisher.publishEvent(new MemberAutoRematchStartedEvent(partyId, List.of(userId)));
 
-            partyMapper.updateVacancyType(partyId, hasHostReservation ? VacancyType.HOST : VacancyType.MEMBER);
+            final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
+            partyMapper.updateCurrentMemberCount(partyId, occupiedCount);
+            partyMapper.updateVacancyType(partyId, VacancyType.NONE);
+            partyMapper.updateRecruitStatus(partyId, RecruitStatus.FULL);
+
+            partyHistoryService.saveHistory(
+                    partyId,
+                    member.getId(),
+                    PartyHistoryEventType.MEMBER_LEFT,
+                    "{\"userId\":" + userId + "}",
+                    userId
+            );
         }
+    }
 
-        partyHistoryService.saveHistory(
-                partyId,
-                member.getId(),
-                PartyHistoryEventType.LEAVE_RESERVATION_CANCELED,
-                "{\"userId\":" + userId + "}",
-                userId
-        );
+    private void requeueMember(final String productId, final Long userId) {
+        final LocalDateTime now = LocalDateTime.now();
+        matchWaitingQueueMapper.insertIfAbsent(MatchWaitingQueue.builder()
+                .productId(productId)
+                .userId(userId)
+                .status(MatchWaitingStatus.WAITING)
+                .requestedAt(now)
+                .createdAt(now)
+                .updatedAt(now)
+                .build());
     }
 
     // 파티장이 탈퇴 예약 멤버 목록 조회

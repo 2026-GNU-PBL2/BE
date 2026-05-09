@@ -29,7 +29,7 @@ public class PartyVacancyCommandService {
             throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
         }
 
-        partyJoinService.joinParty(partyId, userId);
+        partyJoinService.joinVacancyParty(partyId, userId);
 
         final SubProductResponse product = subProductService.getProduct(party.getProductId());
 
