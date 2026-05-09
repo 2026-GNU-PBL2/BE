@@ -21,14 +21,12 @@ public class SubProductController implements SubProductDocs {
     private final SubProductService subProductService;
 
     @GetMapping
-    public ResponseEntity<List<SubProductResponse>> getProducts(
-            @Auth final Accessor accessor) {
+    public ResponseEntity<List<SubProductResponse>> getProducts() {
         return ResponseEntity.ok(subProductService.getProducts());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SubProductResponse> getProduct(
-            @Auth final Accessor accessor,
             @PathVariable String id) {
         return ResponseEntity.ok(subProductService.getProduct(id));
     }

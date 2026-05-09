@@ -9,8 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pbl2.sub119.backend.auth.aop.Auth;
-import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.subproduct.dto.SubProductResponse;
 
 
@@ -34,9 +32,7 @@ public interface SubProductDocs {
             }
     )
     @GetMapping
-    ResponseEntity<List<SubProductResponse>> getProducts(
-            @Parameter(hidden = true) @Auth Accessor accessor
-    );
+    ResponseEntity<List<SubProductResponse>> getProducts();
 
     @Operation(
             summary = "구독 상품 단건 조회",
@@ -56,7 +52,6 @@ public interface SubProductDocs {
     )
     @GetMapping("/{id}")
     ResponseEntity<SubProductResponse> getProduct(
-            @Parameter(hidden = true) @Auth Accessor accessor,
             @Parameter(description = "상품 ID", required = true) @PathVariable String id
     );
 }
