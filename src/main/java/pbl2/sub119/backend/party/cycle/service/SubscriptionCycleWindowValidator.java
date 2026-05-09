@@ -30,15 +30,18 @@ public class SubscriptionCycleWindowValidator {
             throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
         }
 
-        // 종료일이 없으면 주기 정보가 완성되지 않은 상태로 보고 차단
-        if (cycle.getEndAt() == null) {
+        // 다음 결제 사이클이 이미 생성된 경우(PAYMENT_PENDING) — 결제 진행 구간으로 보고 차단
+        if (cycle.getStatus() != PartyCycleStatus.RUNNING) {
             throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
         }
 
-        final LocalDateTime now = LocalDateTime.now();
+        // RUNNING 사이클의 endAt은 다음 회차 결제 성공 시 채워지므로 null이 정상
+        // endAt이 없으면 billingDueAt + 1개월(다음 결제 예정일)을 마감으로 사용
+        final LocalDateTime deadline = cycle.getEndAt() != null
+                ? cycle.getEndAt()
+                : cycle.getBillingDueAt().plusMonths(1);
 
-        // 종료 시각 이상이면 탈퇴 예약 불가
-        if (!now.isBefore(cycle.getEndAt())) {
+        if (!LocalDateTime.now().isBefore(deadline)) {
             throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
         }
     }
