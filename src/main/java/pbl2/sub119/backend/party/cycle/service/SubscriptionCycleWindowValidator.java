@@ -37,9 +37,15 @@ public class SubscriptionCycleWindowValidator {
 
         // RUNNING 사이클의 endAt은 다음 회차 결제 성공 시 채워지므로 null이 정상
         // endAt이 없으면 billingDueAt + 1개월(다음 결제 예정일)을 마감으로 사용
-        final LocalDateTime deadline = cycle.getEndAt() != null
-                ? cycle.getEndAt()
-                : cycle.getBillingDueAt().plusMonths(1);
+        final LocalDateTime billingDueAt = cycle.getBillingDueAt();
+                final LocalDateTime deadline;
+                if (cycle.getEndAt() != null) {
+                    deadline = cycle.getEndAt();
+                } else if (billingDueAt != null) {
+                    deadline = billingDueAt.plusMonths(1);
+                } else {
+                    throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
+                }
 
         if (!LocalDateTime.now().isBefore(deadline)) {
             throw new PartyException(ErrorCode.PARTY_LEAVE_NOT_ALLOWED);
