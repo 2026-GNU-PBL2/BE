@@ -113,7 +113,14 @@ public enum ErrorCode {
     PHONE_OTP_MISMATCH(HttpStatus.BAD_REQUEST, "OTP002", "인증번호가 일치하지 않습니다."),
     PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "OTP003", "휴대폰 인증을 먼저 완료해 주세요."),
     PHONE_OTP_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "OTP004", "인증번호 발송에 실패했습니다. 잠시 후 다시 시도해 주세요."),
-    PHONE_OTP_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "OTP005", "인증번호 입력 횟수를 초과했습니다. 인증번호를 다시 요청해 주세요.");
+    PHONE_OTP_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "OTP005", "인증번호 입력 횟수를 초과했습니다. 인증번호를 다시 요청해 주세요."),
+
+    // Settlement Withdraw
+    SETTLEMENT_WITHDRAW_AMOUNT_INVALID(HttpStatus.BAD_REQUEST, "WITHDRAW001", "환급 요청 금액은 10,000원 이상 100,000원 이하이어야 합니다."),
+    SETTLEMENT_WITHDRAW_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "WITHDRAW002", "SETTLEMENT 유형의 인증된 대표 계좌가 없습니다."),
+    SETTLEMENT_WITHDRAW_BALANCE_INSUFFICIENT(HttpStatus.BAD_REQUEST, "WITHDRAW003", "포인트 잔액이 부족합니다."),
+    SETTLEMENT_WITHDRAW_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "WITHDRAW004", "환급 요청을 찾을 수 없습니다."),
+    SETTLEMENT_WITHDRAW_INVALID_STATUS(HttpStatus.CONFLICT, "WITHDRAW005", "이미 처리되었거나 처리할 수 없는 환급 요청 상태입니다.");
 
     private final HttpStatus status;
     private final String code;

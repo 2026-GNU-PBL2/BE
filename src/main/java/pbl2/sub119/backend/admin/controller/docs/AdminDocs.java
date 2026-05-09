@@ -19,6 +19,13 @@ import pbl2.sub119.backend.admin.user.dto.AdminUserResponse;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import pbl2.sub119.backend.admin.settlement.dto.AdminWithdrawCompleteRequest;
+import pbl2.sub119.backend.admin.settlement.dto.AdminWithdrawRejectRequest;
+import pbl2.sub119.backend.settlement.dto.response.WithdrawRequestResponse;
+import pbl2.sub119.backend.common.enumerated.WithdrawRequestStatus;
+
 import java.util.List;
 
 public interface AdminDocs {
@@ -378,6 +385,108 @@ public interface AdminDocs {
         ResponseEntity<Void> retryPaymentCycle(
                 @Parameter(hidden = true) @Auth Accessor accessor,
                 @PathVariable Long partyCycleId
+        );
+    }
+
+    @Tag(
+            name = "Admin API",
+            description = "관리자 전용 API"
+    )
+    interface Settlement {
+
+        @Operation(
+                summary = "어드민 환급 요청 목록 조회",
+                description = """
+                        관리자가 환급 요청 목록을 상태 필터로 조회합니다.
+
+                        요청 상태(status) 안내:
+                        - REQUESTED : 처리 대기 중 (기본값)
+                        - COMPLETED : 환급 완료
+                        - REJECTED  : 환급 거절
+
+                        처리 기준:
+                        - status 파라미터 미전달 시 REQUESTED 건만 반환합니다.
+                        - 최신 요청순(created_at DESC)으로 정렬됩니다.
+                        """,
+                responses = {
+                        @ApiResponse(
+                                responseCode = "200",
+                                description = "조회 성공",
+                                content = @Content(
+                                        array = @ArraySchema(schema = @Schema(implementation = WithdrawRequestResponse.class))
+                                )
+                        ),
+                        @ApiResponse(responseCode = "401", description = "토큰 없음 또는 유효하지 않은 토큰"),
+                        @ApiResponse(responseCode = "403", description = "관리자 권한 없음")
+                }
+        )
+        @GetMapping
+        ResponseEntity<List<WithdrawRequestResponse>> getWithdrawRequests(
+                @Parameter(hidden = true) @Auth Accessor accessor,
+                @RequestParam(defaultValue = "REQUESTED") WithdrawRequestStatus status,
+                @RequestParam(defaultValue = "1") int page,
+                @RequestParam(defaultValue = "20") int size
+        );
+
+        @Operation(
+                summary = "환급 요청 완료 처리",
+                description = """
+                        REQUESTED 상태인 환급 요청을 COMPLETED로 변경합니다.
+
+                        처리 기준:
+                        - REQUESTED 상태인 요청만 처리 가능합니다.
+                        - 이미 COMPLETED 또는 REJECTED된 요청은 재처리 불가합니다. (409 반환)
+
+                        식별자 안내:
+                        - internalPayoutRef : 요청 생성 시 백엔드가 발급하는 내부 추적 식별자. 조회 응답에 포함됨.
+                        - externalTxId      : 실제 외부 이체가 완료된 경우에만 입력. 빈 문자열은 null로 저장. 미입력 가능(nullable).
+
+                        에러 안내:
+                        - 404 (WITHDRAW004) : 요청을 찾을 수 없음
+                        - 409 (WITHDRAW005) : 이미 처리된 상태
+                        """,
+                responses = {
+                        @ApiResponse(responseCode = "204", description = "완료 처리 성공"),
+                        @ApiResponse(responseCode = "401", description = "토큰 없음 또는 유효하지 않은 토큰"),
+                        @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                        @ApiResponse(responseCode = "404", description = "환급 요청을 찾을 수 없음"),
+                        @ApiResponse(responseCode = "409", description = "이미 처리된 요청")
+                }
+        )
+        @PostMapping("/{id}/complete")
+        ResponseEntity<Void> completeWithdrawRequest(
+                @Parameter(hidden = true) @Auth Accessor accessor,
+                @PathVariable Long id,
+                @RequestBody AdminWithdrawCompleteRequest request
+        );
+
+        @Operation(
+                summary = "환급 요청 거절 처리",
+                description = """
+                        REQUESTED 상태인 환급 요청을 REJECTED로 변경합니다.
+
+                        처리 기준:
+                        - REQUESTED 상태인 요청만 처리 가능합니다.
+                        - 거절 시 차감했던 포인트를 즉시 복구합니다.
+                        - 이미 COMPLETED 또는 REJECTED된 요청은 재처리 불가합니다. (409 반환)
+
+                        에러 안내:
+                        - 404 (WITHDRAW004) : 요청을 찾을 수 없음
+                        - 409 (WITHDRAW005) : 이미 처리된 상태
+                        """,
+                responses = {
+                        @ApiResponse(responseCode = "204", description = "거절 처리 성공"),
+                        @ApiResponse(responseCode = "401", description = "토큰 없음 또는 유효하지 않은 토큰"),
+                        @ApiResponse(responseCode = "403", description = "관리자 권한 없음"),
+                        @ApiResponse(responseCode = "404", description = "환급 요청을 찾을 수 없음"),
+                        @ApiResponse(responseCode = "409", description = "이미 처리된 요청")
+                }
+        )
+        @PostMapping("/{id}/reject")
+        ResponseEntity<Void> rejectWithdrawRequest(
+                @Parameter(hidden = true) @Auth Accessor accessor,
+                @PathVariable Long id,
+                @RequestBody AdminWithdrawRejectRequest request
         );
     }
 

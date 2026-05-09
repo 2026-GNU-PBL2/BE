@@ -47,4 +47,19 @@
         WHERE user_id = #{userId}
     </update>
 
+    <update id="decreaseBalanceIfEnough">
+        UPDATE point_wallet
+        SET balance    = balance - #{amount},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+          AND balance >= #{amount}
+    </update>
+
+    <update id="increaseBalance">
+        UPDATE point_wallet
+        SET balance    = balance + #{amount},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
 </mapper>
