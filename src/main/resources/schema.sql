@@ -401,3 +401,31 @@ CREATE TABLE sms_send_log (
                               fail_reason TEXT NULL,
                               created_at DATETIME NOT NULL
 );
+
+-- point_withdraw_request (2026.05.09 / feature/settlement/105)
+CREATE TABLE IF NOT EXISTS point_withdraw_request (
+    id                      BIGINT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id                 BIGINT          NOT NULL,
+    amount                  BIGINT          NOT NULL,
+    status                  VARCHAR(20)     NOT NULL DEFAULT 'REQUESTED',
+    bank_account_id         BIGINT          NOT NULL,
+    bank_name_snapshot      VARCHAR(50)     NOT NULL,
+    account_masked_snapshot VARCHAR(30)     NOT NULL,
+    internal_payout_ref     VARCHAR(64)     NOT NULL,
+    requested_at            DATETIME        NOT NULL,
+    processed_at            DATETIME        NULL,
+    processed_by            BIGINT          NULL,
+    reject_reason           VARCHAR(500)    NULL,
+    external_tx_id          VARCHAR(255)    NULL,
+    created_at              DATETIME        NOT NULL,
+    updated_at              DATETIME        NOT NULL
+);
+
+CREATE INDEX idx_pwr_user_created
+    ON point_withdraw_request(user_id, created_at);
+
+CREATE INDEX idx_pwr_status_created
+    ON point_withdraw_request(status, created_at);
+
+CREATE UNIQUE INDEX uk_pwr_internal_payout_ref
+    ON point_withdraw_request(internal_payout_ref);

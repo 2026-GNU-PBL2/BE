@@ -16,4 +16,14 @@ public interface PointWalletMapper {
             @Param("userId") Long userId,
             @Param("amount") Long amount
     );
+
+    int decreaseBalanceIfEnough(
+            @Param("userId") Long userId,
+            @Param("amount") Long amount
+    );
+
+    int increaseBalance(
+            @Param("userId") Long userId,
+            @Param("amount") Long amount
+    );
 }

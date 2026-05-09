@@ -64,4 +64,22 @@
                  )
     </insert>
 
+    <select id="findByHostUserId" resultMap="SettlementMap">
+        SELECT id,
+               party_id,
+               party_cycle_id,
+               host_user_id,
+               member_count,
+               unit_amount,
+               total_amount,
+               fee_deducted,
+               status,
+               created_at,
+               updated_at
+        FROM settlement
+        WHERE host_user_id = #{userId}
+        ORDER BY created_at DESC, id DESC
+            LIMIT #{size} OFFSET #{offset}
+    </select>
+
 </mapper>

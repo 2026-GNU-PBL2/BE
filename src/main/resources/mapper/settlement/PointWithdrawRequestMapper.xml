@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.settlement.mapper.PointWithdrawRequestMapper">
+
+    <resultMap id="PointWithdrawRequestMap" type="pbl2.sub119.backend.settlement.entity.PointWithdrawRequest">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="bankAccountId" column="bank_account_id"/>
+        <result property="bankNameSnapshot" column="bank_name_snapshot"/>
+        <result property="accountMaskedSnapshot" column="account_masked_snapshot"/>
+        <result property="requestedAt" column="requested_at"/>
+        <result property="processedAt" column="processed_at"/>
+        <result property="processedBy" column="processed_by"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="externalTxId" column="external_tx_id"/>
+        <result property="internalPayoutRef" column="internal_payout_ref"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert"
+            parameterType="pbl2.sub119.backend.settlement.entity.PointWithdrawRequest"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO point_withdraw_request (
+            user_id,
+            amount,
+            status,
+            bank_account_id,
+            bank_name_snapshot,
+            account_masked_snapshot,
+            internal_payout_ref,
+            requested_at,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{userId},
+            #{amount},
+            #{status},
+            #{bankAccountId},
+            #{bankNameSnapshot},
+            #{accountMaskedSnapshot},
+            #{internalPayoutRef},
+            #{requestedAt},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <select id="findById" resultMap="PointWithdrawRequestMap">
+        SELECT id,
+               user_id,
+               amount,
+               status,
+               bank_account_id,
+               bank_name_snapshot,
+               account_masked_snapshot,
+               requested_at,
+               processed_at,
+               processed_by,
+               reject_reason,
+               external_tx_id,
+               internal_payout_ref,
+               created_at,
+               updated_at
+        FROM point_withdraw_request
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findByUserId" resultMap="PointWithdrawRequestMap">
+        SELECT id,
+               user_id,
+               amount,
+               status,
+               bank_account_id,
+               bank_name_snapshot,
+               account_masked_snapshot,
+               requested_at,
+               processed_at,
+               processed_by,
+               reject_reason,
+               external_tx_id,
+               internal_payout_ref,
+               created_at,
+               updated_at
+        FROM point_withdraw_request
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="findByStatus" resultMap="PointWithdrawRequestMap">
+        SELECT id,
+               user_id,
+               amount,
+               status,
+               bank_account_id,
+               bank_name_snapshot,
+               account_masked_snapshot,
+               requested_at,
+               processed_at,
+               processed_by,
+               reject_reason,
+               external_tx_id,
+               internal_payout_ref,
+               created_at,
+               updated_at
+        FROM point_withdraw_request
+        WHERE status = #{status}
+        ORDER BY created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <update id="updateStatusIfRequested">
+        UPDATE point_withdraw_request
+        SET status         = #{newStatus},
+            processed_at   = NOW(),
+            processed_by   = #{processedBy},
+            reject_reason  = #{rejectReason},
+            external_tx_id = #{externalTxId},
+            updated_at     = NOW()
+        WHERE id = #{id}
+          AND status = 'REQUESTED'
+    </update>
+
+</mapper>
