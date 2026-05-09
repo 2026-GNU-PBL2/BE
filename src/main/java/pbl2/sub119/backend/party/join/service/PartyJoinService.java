@@ -92,4 +92,51 @@ public class PartyJoinService {
                 userId
         );
     }
+
+    // 결원 파티 참여 — current_member_count 증가 없이 SWITCH_WAITING으로 자리 확정 예약
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void joinVacancyParty(final Long partyId, final Long userId) {
+        final Party party = partyMapper.findByIdForUpdate(partyId);
+        if (party == null) {
+            throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
+        }
+
+        if (party.getRecruitStatus() != RecruitStatus.RECRUITING) {
+            throw new PartyException(ErrorCode.PARTY_NOT_RECRUITING);
+        }
+
+        // 이미 SWITCH_WAITING 멤버가 있으면 자리 없음 (동시 접근 방지)
+        if (!partyMemberMapper.findSwitchWaitingMembers(partyId).isEmpty()) {
+            throw new PartyException(ErrorCode.PARTY_FULL);
+        }
+
+        final PartyMember existing = partyMemberMapper.findByPartyIdAndUserId(partyId, userId);
+        if (existing != null
+                && existing.getStatus() != PartyMemberStatus.LEFT
+                && existing.getStatus() != PartyMemberStatus.REMOVED) {
+            throw new PartyException(ErrorCode.PARTY_ALREADY_JOINED);
+        }
+
+        final LocalDateTime now = LocalDateTime.now();
+        final PartyMember newMember = PartyMember.builder()
+                .partyId(partyId)
+                .userId(userId)
+                .role(PartyRole.MEMBER)
+                .status(PartyMemberStatus.SWITCH_WAITING)
+                .joinedAt(now)
+                .build();
+
+        partyMemberMapper.insertPartyMember(newMember);
+
+        // 자리 확정 예약 → 더 이상 결원 모집 불가
+        partyMapper.updateRecruitStatus(partyId, RecruitStatus.FULL);
+
+        partyHistoryService.saveHistory(
+                partyId,
+                newMember.getId(),
+                PartyHistoryEventType.MEMBER_JOINED,
+                "{\"userId\":" + userId + "}",
+                userId
+        );
+    }
 }
