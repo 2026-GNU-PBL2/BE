@@ -19,7 +19,6 @@ import pbl2.sub119.backend.notification.event.event.PartyTerminatedEvent;
 import pbl2.sub119.backend.notification.event.event.PaymentFailedEvent;
 import pbl2.sub119.backend.notification.event.event.PaymentSucceededEvent;
 import pbl2.sub119.backend.notification.event.event.SettlementCompletedEvent;
-import pbl2.sub119.backend.notification.event.event.TestCardPaymentNoticeEvent;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
 import pbl2.sub119.backend.notification.service.WebMessageTemplateService;
@@ -109,14 +108,6 @@ public class NotificationEventListener {
         sendSafely(event.payerUserId(), event.partyId(), NotificationType.PAYMENT_SUCCEEDED, title,
                 smsTemplate.paymentSucceeded(productName),
                 webTemplate.paymentSucceeded(productName));
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
-    public void onTestCardPaymentNotice(final TestCardPaymentNoticeEvent event) {
-        final String title = smsTemplate.getTitle(NotificationType.TEST_CARD_PAYMENT_NOTICE);
-        sendSafely(event.userId(), null, NotificationType.TEST_CARD_PAYMENT_NOTICE, title,
-                smsTemplate.testCardPaymentNotice(),
-                webTemplate.testCardPaymentNotice());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
