@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.cycle.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,15 @@ public class PartyCycleService {
         final List<PartyMember> switchWaitingMembers = partyMemberMapper.findSwitchWaitingMembers(partyId);
         processSwitchWaitingMembers(partyId, switchWaitingMembers);
 
-        refreshPartyState(partyId, party.getCapacity(), leaveReservedMembers);
+        final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
+
+        // 탈퇴 예약자 전원 퇴장 후 잔류 멤버 없으면 파티 해체
+        if (occupiedCount == 0) {
+            terminateEmptyParty(partyId);
+            return;
+        }
+
+        refreshPartyState(partyId, party.getCapacity(), leaveReservedMembers, occupiedCount);
 
         partyProvisionCommandService.handleCycleStart(partyId);
     }
@@ -89,12 +98,20 @@ public class PartyCycleService {
         }
     }
 
+    private void terminateEmptyParty(final Long partyId) {
+        final LocalDateTime now = LocalDateTime.now();
+        partyMapper.terminateParty(partyId, now);
+        partyMapper.updateRecruitStatus(partyId, RecruitStatus.CLOSED);
+        partyMapper.updateVacancyType(partyId, VacancyType.NONE);
+        partyMapper.updateCurrentMemberCount(partyId, 0);
+    }
+
     private void refreshPartyState(
             final Long partyId,
             final int totalCapacity,
-            final List<PartyMember> leaveReservedMembers
+            final List<PartyMember> leaveReservedMembers,
+            final int occupiedCount
     ) {
-        final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
         partyMapper.updateCurrentMemberCount(partyId, occupiedCount);
 
         final VacancyType vacancyType = calculateVacancyType(

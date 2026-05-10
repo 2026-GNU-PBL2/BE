@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.party.leave.dto.response.CancelLeaveResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReservationMemberResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReserveResponse;
 
@@ -54,17 +55,26 @@ public interface PartyLeaveDocs {
     @Operation(
             summary = "탈퇴 예약 취소",
             description = """
-                    등록한 탈퇴 예약을 취소하고 기존 이용 상태로 되돌립니다.
+                    등록한 탈퇴 예약을 취소합니다. 입장 대기자 유무에 따라 두 가지 결과가 발생합니다.
 
-                    상태값 안내
-                    - LEAVE_RESERVED 상태에서 취소하면 다시 ACTIVE 로 돌아갑니다.
+                    [CANCELLED] 입장 대기자 없음
+                    - 탈퇴 예약이 취소되고 다시 ACTIVE 상태로 돌아갑니다.
+
+                    [FORCED_LEFT] 입장 대기자(SWITCH_WAITING) 있음
+                    - 탈퇴를 번복할 수 없습니다. 탈퇴가 즉시 확정(LEFT)됩니다.
+                    - 재매칭은 트랜잭션 커밋 후 비동기로 처리됩니다.
+                    - 재매칭 결과(성공/대기열 등록)는 알림으로 수신됩니다.
                     """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "탈퇴 예약 취소 성공")
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "탈퇴 예약 취소 처리 완료 (result 필드로 결과 구분)",
+                            content = @Content(schema = @Schema(implementation = CancelLeaveResponse.class))
+                    )
             }
     )
     @DeleteMapping("/{partyId}/reserve")
-    ResponseEntity<Void> cancelLeave(
+    ResponseEntity<CancelLeaveResponse> cancelLeave(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId
     );
