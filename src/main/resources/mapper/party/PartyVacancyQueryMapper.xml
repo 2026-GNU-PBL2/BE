@@ -89,9 +89,10 @@
         (p.capacity
             - (p.current_member_count
                 - COALESCE(rh.reserved_host_count, 0)
-                - COALESCE(rm.reserved_member_count, 0))) AS remainingSeatCount,
+                - COALESCE(rm.reserved_member_count, 0))
+                - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
         p.price_per_member_snapshot AS monthlyPaymentAmount,
-        DATE_ADD(lc.billing_due_at, INTERVAL 1 MONTH) AS nextPaymentDate,
+        TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
         'HOST_JOIN' AS joinButtonLabel
         FROM party p
         INNER JOIN sub_product sp ON sp.id = p.product_id
@@ -166,9 +167,10 @@
         (p.capacity
             - (p.current_member_count
                 - COALESCE(rh.reserved_host_count, 0)
-                - COALESCE(rm.reserved_member_count, 0))) AS remainingSeatCount,
+                - COALESCE(rm.reserved_member_count, 0))
+                - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
         p.price_per_member_snapshot AS monthlyPaymentAmount,
-        DATE_ADD(lc.billing_due_at, INTERVAL 1 MONTH) AS nextPaymentDate,
+        TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
         '파티원 참여' AS joinButtonLabel,
         u.nickname AS hostNickname
         FROM party p
@@ -246,9 +248,10 @@
             (p.capacity
                 - (p.current_member_count
                     - COALESCE(rh.reserved_host_count, 0)
-                    - COALESCE(rm.reserved_member_count, 0))) AS remainingSeatCount,
+                    - COALESCE(rm.reserved_member_count, 0))
+                - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
             p.price_per_member_snapshot AS monthlyPaymentAmount,
-            DATE_ADD(lc.billing_due_at, INTERVAL 1 MONTH) AS nextPaymentDate,
+            TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
             sp.operation_type AS operationType,
             p.recruit_status AS recruitStatus,
             p.operation_status AS operationStatus,
@@ -323,9 +326,10 @@
             (p.capacity
                 - (p.current_member_count
                     - COALESCE(rh.reserved_host_count, 0)
-                    - COALESCE(rm.reserved_member_count, 0))) AS remainingSeatCount,
+                    - COALESCE(rm.reserved_member_count, 0))
+                - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
             p.price_per_member_snapshot AS monthlyPaymentAmount,
-            DATE_ADD(lc.billing_due_at, INTERVAL 1 MONTH) AS nextPaymentDate,
+            TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
             sp.operation_type AS operationType,
             p.recruit_status AS recruitStatus,
             p.operation_status AS operationStatus,
