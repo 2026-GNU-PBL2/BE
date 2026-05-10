@@ -101,11 +101,7 @@
         GROUP BY pm.party_id
         ) rh ON rh.party_id = p.id
         WHERE p.recruit_status = 'RECRUITING'
-        AND p.vacancy_type = 'HOST'
-        AND (
-        p.current_member_count &lt; p.capacity
-        OR COALESCE(rh.reserved_host_count, 0) > 0
-        )
+        AND COALESCE(rh.reserved_host_count, 0) > 0
         <if test="productId != null and productId != ''">
             AND p.product_id = #{productId}
         </if>
@@ -162,11 +158,7 @@
         GROUP BY pm.party_id
         ) rm ON rm.party_id = p.id
         WHERE p.recruit_status = 'RECRUITING'
-        AND p.vacancy_type = 'MEMBER'
-        AND (
-        p.current_member_count &lt; p.capacity
-        OR COALESCE(rm.reserved_member_count, 0) > 0
-        )
+        AND COALESCE(rm.reserved_member_count, 0) > 0
         <if test="productId != null and productId != ''">
             AND p.product_id = #{productId}
         </if>
@@ -232,11 +224,7 @@
         ) rh ON rh.party_id = p.id
         WHERE p.id = #{partyId}
           AND p.recruit_status = 'RECRUITING'
-          AND p.vacancy_type = 'HOST'
-          AND (
-            p.current_member_count &lt; p.capacity
-                OR COALESCE(rh.reserved_host_count, 0) > 0
-            )
+          AND COALESCE(rh.reserved_host_count, 0) > 0
             LIMIT 1
     </select>
 
@@ -293,11 +281,7 @@
         ) rm ON rm.party_id = p.id
         WHERE p.id = #{partyId}
           AND p.recruit_status = 'RECRUITING'
-          AND p.vacancy_type = 'MEMBER'
-          AND (
-            p.current_member_count &lt; p.capacity
-                OR COALESCE(rm.reserved_member_count, 0) > 0
-            )
+          AND COALESCE(rm.reserved_member_count, 0) > 0
             LIMIT 1
     </select>
 

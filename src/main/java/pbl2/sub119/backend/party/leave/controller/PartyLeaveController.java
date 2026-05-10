@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.leave.controller.docs.PartyLeaveDocs;
+import pbl2.sub119.backend.party.leave.dto.response.CancelLeaveResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReservationMemberResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReserveResponse;
 import pbl2.sub119.backend.party.leave.service.PartyLeaveService;
@@ -33,12 +34,13 @@ public class PartyLeaveController implements PartyLeaveDocs {
 
     // 탈퇴 예약 취소
     @Override
-    public ResponseEntity<Void> cancelLeave(
+    public ResponseEntity<CancelLeaveResponse> cancelLeave(
             @Auth final Accessor accessor,
             @PathVariable final Long partyId
     ) {
-        partyLeaveService.cancelLeave(partyId, accessor.getUserId());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(
+                partyLeaveService.cancelLeave(partyId, accessor.getUserId())
+        );
     }
 
     // 파티장이 탈퇴 예약 멤버 목록 조회

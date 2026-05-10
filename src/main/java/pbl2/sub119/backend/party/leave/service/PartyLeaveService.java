@@ -21,6 +21,8 @@ import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.cycle.service.SubscriptionCycleWindowValidator;
 import pbl2.sub119.backend.party.common.exception.PartyException;
+import pbl2.sub119.backend.party.join.service.PartyJoinService;
+import pbl2.sub119.backend.party.leave.dto.response.CancelLeaveResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReservationMemberResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReserveResponse;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
@@ -36,6 +38,7 @@ public class PartyLeaveService {
     private final SubscriptionCycleWindowValidator subscriptionCycleWindowValidator;
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final PartyJoinService partyJoinService;
 
     // 다음 결제일 기준 탈퇴 예약
     @Transactional
@@ -95,7 +98,7 @@ public class PartyLeaveService {
 
     // 탈퇴 예약 취소
     @Transactional
-    public void cancelLeave(final Long partyId, final Long userId) {
+    public CancelLeaveResponse cancelLeave(final Long partyId, final Long userId) {
         final Party party = partyMapper.findByIdForUpdate(partyId);
         if (party == null) {
             throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
@@ -138,11 +141,10 @@ public class PartyLeaveService {
                     "{\"userId\":" + userId + "}",
                     userId
             );
+            return CancelLeaveResponse.cancelled();
         } else {
             // Case B: 입장 대기자 있음 → 탈퇴 강제 실행 + 탈퇴자 재매칭
             partyMemberMapper.updateStatusAndLeftAt(member.getId(), PartyMemberStatus.LEFT);
-            requeueMember(party.getProductId(), userId);
-            eventPublisher.publishEvent(new MemberAutoRematchStartedEvent(partyId, List.of(userId)));
 
             final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
             partyMapper.updateCurrentMemberCount(partyId, occupiedCount);
@@ -156,7 +158,37 @@ public class PartyLeaveService {
                     "{\"userId\":" + userId + "}",
                     userId
             );
+
+            final Long rematchedPartyId = tryImmediateRematch(party.getProductId(), userId);
+            Integer monthlyPaymentAmount = null;
+            if (rematchedPartyId != null) {
+                final Party rematchedParty = partyMapper.findById(rematchedPartyId);
+                if (rematchedParty != null) {
+                    monthlyPaymentAmount = rematchedParty.getPricePerMemberSnapshot();
+                }
+            } else {
+                requeueMember(party.getProductId(), userId);
+            }
+
+            eventPublisher.publishEvent(new MemberAutoRematchStartedEvent(partyId, List.of(userId)));
+            return CancelLeaveResponse.forcedLeft(rematchedPartyId, monthlyPaymentAmount);
         }
+    }
+
+    private Long tryImmediateRematch(final String productId, final Long userId) {
+        final List<Party> joinableParties = partyMapper.findJoinablePartiesByProductId(productId);
+        for (final Party target : joinableParties) {
+            try {
+                partyJoinService.joinParty(target.getId(), userId);
+                return target.getId();
+            } catch (PartyException e) {
+                if (e.getErrorCode() == ErrorCode.PARTY_FULL) {
+                    continue;
+                }
+                throw e;
+            }
+        }
+        return null;
     }
 
     private void requeueMember(final String productId, final Long userId) {

@@ -12,6 +12,7 @@ import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.common.enumerated.VacancyType;
 import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
@@ -105,8 +106,15 @@ public class PartyJoinService {
             throw new PartyException(ErrorCode.PARTY_NOT_RECRUITING);
         }
 
+        // 결원이 없는 일반 모집 파티는 결원 참여 불가
+        if (party.getVacancyType() == VacancyType.NONE) {
+            throw new PartyException(ErrorCode.PARTY_NOT_RECRUITING);
+        }
+
         // 이미 SWITCH_WAITING 멤버가 있으면 자리 없음 (동시 접근 방지)
-        if (!partyMemberMapper.findSwitchWaitingMembers(partyId).isEmpty()) {
+        final int existingSwitchWaitingCount = partyMemberMapper.findSwitchWaitingMembers(partyId).size();
+        final int leaveReservedCount = partyMemberMapper.findLeaveReservedMembers(partyId).size();
+        if (existingSwitchWaitingCount >= leaveReservedCount) {
             throw new PartyException(ErrorCode.PARTY_FULL);
         }
 
@@ -128,8 +136,11 @@ public class PartyJoinService {
 
         partyMemberMapper.insertPartyMember(newMember);
 
-        // 자리 확정 예약 → 더 이상 결원 모집 불가
-        partyMapper.updateRecruitStatus(partyId, RecruitStatus.FULL);
+        // 모든 결원 자리가 채워진 경우에만 FULL
+        final boolean allVacanciesFilled = (existingSwitchWaitingCount + 1) >= leaveReservedCount;
+        if (allVacanciesFilled) {
+            partyMapper.updateRecruitStatus(partyId, RecruitStatus.FULL);
+        }
 
         partyHistoryService.saveHistory(
                 partyId,
