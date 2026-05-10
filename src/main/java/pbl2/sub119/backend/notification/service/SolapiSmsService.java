@@ -11,6 +11,8 @@ import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Service;
 import pbl2.sub119.backend.common.config.SolapiProperties;
 import pbl2.sub119.backend.notification.entity.SmsSendLog;
@@ -24,6 +26,7 @@ public class SolapiSmsService {
 
     private final SolapiProperties solapiProperties;
     private final SmsSendLogMapper smsSendLogMapper;
+    private final Environment environment;
 
     private DefaultMessageService messageService;
 
@@ -42,6 +45,9 @@ public class SolapiSmsService {
 
     public SmsSendStatus sendOtp(final Long userId, final String to, final String content) {
         if (!solapiProperties.isEnabled() || messageService == null) {
+            if (isLocalProfile()) {
+                log.info("[LOCAL OTP MOCK] userId={}, phone={}, content={}", userId, maskPhoneNumber(to), content);
+            }
             saveLog(null, userId, maskPhoneNumber(to), "[OTP 발송 내용 비공개]", SmsSendStatus.SKIPPED, "SOLAPI disabled");
             return SmsSendStatus.SKIPPED;
         }
@@ -118,6 +124,10 @@ public class SolapiSmsService {
             return "";
         }
         return phoneNumber.replaceAll("[^0-9]", "");
+    }
+
+    private boolean isLocalProfile() {
+        return environment.acceptsProfiles(Profiles.of("local"));
     }
 
     private void saveLog(
