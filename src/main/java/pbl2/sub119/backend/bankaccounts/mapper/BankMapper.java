@@ -26,6 +26,8 @@ public interface BankMapper {
 
     int clearPrimaryByUserId(@Param("userId") Long userId);
 
+    int deactivateSettlementAccountsByUserId(@Param("userId") Long userId);
+
     int updateSettlementAccountMeta(BankAccount bankAccount);
     int updateVerificationSuccess(@Param("userId") Long userId, @Param("fintechUseNum") String fintechUseNum);
     int updateVerificationFailure(@Param("userId") Long userId,

@@ -43,7 +43,11 @@ public interface BankDocs {
 
     @Operation(
             summary = "금융결제원 계좌 연결 콜백",
-            description = "OAuth 인가코드(code)와 state를 받아 연결 계좌 후보를 저장한 뒤 프론트 계좌등록 페이지로 리다이렉트합니다."
+            description = """
+                    OAuth 인가코드(code)와 state를 받아 연결 계좌를 저장한 뒤 flow에 맞는 프론트 경로로 리다이렉트합니다.
+                    - PARTY_CREATE flow: /party/create/{productId}/host/account-register 로 복귀
+                    - MY_PAGE flow: /mypage/account-register 로 복귀
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "프론트 계좌등록 페이지로 리다이렉트",
@@ -63,8 +67,17 @@ public interface BankDocs {
     );
 
     @Operation(
-            summary = "정산/환불 계좌 등록",
-            description = "연결된 계좌(fintech_use_num)를 기준으로 정산계좌 메타데이터를 저장하고 실명검증 상태를 반영합니다."
+            summary = "정산 계좌 등록 / 교체",
+            description = """
+                    금융결제원 인증으로 연결된 계좌(fintech_use_num)를 활성 정산계좌로 설정합니다.
+
+                    시퀀스: 금융결제원 재인증 → GET /bank/accounts 로 목록 확인 → 이 API로 계좌 선택
+                    - accountType은 반드시 SETTLEMENT 이어야 합니다. 그 외 값은 400(BANK002)으로 거부됩니다.
+                    - isPrimary 필드는 요청에 포함하지 않습니다. 등록된 계좌는 항상 대표 계좌가 됩니다.
+                    - 기존 활성 정산계좌(account_type=SETTLEMENT, is_primary=true)가 비활성화되고, \
+                    선택한 계좌 1건만 활성 정산계좌로 확정됩니다. 나머지 연결 계좌 row는 유지됩니다.
+                    - 전체 처리는 단일 트랜잭션 내에서 원자적으로 수행됩니다.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정산계좌 등록 성공",
@@ -81,6 +94,26 @@ public interface BankDocs {
     String registerSettlementAccount(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @Valid @RequestBody RegisterSettlementAccountRequest request
+    );
+
+    @Operation(
+            summary = "활성 정산계좌 해제",
+            description = """
+                    현재 활성 정산계좌(account_type=SETTLEMENT, is_primary=true)를 비활성화합니다.
+                    - 연결 계좌 row는 삭제되지 않고 목록에 유지됩니다.
+                    - 해제 후 POST /bank/settlement 로 다시 계좌를 선택할 수 있습니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "정산계좌 해제 성공",
+                    content = @Content),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "활성 정산계좌 없음 (BANK006)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    void deleteSettlementAccount(
+            @Parameter(hidden = true) @Auth Accessor accessor
     );
 
     @Operation(
@@ -114,12 +147,12 @@ public interface BankDocs {
     );
 
     @Operation(
-            summary = "금융결제원 계좌 연결 인증 URL 조회",
+            summary = "[파티 생성용] 금융결제원 계좌 연결 인증 URL 조회",
             description = """
-                프론트가 axios로 호출하여 오픈뱅킹 authorize URL을 응답받습니다.
-                이 API는 Authorization 헤더 기반 인증을 통과한 뒤 state를 생성/저장하고,
-                프론트는 응답받은 authorizeUrl로 window.location.href 이동하면 됩니다.
-                """
+                    파티 생성 시 계좌 연결을 위한 오픈뱅킹 authorize URL을 반환합니다. productId 필수.
+                    callback 후 /party/create/{productId}/host/account-register 로 복귀합니다.
+                    프론트는 응답받은 authorizeUrl로 window.location.href 이동하면 됩니다.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "오픈뱅킹 authorize URL 조회 성공",
@@ -133,5 +166,21 @@ public interface BankDocs {
             @RequestParam String productId
     );
 
-
+    @Operation(
+            summary = "[마이페이지용] 금융결제원 계좌 재인증 URL 조회",
+            description = """
+                    마이페이지에서 정산계좌 변경을 위한 오픈뱅킹 authorize URL을 반환합니다. productId 불필요.
+                    callback 후 /mypage/account-register 로 복귀합니다.
+                    프론트는 응답받은 authorizeUrl로 window.location.href 이동하면 됩니다.
+                    """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "오픈뱅킹 authorize URL 조회 성공",
+                    content = @Content(schema = @Schema(implementation = BankAuthorizeUrlResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    BankAuthorizeUrlResponse authorizeUrlMyPage(
+            @Parameter(hidden = true) @Auth Accessor accessor
+    );
 }

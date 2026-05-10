@@ -14,7 +14,13 @@ public class BankAuthStateStore {
 
     public String create(Long userId, String productId) {
         String state = UUID.randomUUID().toString().replace("-", "");
-        store.put(state, new BankAuthState(userId, productId));
+        store.put(state, BankAuthState.forPartyCreate(userId, productId));
+        return state;
+    }
+
+    public String createForMyPage(Long userId) {
+        String state = UUID.randomUUID().toString().replace("-", "");
+        store.put(state, BankAuthState.forMyPage(userId));
         return state;
     }
 

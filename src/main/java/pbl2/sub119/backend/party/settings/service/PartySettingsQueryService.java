@@ -1,11 +1,9 @@
 package pbl2.sub119.backend.party.settings.service;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.bankaccounts.entity.BankAccount;
-import pbl2.sub119.backend.bankaccounts.enums.AccountType;
 import pbl2.sub119.backend.bankaccounts.mapper.BankMapper;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
@@ -170,10 +168,6 @@ public class PartySettingsQueryService {
     }
 
     private BankAccount findSettlementAccount(final Long hostUserId) {
-        final List<BankAccount> accounts = bankMapper.findAllByUserId(hostUserId);
-        return accounts.stream()
-                .filter(a -> a.getAccountType() == AccountType.SETTLEMENT)
-                .findFirst()
-                .orElse(null);
+        return bankMapper.findPrimaryByUserId(hostUserId);
     }
 }

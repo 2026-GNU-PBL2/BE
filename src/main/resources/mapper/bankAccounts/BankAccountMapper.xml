@@ -79,6 +79,7 @@
             account_type, is_primary, verification_status, verified_at, last_verified_at, fail_reason, updated_at
         FROM bank_accounts
         WHERE user_id = #{userId}
+          AND account_type = 'SETTLEMENT'
           AND is_primary = TRUE
         ORDER BY id DESC
         LIMIT 1
@@ -129,6 +130,23 @@
             updated_at = NOW()
         WHERE user_id = #{userId}
           AND is_primary = TRUE
+    </update>
+
+    <update id="deactivateSettlementAccountsByUserId">
+        UPDATE bank_accounts
+        SET account_type              = NULL,
+            bank_code                 = NULL,
+            account_number            = NULL,
+            account_holder_name       = NULL,
+            account_holder_birth_date = NULL,
+            is_primary                = FALSE,
+            verification_status       = 'PENDING',
+            verified_at               = NULL,
+            last_verified_at          = NULL,
+            fail_reason               = NULL,
+            updated_at                = NOW()
+        WHERE user_id = #{userId}
+          AND account_type = 'SETTLEMENT'
     </update>
 
     <update id="updateSettlementAccountMeta"
