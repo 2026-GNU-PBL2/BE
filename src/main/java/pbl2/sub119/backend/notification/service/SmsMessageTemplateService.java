@@ -160,9 +160,4 @@ public class SmsMessageTemplateService {
                 productName
         );
     }
-
-    // 테스트 카드 결제
-    public String testCardPaymentNotice() {
-        return "[Submate] 결제카드 확인을 위해 100원이 결제됐어요.\n정상 카드 확인용 테스트 결제이며 곧바로 환불됩니다.";
-    }
 }
