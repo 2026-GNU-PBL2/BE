@@ -28,6 +28,11 @@ public class UserService {
     private final UserMapper userMapper;
     private final PhoneVerificationService phoneVerificationService;
 
+    public void requestPhoneVerification(final Long userId, final String phoneNumber) {
+        validatePhoneNumberDuplication(userId, phoneNumber);
+        phoneVerificationService.sendOtp(userId, phoneNumber);
+    }
+
     @Transactional
     public UserSignUpResponse signUp(final Accessor accessor, final UserRequest request) {
 

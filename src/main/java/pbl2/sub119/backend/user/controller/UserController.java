@@ -87,7 +87,7 @@ public class UserController implements UserDocs {
             @Auth final Accessor accessor,
             @RequestBody @Valid final PhoneVerificationRequest request
     ) {
-        phoneVerificationService.sendOtp(accessor.getUserId(), request.phoneNumber());
+        userService.requestPhoneVerification(accessor.getUserId(), request.phoneNumber());
         return ResponseEntity.ok().build();
     }
 
