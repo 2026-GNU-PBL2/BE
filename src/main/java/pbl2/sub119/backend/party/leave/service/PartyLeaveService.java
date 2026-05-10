@@ -1,6 +1,5 @@
 package pbl2.sub119.backend.party.leave.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -8,25 +7,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
-import pbl2.sub119.backend.party.common.entity.MatchWaitingQueue;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
-import pbl2.sub119.backend.party.common.enumerated.MatchWaitingStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
 import pbl2.sub119.backend.party.common.enumerated.VacancyType;
-import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
+import pbl2.sub119.backend.party.common.exception.PartyException;
+import pbl2.sub119.backend.party.common.mapper.PartyMapper;
+import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.cycle.service.SubscriptionCycleWindowValidator;
-import pbl2.sub119.backend.party.common.exception.PartyException;
-import pbl2.sub119.backend.party.join.service.PartyJoinService;
 import pbl2.sub119.backend.party.leave.dto.response.CancelLeaveResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReservationMemberResponse;
 import pbl2.sub119.backend.party.leave.dto.response.PartyLeaveReserveResponse;
-import pbl2.sub119.backend.party.common.mapper.PartyMapper;
-import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.leave.event.PartyRematchRequestedEvent;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +31,7 @@ public class PartyLeaveService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
     private final SubscriptionCycleWindowValidator subscriptionCycleWindowValidator;
-    private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final ApplicationEventPublisher eventPublisher;
-    private final PartyJoinService partyJoinService;
 
     // 다음 결제일 기준 탈퇴 예약
     @Transactional
@@ -143,7 +136,8 @@ public class PartyLeaveService {
             );
             return CancelLeaveResponse.cancelled();
         } else {
-            // Case B: 입장 대기자 있음 → 탈퇴 강제 실행 + 탈퇴자 재매칭
+            // Case B: 입장 대기자(SWITCH_WAITING) 있음 → 탈퇴 강제 확정 + AFTER_COMMIT 재매칭
+            // 취소 시도자가 마음을 바꿨으나 대기자가 자리를 선점해 번복 불가 → 다른 파티로 재매칭
             partyMemberMapper.updateStatusAndLeftAt(member.getId(), PartyMemberStatus.LEFT);
 
             final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
@@ -159,48 +153,12 @@ public class PartyLeaveService {
                     userId
             );
 
-            final Long rematchedPartyId = tryImmediateRematch(party.getProductId(), userId);
-            Integer monthlyPaymentAmount = null;
-            if (rematchedPartyId != null) {
-                final Party rematchedParty = partyMapper.findById(rematchedPartyId);
-                if (rematchedParty != null) {
-                    monthlyPaymentAmount = rematchedParty.getPricePerMemberSnapshot();
-                }
-            } else {
-                requeueMember(party.getProductId(), userId);
-            }
-
-            eventPublisher.publishEvent(new MemberAutoRematchStartedEvent(partyId, List.of(userId)));
-            return CancelLeaveResponse.forcedLeft(rematchedPartyId, monthlyPaymentAmount);
+            // 외부 트랜잭션 커밋 후 재매칭 처리 (정합성 보장)
+            eventPublisher.publishEvent(
+                    new PartyRematchRequestedEvent(partyId, party.getProductId(), userId)
+            );
+            return CancelLeaveResponse.forcedLeft();
         }
-    }
-
-    private Long tryImmediateRematch(final String productId, final Long userId) {
-        final List<Party> joinableParties = partyMapper.findJoinablePartiesByProductId(productId);
-        for (final Party target : joinableParties) {
-            try {
-                partyJoinService.joinParty(target.getId(), userId);
-                return target.getId();
-            } catch (PartyException e) {
-                if (e.getErrorCode() == ErrorCode.PARTY_FULL) {
-                    continue;
-                }
-                throw e;
-            }
-        }
-        return null;
-    }
-
-    private void requeueMember(final String productId, final Long userId) {
-        final LocalDateTime now = LocalDateTime.now();
-        matchWaitingQueueMapper.insertIfAbsent(MatchWaitingQueue.builder()
-                .productId(productId)
-                .userId(userId)
-                .status(MatchWaitingStatus.WAITING)
-                .requestedAt(now)
-                .createdAt(now)
-                .updatedAt(now)
-                .build());
     }
 
     // 파티장이 탈퇴 예약 멤버 목록 조회

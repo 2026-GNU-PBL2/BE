@@ -59,13 +59,11 @@ public interface PartyLeaveDocs {
 
                     [CANCELLED] 입장 대기자 없음
                     - 탈퇴 예약이 취소되고 다시 ACTIVE 상태로 돌아갑니다.
-                    - rematchedPartyId, monthlyPaymentAmount 는 null 입니다.
 
                     [FORCED_LEFT] 입장 대기자(SWITCH_WAITING) 있음
                     - 탈퇴를 번복할 수 없습니다. 탈퇴가 즉시 확정(LEFT)됩니다.
-                    - 동일 상품 내 빈 자리가 있으면 자동 재매칭됩니다.
-                    - rematchedPartyId: 재매칭된 파티 ID (즉시 매칭 성공 시), null이면 대기열 등록
-                    - monthlyPaymentAmount: 재매칭된 파티의 월 결제 금액 (즉시 매칭 성공 시), null이면 대기열 등록
+                    - 재매칭은 트랜잭션 커밋 후 비동기로 처리됩니다.
+                    - 재매칭 결과(성공/대기열 등록)는 알림으로 수신됩니다.
                     """,
             responses = {
                     @ApiResponse(

@@ -100,8 +100,16 @@
         AND pm.status = 'LEAVE_RESERVED'
         GROUP BY pm.party_id
         ) rh ON rh.party_id = p.id
+        LEFT JOIN (
+        SELECT
+        pm.party_id,
+        COUNT(*) AS switch_waiting_count
+        FROM party_member pm
+        WHERE pm.status = 'SWITCH_WAITING'
+        GROUP BY pm.party_id
+        ) sw ON sw.party_id = p.id
         WHERE p.recruit_status = 'RECRUITING'
-        AND COALESCE(rh.reserved_host_count, 0) > 0
+        AND COALESCE(rh.reserved_host_count, 0) > COALESCE(sw.switch_waiting_count, 0)
         <if test="productId != null and productId != ''">
             AND p.product_id = #{productId}
         </if>
@@ -157,8 +165,16 @@
         AND pm.status = 'LEAVE_RESERVED'
         GROUP BY pm.party_id
         ) rm ON rm.party_id = p.id
+        LEFT JOIN (
+        SELECT
+        pm.party_id,
+        COUNT(*) AS switch_waiting_count
+        FROM party_member pm
+        WHERE pm.status = 'SWITCH_WAITING'
+        GROUP BY pm.party_id
+        ) sw ON sw.party_id = p.id
         WHERE p.recruit_status = 'RECRUITING'
-        AND COALESCE(rm.reserved_member_count, 0) > 0
+        AND COALESCE(rm.reserved_member_count, 0) > COALESCE(sw.switch_waiting_count, 0)
         <if test="productId != null and productId != ''">
             AND p.product_id = #{productId}
         </if>
@@ -222,9 +238,17 @@
               AND pm.status = 'LEAVE_RESERVED'
             GROUP BY pm.party_id
         ) rh ON rh.party_id = p.id
+        LEFT JOIN (
+            SELECT
+                pm.party_id,
+                COUNT(*) AS switch_waiting_count
+            FROM party_member pm
+            WHERE pm.status = 'SWITCH_WAITING'
+            GROUP BY pm.party_id
+        ) sw ON sw.party_id = p.id
         WHERE p.id = #{partyId}
           AND p.recruit_status = 'RECRUITING'
-          AND COALESCE(rh.reserved_host_count, 0) > 0
+          AND COALESCE(rh.reserved_host_count, 0) > COALESCE(sw.switch_waiting_count, 0)
             LIMIT 1
     </select>
 
@@ -279,9 +303,17 @@
               AND pm.status = 'LEAVE_RESERVED'
             GROUP BY pm.party_id
         ) rm ON rm.party_id = p.id
+        LEFT JOIN (
+            SELECT
+                pm.party_id,
+                COUNT(*) AS switch_waiting_count
+            FROM party_member pm
+            WHERE pm.status = 'SWITCH_WAITING'
+            GROUP BY pm.party_id
+        ) sw ON sw.party_id = p.id
         WHERE p.id = #{partyId}
           AND p.recruit_status = 'RECRUITING'
-          AND COALESCE(rm.reserved_member_count, 0) > 0
+          AND COALESCE(rm.reserved_member_count, 0) > COALESCE(sw.switch_waiting_count, 0)
             LIMIT 1
     </select>
 
