@@ -39,10 +39,6 @@ public class RegisterSettlementAccountRequest {
     private String accountHolderBirthDate;
 
     @NotNull
-    @Schema(description = "계좌 유형", allowableValues = {"WITHDRAWAL", "SETTLEMENT"}, example = "SETTLEMENT")
+    @Schema(description = "계좌 유형. 반드시 SETTLEMENT 이어야 합니다.", allowableValues = {"SETTLEMENT"}, example = "SETTLEMENT")
     private AccountType accountType;
-
-    @NotNull
-    @Schema(description = "대표 계좌 여부", example = "true")
-    private Boolean isPrimary;
 }

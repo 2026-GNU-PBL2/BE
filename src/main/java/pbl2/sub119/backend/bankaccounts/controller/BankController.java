@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 import pbl2.sub119.backend.auth.aop.Auth;
@@ -21,6 +23,7 @@ import pbl2.sub119.backend.bankaccounts.dto.request.RegisterSettlementAccountReq
 import pbl2.sub119.backend.bankaccounts.dto.response.BankAccountSummaryResponse;
 import pbl2.sub119.backend.bankaccounts.dto.response.BankAuthorizeUrlResponse;
 import pbl2.sub119.backend.bankaccounts.dto.response.PrimaryBankAccountResponse;
+import pbl2.sub119.backend.bankaccounts.enums.BankAuthFlow;
 import pbl2.sub119.backend.bankaccounts.service.BankAuthStateStore;
 import pbl2.sub119.backend.bankaccounts.service.BankService;
 import pbl2.sub119.backend.common.exception.BusinessException;
@@ -57,18 +60,7 @@ public class BankController implements BankDocs {
             @RequestParam String productId
     ) {
         String state = bankAuthStateStore.create(accessor.getUserId(), productId);
-
-        String authorizeUrl = UriComponentsBuilder
-                .fromHttpUrl(kftcBaseUrl + "/oauth/2.0/authorize")
-                .queryParam("response_type", "code")
-                .queryParam("client_id", kftcClientId)
-                .queryParam("redirect_uri", kftcRedirectUrl)
-                .queryParam("scope", "login inquiry")
-                .queryParam("state", state)
-                .queryParam("auth_type", "0")
-                .toUriString();
-
-        return redirect(authorizeUrl);
+        return redirect(buildKftcAuthorizeUrl(state));
     }
 
     @Override
@@ -82,48 +74,37 @@ public class BankController implements BankDocs {
 
         if (authState == null) {
             String invalidStateUrl = UriComponentsBuilder.fromUriString(frontendBaseUrl)
-                    .path("/party/create/0/host/account-register")
                     .queryParam("bankAuthSuccess", false)
                     .queryParam("message", "유효하지 않은 인증 요청입니다.")
                     .toUriString();
-
             return redirect(invalidStateUrl);
         }
 
-        String redirectBaseUrl = UriComponentsBuilder.fromUriString(frontendBaseUrl)
-                .path("/party/create/{productId}/host/account-register")
-                .buildAndExpand(authState.getProductId())
-                .toUriString();
+        String redirectBaseUrl = resolveRedirectBaseUrl(authState);
 
         try {
             bankService.registerAccount(authState.getUserId(), code);
             bankAuthStateStore.remove(state);
 
-            String successUrl = UriComponentsBuilder.fromUriString(redirectBaseUrl)
+            return redirect(UriComponentsBuilder.fromUriString(redirectBaseUrl)
                     .queryParam("bankAuthSuccess", true)
-                    .toUriString();
-
-            return redirect(successUrl);
+                    .toUriString());
 
         } catch (BusinessException e) {
             bankAuthStateStore.remove(state);
 
-            String failUrl = UriComponentsBuilder.fromUriString(redirectBaseUrl)
+            return redirect(UriComponentsBuilder.fromUriString(redirectBaseUrl)
                     .queryParam("bankAuthSuccess", false)
                     .queryParam("message", e.getErrorCode().getMessage())
-                    .toUriString();
-
-            return redirect(failUrl);
+                    .toUriString());
 
         } catch (Exception e) {
             bankAuthStateStore.remove(state);
 
-            String failUrl = UriComponentsBuilder.fromUriString(redirectBaseUrl)
+            return redirect(UriComponentsBuilder.fromUriString(redirectBaseUrl)
                     .queryParam("bankAuthSuccess", false)
                     .queryParam("message", BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED.getMessage())
-                    .toUriString();
-
-            return redirect(failUrl);
+                    .toUriString());
         }
     }
 
@@ -138,6 +119,13 @@ public class BankController implements BankDocs {
     }
 
     @Override
+    @DeleteMapping("/settlement")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSettlementAccount(@Auth final Accessor accessor) {
+        bankService.deactivateSettlementAccount(accessor.getUserId());
+    }
+
+    @Override
     @GetMapping("/accounts")
     public List<BankAccountSummaryResponse> getAccounts(@Auth final Accessor accessor) {
         return bankService.getAccounts(accessor.getUserId());
@@ -149,12 +137,6 @@ public class BankController implements BankDocs {
         return bankService.getPrimaryAccount(accessor.getUserId());
     }
 
-    private ResponseEntity<Void> redirect(String url) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create(url));
-        return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
-    }
-
     @Override
     @GetMapping("/authorize-url")
     public BankAuthorizeUrlResponse authorizeUrl(
@@ -162,8 +144,30 @@ public class BankController implements BankDocs {
             @RequestParam String productId
     ) {
         String state = bankAuthStateStore.create(accessor.getUserId(), productId);
+        return new BankAuthorizeUrlResponse(buildKftcAuthorizeUrl(state));
+    }
 
-        String authorizeUrl = UriComponentsBuilder
+    @Override
+    @GetMapping("/authorize-url/mypage")
+    public BankAuthorizeUrlResponse authorizeUrlMyPage(@Auth final Accessor accessor) {
+        String state = bankAuthStateStore.createForMyPage(accessor.getUserId());
+        return new BankAuthorizeUrlResponse(buildKftcAuthorizeUrl(state));
+    }
+
+    private String resolveRedirectBaseUrl(BankAuthState authState) {
+        if (authState.getFlow() == BankAuthFlow.MY_PAGE) {
+            return UriComponentsBuilder.fromUriString(frontendBaseUrl)
+                    .path("/mypage/account-register")
+                    .toUriString();
+        }
+        return UriComponentsBuilder.fromUriString(frontendBaseUrl)
+                .path("/party/create/{productId}/host/account-register")
+                .buildAndExpand(authState.getProductId())
+                .toUriString();
+    }
+
+    private String buildKftcAuthorizeUrl(String state) {
+        return UriComponentsBuilder
                 .fromHttpUrl(kftcBaseUrl + "/oauth/2.0/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("client_id", kftcClientId)
@@ -172,7 +176,11 @@ public class BankController implements BankDocs {
                 .queryParam("state", state)
                 .queryParam("auth_type", "0")
                 .toUriString();
+    }
 
-        return new BankAuthorizeUrlResponse(authorizeUrl);
+    private ResponseEntity<Void> redirect(String url) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create(url));
+        return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
     }
 }

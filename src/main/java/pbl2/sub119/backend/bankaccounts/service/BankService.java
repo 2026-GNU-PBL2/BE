@@ -12,6 +12,7 @@ import pbl2.sub119.backend.bankaccounts.dto.request.RegisterSettlementAccountReq
 import pbl2.sub119.backend.bankaccounts.dto.response.BankAccountSummaryResponse;
 import pbl2.sub119.backend.bankaccounts.dto.response.PrimaryBankAccountResponse;
 import pbl2.sub119.backend.bankaccounts.entity.BankAccount;
+import pbl2.sub119.backend.bankaccounts.enums.AccountType;
 import pbl2.sub119.backend.bankaccounts.enums.VerificationStatus;
 import pbl2.sub119.backend.bankaccounts.mapper.BankMapper;
 import pbl2.sub119.backend.common.exception.BusinessException;
@@ -22,6 +23,7 @@ import java.util.List;
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_VERIFICATION_FAILED;
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED;
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_CONNECTED_ACCOUNT_NOT_FOUND;
+import static pbl2.sub119.backend.common.error.ErrorCode.BANK_INVALID_ACCOUNT_TYPE;
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_PRIMARY_ACCOUNT_NOT_FOUND;
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_SETTLEMENT_ACCOUNT_REGISTER_FAILED;
 
@@ -76,17 +78,19 @@ public class BankService {
 
     @Transactional
     public void registerSettlementAccount(Long userId, RegisterSettlementAccountRequest request) {
+        if (request.getAccountType() != AccountType.SETTLEMENT) {
+            throw new BusinessException(BANK_INVALID_ACCOUNT_TYPE);
+        }
+
         BankAccount connectedAccount = bankMapper.findByUserIdAndFintechUseNum(userId, request.getFintechUseNum());
         if (connectedAccount == null) {
             throw new BusinessException(BANK_CONNECTED_ACCOUNT_NOT_FOUND);
         }
 
-        LocalDateTime now = LocalDateTime.now();
-        boolean isPrimary = Boolean.TRUE.equals(request.getIsPrimary());
+        // 기존 활성 정산계좌 비활성화 (account_type/is_primary 초기화)
+        bankMapper.deactivateSettlementAccountsByUserId(userId);
 
-        if (isPrimary) {
-            bankMapper.clearPrimaryByUserId(userId);
-        }
+        LocalDateTime now = LocalDateTime.now();
 
         BankAccount bankAccount = BankAccount.builder()
                 .userId(userId)
@@ -95,8 +99,8 @@ public class BankService {
                 .accountNumber(request.getAccountNumber())
                 .accountHolderName(request.getAccountHolderName())
                 .accountHolderBirthDate(request.getAccountHolderBirthDate())
-                .accountType(request.getAccountType())
-                .isPrimary(isPrimary)
+                .accountType(AccountType.SETTLEMENT)
+                .isPrimary(true)
                 .verificationStatus(VerificationStatus.PENDING)
                 .verifiedAt(null)
                 .lastVerifiedAt(now)
@@ -173,6 +177,15 @@ public class BankService {
 //            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
 //        }
         bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
+    }
+
+    @Transactional
+    public void deactivateSettlementAccount(Long userId) {
+        BankAccount primary = bankMapper.findPrimaryByUserId(userId);
+        if (primary == null) {
+            throw new BusinessException(BANK_PRIMARY_ACCOUNT_NOT_FOUND);
+        }
+        bankMapper.deactivateSettlementAccountsByUserId(userId);
     }
 
     @Transactional(readOnly = true)
