@@ -71,7 +71,7 @@ public class PartyProvisionCommandService {
                 request.provisionType() == OperationType.ACCOUNT_SHARE ? request.sharedAccountEmail() : null;
         final String normalizedGuide = request.provisionGuide();
 
-        // 최초 등록
+        // 최초 등록 (provision 자동 생성 없이 직접 호출된 경우 — 예외적 fallback)
         if (existingProvision == null) {
             final PartyProvision provision = PartyProvision.builder()
                     .partyId(partyId)
@@ -102,7 +102,11 @@ public class PartyProvisionCommandService {
             );
         }
 
-        // 수정 또는 비밀번호 변경도 같은 API로 처리
+        // WAITING: 파티 FULL 시 자동 생성된 provision → 파티장 최초 등록
+        // 그 외: 이미 등록된 provision 수정
+        final boolean isFirstRegistration = existingProvision.getOperationStatus() == ProvisionStatus.WAITING;
+        final LocalDateTime operationStartedAt = isFirstRegistration ? now : existingProvision.getOperationStartedAt();
+
         partyProvisionMapper.updateSetup(
                 existingProvision.getId(),
                 request.provisionType(),
@@ -111,12 +115,19 @@ public class PartyProvisionCommandService {
                 encryptedPassword,
                 normalizedGuide,
                 ProvisionStatus.IN_PROGRESS,
-                now,
+                operationStartedAt,
                 now
         );
 
-        // 다시 저장하면 기존 멤버는 처음부터 다시 확인
-        resetMemberRows(existingProvision.getId(), partyId, party.getHostUserId(), now);
+        if (isFirstRegistration) {
+            // 최초 등록: 멤버 rows 초기 생성 + 파티원 알림 발행
+            initializeMembers(existingProvision.getId(), partyId, party.getHostUserId(), now);
+            publishProvisionRequiredEvent(partyId, existingProvision.getId(), party.getHostUserId(), request.provisionType());
+        } else {
+            // 재등록: 기존 멤버 rows 리셋
+            resetMemberRows(existingProvision.getId(), partyId, party.getHostUserId(), now);
+        }
+
         publishProvisionSetupCompletedEvent(partyId);
 
         return new PartyProvisionSetupResponse(

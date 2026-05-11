@@ -164,17 +164,23 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 48시간 초과 -> 파티 해체 -->
+    <!-- 24시간 초과 -> 파티 해체 -->
     <select id="findTimedOutProvisions" resultMap="partyOperationResultMap">
         SELECT
         <include refid="partyOperationColumns"/>
-        FROM party_operation
-        WHERE operation_status != 'ACTIVE'
-        AND operation_started_at IS NULL
-        AND TIMESTAMPDIFF(HOUR, created_at, NOW()) >= 48
+        FROM party_operation po
+                 INNER JOIN party p ON p.id = po.party_id
+        WHERE po.operation_status != 'ACTIVE'
+          AND po.operation_started_at IS NULL
+          AND p.operation_status != 'TERMINATED'
+          AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) >= 24
     </select>
 
-    <!-- 24시간 -> 파티장 리마인드 + 파티원 지연 안내 (이미 알림 발송된 파티 제외) -->
+    <!--
+        파티장 미등록 주기 리마인드 대상 조회
+        - minElapsedHours 이후부터 마감(24h) 전까지
+        - 리마인드 미발송이거나 마지막 발송으로부터 reminderIntervalHours 이상 경과 시 대상 포함
+    -->
     <select id="findHostProvisionAt24hDue" resultMap="partyOperationResultMap">
         SELECT
             po.id,
@@ -195,14 +201,22 @@
         WHERE po.operation_status != 'ACTIVE'
           AND po.operation_started_at IS NULL
           AND p.operation_status != 'TERMINATED'
-          AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) >= #{elapsedHours}
-          AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) <![CDATA[<]]> #{elapsedHours} + 1
-          AND NOT EXISTS (
-            SELECT 1 FROM notification n
-            WHERE n.party_id = po.party_id
-          AND n.user_id = p.host_user_id
-          AND n.type = 'HOST_PROVISION_REMINDER'
+          AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) >= #{minElapsedHours}
+          AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) <![CDATA[<]]> 24
+          AND (
+            NOT EXISTS (
+                SELECT 1 FROM notification n
+                WHERE n.party_id = po.party_id
+                  AND n.user_id = p.host_user_id
+                  AND n.type = 'HOST_PROVISION_REMINDER'
             )
+            OR (
+                SELECT MAX(n.created_at) FROM notification n
+                WHERE n.party_id = po.party_id
+                  AND n.user_id = p.host_user_id
+                  AND n.type = 'HOST_PROVISION_REMINDER'
+            ) <![CDATA[<=]]> NOW() - INTERVAL #{reminderIntervalHours} HOUR
+          )
     </select>
 
 </mapper>

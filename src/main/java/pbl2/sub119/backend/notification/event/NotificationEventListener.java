@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
+import pbl2.sub119.backend.notification.event.event.PartyRecruitmentCompletedEvent;
 import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.InviteLinkRequiredEvent;
@@ -45,6 +46,20 @@ public class NotificationEventListener {
     private final PartyProvisionMapper partyProvisionMapper;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onPartyRecruitmentCompleted(final PartyRecruitmentCompletedEvent event) {
+        final Party party = partyMapper.findById(event.partyId());
+        if (party == null) {
+            return;
+        }
+
+        final String productName = resolveProductName(party.getProductId());
+        final String hostTitle = smsTemplate.getTitle(NotificationType.HOST_PARTY_MATCHED);
+        sendSafely(event.hostUserId(), event.partyId(), NotificationType.HOST_PARTY_MATCHED, hostTitle,
+                smsTemplate.hostPartyMatched(productName),
+                webTemplate.hostPartyMatched(productName));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onPartyMatched(final PartyMatchedEvent event) {
         final Party party = partyMapper.findById(event.partyId());
         if (party == null) {
@@ -59,11 +74,6 @@ public class NotificationEventListener {
                     smsTemplate.memberPartyMatched(productName),
                     webTemplate.memberPartyMatched(productName));
         }
-
-        final String hostTitle = smsTemplate.getTitle(NotificationType.HOST_PARTY_MATCHED);
-        sendSafely(party.getHostUserId(), event.partyId(), NotificationType.HOST_PARTY_MATCHED, hostTitle,
-                smsTemplate.hostPartyMatched(productName),
-                webTemplate.hostPartyMatched(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)

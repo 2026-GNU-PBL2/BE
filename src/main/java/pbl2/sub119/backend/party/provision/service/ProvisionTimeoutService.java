@@ -1,6 +1,7 @@
 package pbl2.sub119.backend.party.provision.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +13,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import java.util.ArrayList;
-import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
 import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionReminderEvent;
@@ -50,15 +50,15 @@ public class ProvisionTimeoutService {
     @Lazy
     private ProvisionTimeoutService self;
 
-    // 파티장 미등록 24h: 파티장 리마인드 + 파티원 지연 안내 동시 발행
+    // 파티장 미등록 — 3시간 간격 주기 리마인드 (FULL 후 3h~24h)
     public void processHostProvisionAt24h() {
-        final List<PartyProvision> due = partyProvisionMapper.findHostProvisionAt24hDue(24);
+        final List<PartyProvision> due = partyProvisionMapper.findHostProvisionAt24hDue(3, 3);
 
         for (final PartyProvision provision : due) {
             try {
                 self.publishHostAt24hInIsolation(provision);
             } catch (Exception e) {
-                log.error("파티장 provision 24시간 안내 실패. partyId={}", provision.getPartyId(), e);
+                log.error("파티장 provision 리마인드 실패. partyId={}", provision.getPartyId(), e);
             }
         }
     }
@@ -108,7 +108,7 @@ public class ProvisionTimeoutService {
         }
     }
 
-    // 파티장 24h: 파티장 리마인드 + 파티원 지연 안내 동시 발행 — 각 파티별 독립 트랜잭션
+    // 파티장 리마인드 — elapsed hours 실시간 계산, 파티별 독립 트랜잭션
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void publishHostAt24hInIsolation(final PartyProvision provision) {
         final Party party = partyMapper.findById(provision.getPartyId());
@@ -116,25 +116,14 @@ public class ProvisionTimeoutService {
             return;
         }
 
+        final int elapsedHours = (int) ChronoUnit.HOURS.between(
+                provision.getCreatedAt(), LocalDateTime.now());
+
         eventPublisher.publishEvent(
-                new HostProvisionReminderEvent(provision.getPartyId(), party.getHostUserId(), 24)
+                new HostProvisionReminderEvent(provision.getPartyId(), party.getHostUserId(), elapsedHours)
         );
 
-        final List<Long> memberUserIds = partyMemberMapper.findMembersByPartyId(provision.getPartyId())
-                .stream()
-                .filter(member -> !member.getUserId().equals(party.getHostUserId()))
-                .filter(member -> member.getStatus() != PartyMemberStatus.LEFT)
-                .filter(member -> member.getStatus() != PartyMemberStatus.REMOVED)
-                .map(PartyMember::getUserId)
-                .toList();
-
-        if (!memberUserIds.isEmpty()) {
-            eventPublisher.publishEvent(
-                    new HostProvisionDelayedNoticeEvent(provision.getPartyId(), memberUserIds)
-            );
-        }
-
-        log.info("파티장 provision 24시간 안내 발행. partyId={}", provision.getPartyId());
+        log.info("파티장 provision 리마인드 발행. partyId={}, elapsedHours={}", provision.getPartyId(), elapsedHours);
     }
 
     // 파티 해체 — 각 파티별 독립 트랜잭션

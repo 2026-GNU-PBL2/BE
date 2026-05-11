@@ -14,8 +14,8 @@ public class ProvisionTimeoutScheduler {
     private final ProvisionTimeoutService provisionTimeoutService;
 
     // provision 정책 체크
-    // - 파티장 미등록 24h (리마인드 + 파티원 지연 안내 동시) / 48h (파티 해체)
-    // - 파티원 미확인 24h (리마인드)
+    // - 파티장 미등록: FULL 후 3h~21h 동안 3시간 간격 리마인드 / 24h 파티 해체
+    // - 파티원 미확인: 24h 리마인드
     @Scheduled(fixedRate = 60 * 60 * 1000L)
     public void checkProvisionStatus() {
         log.info("provision 정책 스케줄러 실행");
