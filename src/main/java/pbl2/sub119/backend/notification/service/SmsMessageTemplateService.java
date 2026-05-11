@@ -57,7 +57,7 @@ public class SmsMessageTemplateService {
 
     // 파티장 provision 리마인드
     public String hostProvisionReminder(final String productName, final int elapsedHours) {
-        final int remainingHours = 48 - elapsedHours;
+        final int remainingHours = 24 - elapsedHours;
         return String.format(
                 "[Submate] %s 이용 정보가 아직 등록되지 않았어요.\n등록 기한까지 %d시간 남았습니다.\n기한 내 미등록 시 파티가 자동 해체됩니다.",
                 productName,

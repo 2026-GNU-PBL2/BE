@@ -2,11 +2,14 @@ package pbl2.sub119.backend.party.join.service;
 
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.notification.event.event.PartyRecruitmentCompletedEvent;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
@@ -17,7 +20,13 @@ import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
+import pbl2.sub119.backend.party.provision.entity.PartyProvision;
+import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
+import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
+import pbl2.sub119.backend.subproduct.entity.SubProduct;
+import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PartyJoinService {
@@ -25,6 +34,9 @@ public class PartyJoinService {
     private final PartyMapper partyMapper;
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
+    private final PartyProvisionMapper partyProvisionMapper;
+    private final SubProductMapper subProductMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 특정 파티에 실제 참여 처리
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -83,6 +95,10 @@ public class PartyJoinService {
                     "{\"before\":\"RECRUITING\",\"after\":\"FULL\"}",
                     userId
             );
+
+            initializeProvisionOnFull(updatedParty, now);
+            eventPublisher.publishEvent(
+                    new PartyRecruitmentCompletedEvent(partyId, updatedParty.getHostUserId()));
         }
 
         partyHistoryService.saveHistory(
@@ -91,6 +107,30 @@ public class PartyJoinService {
                 PartyHistoryEventType.MEMBER_JOINED,
                 "{\"userId\":" + userId + "}",
                 userId
+        );
+    }
+
+    // 파티 FULL 전환 시 provision 자동 생성 — 24시간 타이머 시작점 확보
+    private void initializeProvisionOnFull(final Party party, final LocalDateTime now) {
+        final PartyProvision existing = partyProvisionMapper.findByPartyId(party.getId());
+        if (existing != null) {
+            return;
+        }
+
+        subProductMapper.findById(party.getProductId()).ifPresentOrElse(
+                subProduct -> {
+                    final PartyProvision provision = PartyProvision.builder()
+                            .partyId(party.getId())
+                            .operationType(subProduct.getOperationType())
+                            .operationStatus(ProvisionStatus.WAITING)
+                            .operationStartedAt(null)
+                            .createdAt(now)
+                            .updatedAt(now)
+                            .build();
+                    partyProvisionMapper.insert(provision);
+                },
+                () -> log.warn("SubProduct 없음 — provision 자동 생성 생략. partyId={}, productId={}",
+                        party.getId(), party.getProductId())
         );
     }
 
