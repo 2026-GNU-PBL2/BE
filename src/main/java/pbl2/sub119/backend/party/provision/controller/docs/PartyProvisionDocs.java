@@ -131,13 +131,17 @@ public interface PartyProvisionDocs {
     @Operation(
             summary = "파티 이용 멤버 목록 조회",
             description = """
-                    파티장이 이용 대상 멤버의 상태 목록을 조회합니다.
+                    파티장이 이용 대상 멤버의 목록을 조회합니다.
 
-                    이 API는 아래 화면에서 사용합니다.
-                    - 파티장 이용 관리 화면
-                    - 누가 아직 확인을 안 했는지 보는 화면
+                    이용 정보 등록 전(WAITING)과 등록 후 모두 호출 가능합니다.
 
-                    상태값 안내
+                    [이용 정보 등록 전 - WAITING 상태]
+                    - 파티장이 OTT 초대 전 파티원 이메일 확인 용도
+                    - submateEmail, nickname, userId만 반환되며 나머지 필드는 null
+
+                    [이용 정보 등록 후]
+                    - 파티장 이용 관리 화면 / 누가 아직 확인을 안 했는지 보는 화면
+                    - 상태값 안내
                     - REQUIRED : 아직 이용 확인을 하지 않은 멤버
                     - ACTIVE : 이용 확인까지 끝나 현재 정상 이용 중인 멤버
                     - RESET_REQUIRED : 파티장이 정보를 다시 바꿔 재확인이 필요한 멤버

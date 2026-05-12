@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 
 @Mapper
 public interface PartyMemberMapper {
@@ -62,5 +63,10 @@ public interface PartyMemberMapper {
     int updateStatusAndActivatedAt(
             @Param("memberId") Long memberId,
             @Param("status") PartyMemberStatus status
+    );
+
+    int updateRole(
+            @Param("memberId") Long memberId,
+            @Param("role") PartyRole role
     );
 }
