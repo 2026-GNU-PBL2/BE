@@ -118,6 +118,7 @@
         COUNT(*) AS switch_waiting_count
         FROM party_member pm
         WHERE pm.status = 'SWITCH_WAITING'
+          AND pm.role = 'HOST'
         GROUP BY pm.party_id
         ) sw ON sw.party_id = p.id
         WHERE p.recruit_status = 'RECRUITING'
@@ -195,6 +196,7 @@
         COUNT(*) AS switch_waiting_count
         FROM party_member pm
         WHERE pm.status = 'SWITCH_WAITING'
+          AND pm.role = 'MEMBER'
         GROUP BY pm.party_id
         ) sw ON sw.party_id = p.id
         WHERE p.recruit_status = 'RECRUITING'
@@ -278,6 +280,7 @@
                 COUNT(*) AS switch_waiting_count
             FROM party_member pm
             WHERE pm.status = 'SWITCH_WAITING'
+              AND pm.role = 'HOST'
             GROUP BY pm.party_id
         ) sw ON sw.party_id = p.id
         WHERE p.id = #{partyId}
@@ -353,6 +356,7 @@
                 COUNT(*) AS switch_waiting_count
             FROM party_member pm
             WHERE pm.status = 'SWITCH_WAITING'
+              AND pm.role = 'MEMBER'
             GROUP BY pm.party_id
         ) sw ON sw.party_id = p.id
         WHERE p.id = #{partyId}

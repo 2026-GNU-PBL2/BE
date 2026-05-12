@@ -8,6 +8,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
+import pbl2.sub119.backend.notification.event.event.HostChangedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
 import pbl2.sub119.backend.notification.event.event.PartyRecruitmentCompletedEvent;
 import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
@@ -44,6 +45,20 @@ public class NotificationEventListener {
     private final PartyMapper partyMapper;
     private final SubProductMapper subProductMapper;
     private final PartyProvisionMapper partyProvisionMapper;
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onHostChanged(final HostChangedEvent event) {
+        final Party party = partyMapper.findById(event.partyId());
+        if (party == null) {
+            return;
+        }
+
+        final String productName = resolveProductName(party.getProductId());
+        final String hostTitle = smsTemplate.getTitle(NotificationType.HOST_PROVISION_REQUIRED);
+        sendSafely(event.newHostUserId(), event.partyId(), NotificationType.HOST_PROVISION_REQUIRED, hostTitle,
+                smsTemplate.hostProvisionRequired(productName),
+                webTemplate.hostProvisionRequired(productName));
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onPartyRecruitmentCompleted(final PartyRecruitmentCompletedEvent event) {

@@ -3,6 +3,7 @@ package pbl2.sub119.backend.party.cycle.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
@@ -15,6 +16,8 @@ import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
+import pbl2.sub119.backend.notification.event.event.HostChangedEvent;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class PartyCycleService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
     private final PartyProvisionCommandService partyProvisionCommandService;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 회차 결제 성공 후 이용 주기 시작 시 서비스 상태 반영 (첫 회차 / 반복 회차 공통)
     @Transactional
@@ -95,6 +99,19 @@ public class PartyCycleService {
                     "{\"userId\":" + member.getUserId() + ",\"status\":\"ACTIVE\"}",
                     member.getUserId()
             );
+
+            if (member.getRole() == PartyRole.HOST) {
+                partyMapper.updateHostUserId(partyId, member.getUserId());
+
+                final List<Long> memberUserIds = partyMemberMapper
+                        .findProvisionTargetMembersByPartyId(partyId).stream()
+                        .filter(m -> !m.getUserId().equals(member.getUserId()))
+                        .map(pbl2.sub119.backend.party.common.entity.PartyMember::getUserId)
+                        .toList();
+
+                eventPublisher.publishEvent(
+                        new HostChangedEvent(partyId, member.getUserId(), memberUserIds));
+            }
         }
     }
 
