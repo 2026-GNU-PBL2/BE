@@ -47,8 +47,9 @@ public interface PartyHistoryDocs {
                     - MEMBER : 파티원
 
                     상태값(status) 안내:
-                    - USING : 이용 중
-                    - ENDED : 종료
+                    - USING      : 이용 중 (ACTIVE, LEAVE_RESERVED)
+                    - SCHEDULED  : 이용 예정 (결원 참여 후 다음 사이클 시작 대기 중, SWITCH_WAITING)
+                    - ENDED      : 종료 (LEFT, REMOVED, 파티 해체)
 
                     기간 기준:
                     - startAt : party_member.service_start_at
