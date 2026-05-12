@@ -30,6 +30,11 @@ public interface PartyProvisionMemberMapper {
             @Param("partyOperationId") Long partyOperationId
     );
 
+    List<PartyProvisionMemberResponse> findMemberEmailsByPartyId(
+            @Param("partyId") Long partyId,
+            @Param("hostUserId") Long hostUserId
+    );
+
     int countByPartyOperationId(@Param("partyOperationId") Long partyOperationId);
 
     int countActiveByPartyOperationId(@Param("partyOperationId") Long partyOperationId);

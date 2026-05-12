@@ -166,6 +166,32 @@
         ORDER BY pom.id ASC
     </select>
 
+    <!-- WAITING 상태 provision 등록 전 파티원 이메일 조회 (party_member + users 직접 조인) -->
+    <select id="findMemberEmailsByPartyId" resultMap="partyOperationMemberResponseResultMap">
+        SELECT
+            NULL              AS id,
+            pm.id             AS party_member_id,
+            pm.user_id,
+            u.nickname,
+            u.submate_email,
+            NULL              AS member_status,
+            NULL              AS invite_sent_at,
+            NULL              AS must_complete_by,
+            NULL              AS confirmed_at,
+            NULL              AS completed_at,
+            NULL              AS activated_at,
+            NULL              AS last_reset_at,
+            false             AS penalty_applied,
+            NULL              AS operation_message
+        FROM party_member pm
+                 INNER JOIN users u ON u.id = pm.user_id
+        WHERE pm.party_id = #{partyId}
+          AND pm.role = 'MEMBER'
+          AND pm.status IN ('ACTIVE', 'PENDING', 'SWITCH_WAITING')
+          AND pm.user_id != #{hostUserId}
+        ORDER BY pm.id ASC
+    </select>
+
     <!-- 전체 provision 멤버 수 조회 -->
     <select id="countByPartyOperationId" resultType="int">
         SELECT COUNT(*)

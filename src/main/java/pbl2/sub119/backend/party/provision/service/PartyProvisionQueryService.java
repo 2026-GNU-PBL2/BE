@@ -70,9 +70,13 @@ public class PartyProvisionQueryService {
             final Long userId,
             final Long partyId
     ) {
-        getHostParty(userId, partyId);
+        final Party party = getHostParty(userId, partyId);
+        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
 
-        final PartyProvision provision = getProvisionByPartyId(partyId);
+        // provision 미등록(WAITING) 상태: party_member + users에서 이메일만 반환
+        if (provision == null || provision.getOperationStatus() == ProvisionStatus.WAITING) {
+            return partyProvisionMemberMapper.findMemberEmailsByPartyId(partyId, party.getHostUserId());
+        }
 
         return partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId());
     }
