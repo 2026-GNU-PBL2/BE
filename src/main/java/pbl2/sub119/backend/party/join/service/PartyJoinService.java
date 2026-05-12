@@ -166,10 +166,13 @@ public class PartyJoinService {
         }
 
         final LocalDateTime now = LocalDateTime.now();
+        final PartyRole role = party.getVacancyType() == VacancyType.HOST
+                ? PartyRole.HOST
+                : PartyRole.MEMBER;
         final PartyMember newMember = PartyMember.builder()
                 .partyId(partyId)
                 .userId(userId)
-                .role(PartyRole.MEMBER)
+                .role(role)
                 .status(PartyMemberStatus.SWITCH_WAITING)
                 .joinedAt(now)
                 .build();
