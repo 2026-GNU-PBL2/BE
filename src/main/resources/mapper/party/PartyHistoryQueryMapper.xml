@@ -17,6 +17,7 @@
             CASE
                 WHEN pm.status IN ('LEFT', 'REMOVED') THEN 'ENDED'
                 WHEN p.operation_status = 'TERMINATED' THEN 'ENDED'
+                WHEN pm.status = 'SWITCH_WAITING' THEN 'SCHEDULED'
                 ELSE 'USING'
                 END AS status,
             pm.service_start_at AS startAt,
