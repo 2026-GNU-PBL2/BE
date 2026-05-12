@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.provision.dto.response;
 
+import java.util.List;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
 import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 
@@ -8,6 +9,7 @@ public record PartyProvisionSetupResponse(
         Long provisionId,
         Long partyId,
         OperationType provisionType,
-        ProvisionStatus provisionStatus
+        ProvisionStatus provisionStatus,
+        List<PartyProvisionMemberResponse> members
 ) {
 }
