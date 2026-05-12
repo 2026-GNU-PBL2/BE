@@ -16,6 +16,7 @@ import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRe
 import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
+import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
@@ -158,7 +159,7 @@ public class PartyProvisionQueryService {
     private PartyProvision getProvisionByPartyId(final Long partyId) {
         final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
 
-        if (provision == null) {
+        if (provision == null || provision.getOperationStatus() == ProvisionStatus.WAITING) {
             throw new PartyException(ErrorCode.PARTY_OPERATION_NOT_FOUND);
         }
 
