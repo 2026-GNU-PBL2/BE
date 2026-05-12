@@ -86,11 +86,8 @@
         (p.current_member_count
             - COALESCE(rh.reserved_host_count, 0)
             - COALESCE(rm.reserved_member_count, 0)) AS currentMemberCount,
-        (p.capacity
-            - (p.current_member_count
-                - COALESCE(rh.reserved_host_count, 0)
-                - COALESCE(rm.reserved_member_count, 0))
-                - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
+        (COALESCE(rh.reserved_host_count, 0)
+            - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
         p.price_per_member_snapshot AS monthlyPaymentAmount,
         TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
         'HOST_JOIN' AS joinButtonLabel
@@ -164,11 +161,8 @@
         (p.current_member_count
             - COALESCE(rh.reserved_host_count, 0)
             - COALESCE(rm.reserved_member_count, 0)) AS currentMemberCount,
-        (p.capacity
-            - (p.current_member_count
-                - COALESCE(rh.reserved_host_count, 0)
-                - COALESCE(rm.reserved_member_count, 0))
-                - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
+        (COALESCE(rm.reserved_member_count, 0)
+            - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
         p.price_per_member_snapshot AS monthlyPaymentAmount,
         TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
         '파티원 참여' AS joinButtonLabel,
@@ -245,10 +239,7 @@
             (p.current_member_count
                 - COALESCE(rh.reserved_host_count, 0)
                 - COALESCE(rm.reserved_member_count, 0)) AS currentMemberCount,
-            (p.capacity
-                - (p.current_member_count
-                    - COALESCE(rh.reserved_host_count, 0)
-                    - COALESCE(rm.reserved_member_count, 0))
+            (COALESCE(rh.reserved_host_count, 0)
                 - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
             p.price_per_member_snapshot AS monthlyPaymentAmount,
             TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
@@ -323,10 +314,7 @@
             (p.current_member_count
                 - COALESCE(rh.reserved_host_count, 0)
                 - COALESCE(rm.reserved_member_count, 0)) AS currentMemberCount,
-            (p.capacity
-                - (p.current_member_count
-                    - COALESCE(rh.reserved_host_count, 0)
-                    - COALESCE(rm.reserved_member_count, 0))
+            (COALESCE(rm.reserved_member_count, 0)
                 - COALESCE(sw.switch_waiting_count, 0)) AS remainingSeatCount,
             p.price_per_member_snapshot AS monthlyPaymentAmount,
             TIMESTAMPADD(MONTH, 1, lc.billing_due_at) AS nextPaymentDate,
