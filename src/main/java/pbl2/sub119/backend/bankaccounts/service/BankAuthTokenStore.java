@@ -22,7 +22,7 @@ public class BankAuthTokenStore {
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
-    public void save(Long userId, String accessToken, String refreshToken, String userSeqNo) {
+    public boolean save(Long userId, String accessToken, String refreshToken, String userSeqNo) {
         try {
             BankAuthTokenDto dto = BankAuthTokenDto.builder()
                     .accessToken(accessToken)
@@ -30,8 +30,10 @@ public class BankAuthTokenStore {
                     .userSeqNo(userSeqNo)
                     .build();
             redisTemplate.opsForValue().set(KEY_PREFIX + userId, objectMapper.writeValueAsString(dto), TTL);
+            return true;
         } catch (Exception e) {
             log.warn("Failed to save bank auth token to Redis. userId={}", userId, e);
+            return false;
         }
     }
 
