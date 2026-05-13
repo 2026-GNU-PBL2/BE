@@ -84,6 +84,7 @@ public enum ErrorCode {
     BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK005", "계좌 실명 검증 요청에 실패했습니다."),
     BANK_PRIMARY_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "BANK006", "대표 정산 계좌가 없습니다."),
     BANK_ACCOUNT_CONNECT_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "BANK007", "계좌 연결 요청에 실패했습니다."),
+    BANK_AUTH_EXPIRED(HttpStatus.UNAUTHORIZED, "BANK008", "KFTC 인증이 만료되었습니다. 다시 인증 후 시도해 주세요."),
 
     // Party Operation
     PARTY_OPERATION_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTY023", "파티 운영 정보가 존재하지 않습니다."),
