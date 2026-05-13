@@ -23,8 +23,6 @@ public class PartyMember {
     private PartyMemberStatus status;
     private LocalDateTime joinedAt;
     private LocalDateTime activatedAt;
-    private LocalDateTime serviceStartAt;
-    private LocalDateTime serviceEndAt;
     private LocalDateTime leaveReservedAt;
     private LocalDateTime leftAt;
     private Long replacedTargetMemberId;

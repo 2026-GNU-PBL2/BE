@@ -15,7 +15,6 @@ public enum NotificationType {
     // 파티장 provision
     HOST_PROVISION_REQUIRED,
     HOST_PROVISION_REMINDER,
-    HOST_PROVISION_DELAYED_NOTICE,
     HOST_PROVISION_TIMEOUT_TERMINATED,
 
     // 파티원 provision

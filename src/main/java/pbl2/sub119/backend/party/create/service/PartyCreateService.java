@@ -131,8 +131,6 @@ public class PartyCreateService {
                 .status(PartyMemberStatus.ACTIVE)
                 .joinedAt(now)
                 .activatedAt(now)
-                .serviceStartAt(null)
-                .serviceEndAt(null)
                 .leaveReservedAt(null)
                 .leftAt(null)
                 .replacedTargetMemberId(null)

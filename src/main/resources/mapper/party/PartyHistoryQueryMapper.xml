@@ -20,13 +20,22 @@
                 WHEN pm.status = 'SWITCH_WAITING' THEN 'SCHEDULED'
                 ELSE 'USING'
                 END AS status,
-            pm.service_start_at AS startAt,
-            pm.service_end_at AS endAt
+            CASE
+                WHEN pm.status = 'SWITCH_WAITING' THEN TIMESTAMPADD(MONTH, 1, pc.billing_due_at)
+                ELSE pc.start_at
+            END AS startAt,
+            CASE
+                WHEN pm.status = 'SWITCH_WAITING' THEN NULL
+                ELSE pc.billing_due_at
+            END AS endAt
         FROM party_member pm
                  INNER JOIN party p
                             ON p.id = pm.party_id
                  INNER JOIN sub_product sp
                             ON sp.id = p.product_id
+                 LEFT JOIN party_cycle pc
+                            ON pc.party_id = pm.party_id
+                            AND pc.status = 'RUNNING'
         WHERE pm.user_id = #{userId}
           AND pm.status IN ('ACTIVE','LEAVE_RESERVED','SWITCH_WAITING','LEFT','REMOVED')
         ORDER BY
@@ -35,7 +44,7 @@
                 WHEN p.operation_status = 'TERMINATED' THEN 1
                 ELSE 0
                 END,
-            pm.service_start_at DESC,
+            pc.start_at DESC,
             pm.id DESC
     </select>
 
