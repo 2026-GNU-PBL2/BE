@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
@@ -23,6 +24,7 @@ import pbl2.sub119.backend.party.common.mapper.PartyHistoryMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.party.create.dto.request.PartyCreateRequest;
+import pbl2.sub119.backend.party.create.event.PartyCreatedEvent;
 import pbl2.sub119.backend.party.create.dto.request.PartyCreateSummaryRequest;
 import pbl2.sub119.backend.party.create.dto.response.PartyCreateResponse;
 import pbl2.sub119.backend.party.create.dto.response.PartyCreateSummaryResponse;
@@ -39,6 +41,7 @@ public class PartyCreateService {
     private final PartyHistoryMapper partyHistoryMapper;
     private final SubProductService subProductService;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     // 파티 생성 전에 화면에서 보여줄 예상 금액과 안내 문구를 계산
     @Transactional(readOnly = true)
@@ -147,6 +150,8 @@ public class PartyCreateService {
                 .build();
 
         partyHistoryMapper.insertHistory(history);
+
+        eventPublisher.publishEvent(new PartyCreatedEvent(party.getId(), party.getProductId()));
 
         return new PartyCreateResponse(
                 party.getId(),
