@@ -71,8 +71,6 @@ public class PartyJoinService {
                 .status(PartyMemberStatus.PENDING)
                 .joinedAt(now)
                 .activatedAt(null)
-                .serviceStartAt(null)
-                .serviceEndAt(null)
                 .leaveReservedAt(null)
                 .leftAt(null)
                 .replacedTargetMemberId(null)

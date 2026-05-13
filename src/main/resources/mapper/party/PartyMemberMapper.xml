@@ -15,8 +15,6 @@
                 javaType="pbl2.sub119.backend.common.enumerated.PartyMemberStatus"/>
         <result property="joinedAt" column="joined_at"/>
         <result property="activatedAt" column="activated_at"/>
-        <result property="serviceStartAt" column="service_start_at"/>
-        <result property="serviceEndAt" column="service_end_at"/>
         <result property="leaveReservedAt" column="leave_reserved_at"/>
         <result property="leftAt" column="left_at"/>
         <result property="replacedTargetMemberId" column="replaced_target_member_id"/>
@@ -30,8 +28,6 @@
         status,
         joined_at,
         activated_at,
-        service_start_at,
-        service_end_at,
         leave_reserved_at,
         left_at,
         replaced_target_member_id
@@ -48,8 +44,6 @@
             status,
             joined_at,
             activated_at,
-            service_start_at,
-            service_end_at,
             leave_reserved_at,
             left_at,
             replaced_target_member_id
@@ -60,8 +54,6 @@
                      #{status},
                      #{joinedAt},
                      #{activatedAt},
-                     #{serviceStartAt},
-                     #{serviceEndAt},
                      #{leaveReservedAt},
                      #{leftAt},
                      #{replacedTargetMemberId}

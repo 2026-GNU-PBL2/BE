@@ -17,7 +17,6 @@ public class SmsMessageTemplateService {
 
             case HOST_PROVISION_REQUIRED -> "이용 정보 등록 필요";
             case HOST_PROVISION_REMINDER -> "이용 정보 등록 기한 안내";
-            case HOST_PROVISION_DELAYED_NOTICE -> "파티장 이용 정보 등록 지연";
             case HOST_PROVISION_TIMEOUT_TERMINATED -> "파티 해체 안내";
 
             case PROVISION_ACCOUNT_SHARED_REQUIRED -> "공유 계정 확인 필요";
@@ -62,14 +61,6 @@ public class SmsMessageTemplateService {
                 "[Submate] %s 이용 정보가 아직 등록되지 않았어요.\n등록 기한까지 %d시간 남았습니다.\n기한 내 미등록 시 파티가 자동 해체됩니다.",
                 productName,
                 remainingHours
-        );
-    }
-
-    // 파티원에게 파티장 지연 안내
-    public String hostProvisionDelayedNotice(final String productName) {
-        return String.format(
-                "[Submate] %s 파티장이 아직 이용 정보를 등록하지 않았어요.\n결제는 아직 진행되지 않았습니다.\n등록이 완료되면 다시 알려드릴게요.",
-                productName
         );
     }
 

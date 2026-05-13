@@ -157,8 +157,6 @@ CREATE TABLE party_member (
                               status VARCHAR(30) NOT NULL,
                               joined_at DATETIME NOT NULL,
                               activated_at DATETIME NULL,
-                              service_start_at DATETIME NULL,
-                              service_end_at DATETIME NULL,
                               leave_reserved_at DATETIME NULL,
                               left_at DATETIME NULL,
                               replaced_target_member_id BIGINT NULL,
