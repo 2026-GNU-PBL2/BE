@@ -118,7 +118,12 @@ public interface BankDocs {
 
     @Operation(
             summary = "연결 계좌 목록 조회",
-            description = "인증 사용자의 연결된 계좌 목록을 조회합니다."
+            description = """
+                    금융결제원 최신 인증 후보(Redis, TTL 10분) 기준으로 계좌 목록을 반환합니다.
+                    - 재인증 후 TTL 이내: 최신 인증 스냅샷(Redis 후보)만 노출되며 과거 인증 계좌는 누적되지 않습니다.
+                    - Redis TTL 만료 또는 캐시 미스: 기존 DB 목록으로 fallback합니다.
+                    - 정산계좌 활성 상태(account_type=SETTLEMENT, is_primary=true)는 POST /bank/settlement 호출 시점에만 확정됩니다.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",

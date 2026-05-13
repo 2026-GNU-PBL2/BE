@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.bankaccounts.client.KftcApiClient;
+import pbl2.sub119.backend.bankaccounts.dto.BankCandidateDto;
 import pbl2.sub119.backend.bankaccounts.dto.KftcAccountRealNameResponse;
 import pbl2.sub119.backend.bankaccounts.dto.KftcTokenResponse;
 import pbl2.sub119.backend.bankaccounts.dto.KftcUserInfoResponse;
@@ -19,6 +20,7 @@ import pbl2.sub119.backend.common.exception.BusinessException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_VERIFICATION_FAILED;
 import static pbl2.sub119.backend.common.error.ErrorCode.BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED;
@@ -34,8 +36,8 @@ public class BankService {
 
     private final BankMapper bankMapper;
     private final KftcApiClient kftcApiClient;
+    private final BankCandidateStore bankCandidateStore;
 
-    @Transactional
     public void registerAccount(Long userId, String code) {
         log.info("KFTC account registration started. userId={}", userId);
 
@@ -44,36 +46,24 @@ public class BankService {
 
         if (userInfo.getResList() == null || userInfo.getResList().isEmpty()) {
             log.warn("KFTC account list is empty. userId={}", userId);
+            bankCandidateStore.save(userId, List.of());
             return;
         }
 
-        int processedCount = 0;
+        List<BankCandidateDto> candidates = userInfo.getResList().stream()
+                .map(dto -> BankCandidateDto.builder()
+                        .fintechUseNum(dto.getFintechUseNum())
+                        .bankTranId(dto.getBankTranId())
+                        .bankName(dto.getBankName())
+                        .accountAlias(dto.getAccountAlias())
+                        .accountNumMasked(dto.getAccountNumMasked())
+                        .accessToken(tokenResponse.getAccessToken())
+                        .refreshToken(tokenResponse.getRefreshToken())
+                        .build())
+                .toList();
 
-        for (KftcUserInfoResponse.KftcAccountDto accountDto : userInfo.getResList()) {
-            BankAccount bankAccount = BankAccount.builder()
-                    .userId(userId)
-                    .bankTranId(accountDto.getBankTranId())
-                    .fintechUseNum(accountDto.getFintechUseNum())
-                    .accessToken(tokenResponse.getAccessToken())
-                    .refreshToken(tokenResponse.getRefreshToken())
-                    .bankName(accountDto.getBankName())
-                    .accountAlias(accountDto.getAccountAlias())
-                    .accountNumMasked(accountDto.getAccountNumMasked())
-                    .balanceAmt(0L)
-                    .build();
-
-            boolean exists = bankMapper.existsByUserIdAndFintechUseNum(userId, accountDto.getFintechUseNum());
-
-            if (exists) {
-                bankMapper.updateBankAccount(bankAccount);
-            } else {
-                bankMapper.saveBankAccount(bankAccount);
-            }
-
-            processedCount++;
-        }
-
-        log.info("KFTC account registration completed. userId={}, accountCount={}", userId, processedCount);
+        bankCandidateStore.save(userId, candidates);
+        log.info("KFTC account candidates cached. userId={}, accountCount={}", userId, candidates.size());
     }
 
     @Transactional
@@ -82,9 +72,17 @@ public class BankService {
             throw new BusinessException(BANK_INVALID_ACCOUNT_TYPE);
         }
 
-        BankAccount connectedAccount = bankMapper.findByUserIdAndFintechUseNum(userId, request.getFintechUseNum());
-        if (connectedAccount == null) {
-            throw new BusinessException(BANK_CONNECTED_ACCOUNT_NOT_FOUND);
+        Optional<BankCandidateDto> candidateOpt = bankCandidateStore.findByFintechUseNum(userId, request.getFintechUseNum());
+
+        if (candidateOpt.isPresent()) {
+            // 최신 인증 경로: Redis 후보에서 KFTC 메타 확보 후 DB row 보장
+            ensureKftcRowExists(userId, candidateOpt.get());
+        } else {
+            // Redis 미스(TTL 만료 등): DB fallback
+            BankAccount connectedAccount = bankMapper.findByUserIdAndFintechUseNum(userId, request.getFintechUseNum());
+            if (connectedAccount == null) {
+                throw new BusinessException(BANK_CONNECTED_ACCOUNT_NOT_FOUND);
+            }
         }
 
         // 기존 활성 정산계좌 비활성화 (account_type/is_primary 초기화)
@@ -112,6 +110,7 @@ public class BankService {
         if (updated != 1) {
             throw new BusinessException(BANK_SETTLEMENT_ACCOUNT_REGISTER_FAILED);
         }
+
         //실명검증 테스트베드
 //        try {
 //            KftcAccountRealNameResponse realNameResponse = kftcApiClient.requestAccountRealName(
@@ -140,6 +139,7 @@ public class BankService {
 //            if (verified) {
 //                bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
 //                log.info("Settlement account verified. userId={}, fintechUseNum={}", userId, request.getFintechUseNum());
+//                bankCandidateStore.remove(userId);
 //                return;
 //            }
 //
@@ -177,6 +177,7 @@ public class BankService {
 //            throw new BusinessException(BANK_ACCOUNT_VERIFICATION_REQUEST_FAILED);
 //        }
         bankMapper.updateVerificationSuccess(userId, request.getFintechUseNum());
+        bankCandidateStore.remove(userId);
     }
 
     @Transactional
@@ -190,6 +191,13 @@ public class BankService {
 
     @Transactional(readOnly = true)
     public List<BankAccountSummaryResponse> getAccounts(Long userId) {
+        List<BankCandidateDto> candidates = bankCandidateStore.findAll(userId);
+        if (candidates != null) {
+            return candidates.stream()
+                    .map(BankAccountSummaryResponse::fromCandidate)
+                    .toList();
+        }
+        log.warn("Bank candidate cache miss — falling back to DB. userId={}. Shown accounts may not reflect latest KFTC auth.", userId);
         return bankMapper.findAllByUserId(userId).stream()
                 .map(BankAccountSummaryResponse::from)
                 .toList();
@@ -202,6 +210,25 @@ public class BankService {
             throw new BusinessException(BANK_PRIMARY_ACCOUNT_NOT_FOUND);
         }
         return PrimaryBankAccountResponse.from(primary);
+    }
+
+    private void ensureKftcRowExists(Long userId, BankCandidateDto candidate) {
+        BankAccount kftcRow = BankAccount.builder()
+                .userId(userId)
+                .fintechUseNum(candidate.getFintechUseNum())
+                .bankTranId(candidate.getBankTranId())
+                .accessToken(candidate.getAccessToken())
+                .refreshToken(candidate.getRefreshToken())
+                .bankName(candidate.getBankName())
+                .accountAlias(candidate.getAccountAlias())
+                .accountNumMasked(candidate.getAccountNumMasked())
+                .balanceAmt(0L)
+                .build();
+        if (bankMapper.existsByUserIdAndFintechUseNum(userId, candidate.getFintechUseNum())) {
+            bankMapper.updateBankAccount(kftcRow);
+        } else {
+            bankMapper.saveBankAccount(kftcRow);
+        }
     }
 
     private String normalizeName(String name) {
