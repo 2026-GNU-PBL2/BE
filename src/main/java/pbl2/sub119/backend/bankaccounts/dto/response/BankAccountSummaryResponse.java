@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pbl2.sub119.backend.bankaccounts.dto.BankCandidateDto;
 import pbl2.sub119.backend.bankaccounts.entity.BankAccount;
 import pbl2.sub119.backend.bankaccounts.enums.AccountType;
 import pbl2.sub119.backend.bankaccounts.enums.VerificationStatus;
@@ -48,6 +49,19 @@ public class BankAccountSummaryResponse {
                 bankAccount.getAccountType(),
                 bankAccount.getIsPrimary(),
                 bankAccount.getVerificationStatus()
+        );
+    }
+
+    public static BankAccountSummaryResponse fromCandidate(BankCandidateDto candidate) {
+        return new BankAccountSummaryResponse(
+                null,
+                candidate.getFintechUseNum(),
+                candidate.getBankName(),
+                candidate.getAccountAlias(),
+                candidate.getAccountNumMasked(),
+                null,
+                null,
+                null
         );
     }
 }

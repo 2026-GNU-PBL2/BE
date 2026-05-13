@@ -77,6 +77,12 @@ public interface BankDocs {
                     - 기존 활성 정산계좌(account_type=SETTLEMENT, is_primary=true)가 비활성화되고, \
                     선택한 계좌 1건만 활성 정산계좌로 확정됩니다. 나머지 연결 계좌 row는 유지됩니다.
                     - 전체 처리는 단일 트랜잭션 내에서 원자적으로 수행됩니다.
+
+                    [캐시 miss 복구 경로] (등록 보장 전용)
+                    - Redis 후보 캐시(10분) 만료 시: 인증 토큰 캐시(45분)로 KFTC 재조회 후 자동 복구.
+                    - KFTC 재조회에서 해당 계좌를 찾으면 등록 진행.
+                    - 인증 토큰 만료 또는 KFTC에 해당 계좌 없음: 401(BANK008) 반환. 재인증 필요.
+                    - 등록 성공 시 해당 계좌가 GET /bank/accounts 조회 가능 목록에 자동 반영됩니다.
                     """
     )
     @ApiResponses(value = {
@@ -84,11 +90,9 @@ public interface BankDocs {
                     content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 또는 계좌 검증 실패 (BANK002, BANK004)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "인증 실패",
+            @ApiResponse(responseCode = "401", description = "인증 실패 또는 KFTC 인증 만료 — 재인증 필요 (BANK008)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "연결 계좌 없음 (BANK001)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "등록/검증 요청 실패 (BANK003, BANK005)",
+            @ApiResponse(responseCode = "500", description = "등록/KFTC 연결 요청 실패 (BANK003, BANK005, BANK007)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     String registerSettlementAccount(
@@ -118,7 +122,13 @@ public interface BankDocs {
 
     @Operation(
             summary = "연결 계좌 목록 조회",
-            description = "인증 사용자의 연결된 계좌 목록을 조회합니다."
+            description = """
+                    활성 정산계좌 + POST /bank/settlement 등록 완료 계좌만 노출합니다. (표시 전용 — 엄격)
+                    - 활성 정산계좌(account_type=SETTLEMENT, is_primary=true)는 항상 포함됩니다.
+                    - 이번 인증 후보 중 POST /bank/settlement 에 성공한 계좌만 추가로 포함됩니다.
+                    - KFTC 인증 후보 전체는 노출하지 않습니다. 레거시·미등록 후보는 항상 제외됩니다.
+                    - 재인증 직후라도 POST /bank/settlement 미수행 계좌는 목록에 표시되지 않습니다.
+                    """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
