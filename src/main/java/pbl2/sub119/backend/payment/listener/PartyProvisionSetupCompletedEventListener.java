@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.party.event.PartyProvisionSetupCompletedEvent;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
@@ -44,6 +46,11 @@ public class PartyProvisionSetupCompletedEventListener {
         final PartyCycle partyCycle = initialPaymentCycleService.createInitialCycle(partyId);
         log.info("파티 결제일 확정 완료. partyId={}, partyCycleId={}", partyId, partyCycle.getId());
 
-        eventPublisher.publishEvent(new PaymentExecutionRequestedEvent(partyId, partyCycle.getId()));
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                eventPublisher.publishEvent(new PaymentExecutionRequestedEvent(partyId, partyCycle.getId()));
+            }
+        });
     }
 }
