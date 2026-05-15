@@ -13,6 +13,7 @@ public class SmsMessageTemplateService {
             case PAYMENT_SUCCEEDED -> "결제 완료";
             case PAYMENT_FAILED -> "결제 실패";
             case SETTLEMENT_COMPLETED -> "정산 완료";
+            case SETTLEMENT_SKIPPED_PAYMENT_FAILED -> "정산 미진행 안내";
             case TEST_CARD_PAYMENT_NOTICE -> "카드 확인 결제 안내";
 
             case HOST_PROVISION_REQUIRED -> "이용 정보 등록 필요";
@@ -132,6 +133,14 @@ public class SmsMessageTemplateService {
     public String settlementCompleted(final String productName) {
         return String.format(
                 "[Submate] %s 파티 정산이 완료됐어요.\n정산금, 정산일, 입금 계좌는 웹에서 확인해주세요.",
+                productName
+        );
+    }
+
+    // 결제 실패로 인한 정산 미진행
+    public String settlementSkippedPaymentFailed(final String productName) {
+        return String.format(
+                "[Submate] %s 이번 회차는 일부 결제 실패로 정산이 진행되지 않았습니다.\n자세한 내용은 웹에서 확인해주세요.",
                 productName
         );
     }
