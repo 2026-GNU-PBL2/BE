@@ -12,10 +12,12 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.notification.event.event.PartyMatchedEvent;
+import pbl2.sub119.backend.notification.event.event.SettlementSkippedPaymentFailedEvent;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PartyCyclePaymentCompletedEvent;
+import pbl2.sub119.backend.payment.event.PartyCyclePaymentFailedEvent;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 
@@ -54,6 +56,27 @@ public class PartyCycleStateEventListener {
         }
 
         eventPublisher.publishEvent(new SettlementRequestedEvent(event.partyId(), event.partyCycleId()));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onPaymentFailed(PartyCyclePaymentFailedEvent event) {
+        log.info("결제 실패 → 정산 미진행 알림 발행. partyId={}, partyCycleId={}", event.partyId(), event.partyCycleId());
+
+        final Long hostUserId = partyMemberMapper.findMembersByPartyId(event.partyId())
+                .stream()
+                .filter(m -> m.getRole() == PartyRole.HOST)
+                .map(m -> m.getUserId())
+                .findFirst()
+                .orElse(null);
+
+        if (hostUserId == null) {
+            log.warn("파티장을 찾을 수 없어 정산 미진행 알림 미발행. partyId={}", event.partyId());
+            return;
+        }
+
+        eventPublisher.publishEvent(
+                new SettlementSkippedPaymentFailedEvent(event.partyId(), event.partyCycleId(), hostUserId));
     }
 
     private void closePreviousCycle(final Long partyId, final int currentCycleNo) {

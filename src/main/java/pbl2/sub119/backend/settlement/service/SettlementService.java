@@ -3,10 +3,12 @@ package pbl2.sub119.backend.settlement.service;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.SettlementStatus;
+import pbl2.sub119.backend.notification.event.event.SettlementCompletedEvent;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
@@ -26,6 +28,7 @@ public class SettlementService {
     private final PointWalletMapper pointWalletMapper;
     private final PartyMapper partyMapper;
     private final PartyCycleMapper partyCycleMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void process(Long partyId, Long partyCycleId) {
@@ -106,5 +109,7 @@ public class SettlementService {
 
         log.info("정산 적립 완료. partyId={}, partyCycleId={}, hostUserId={}, amount={}",
                 partyId, partyCycleId, party.getHostUserId(), totalAmount);
+
+        eventPublisher.publishEvent(new SettlementCompletedEvent(partyId, partyCycleId, party.getHostUserId()));
     }
 }

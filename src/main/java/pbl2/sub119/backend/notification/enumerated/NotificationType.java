@@ -10,6 +10,7 @@ public enum NotificationType {
     PAYMENT_SUCCEEDED,
     PAYMENT_FAILED,
     SETTLEMENT_COMPLETED,
+    SETTLEMENT_SKIPPED_PAYMENT_FAILED,
     TEST_CARD_PAYMENT_NOTICE,
 
     // 파티장 provision

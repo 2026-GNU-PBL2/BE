@@ -16,6 +16,8 @@ import pbl2.sub119.backend.payment.dto.PaymentChargeTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.entity.PartyCycleMemberPayment;
 import pbl2.sub119.backend.payment.enumerated.MemberPaymentStatus;
+import pbl2.sub119.backend.notification.event.event.PaymentFailedEvent;
+import pbl2.sub119.backend.notification.event.event.PaymentSucceededEvent;
 import pbl2.sub119.backend.payment.event.PartyCyclePaymentCompletedEvent;
 import pbl2.sub119.backend.payment.event.PartyCyclePaymentFailedEvent;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMemberPaymentMapper;
@@ -91,6 +93,11 @@ public class AutoPaymentService {
                         partyCycleId, target.getMemberId(),
                         response.paymentKey(), LocalDateTime.now());
 
+                registerAfterCommit(() ->
+                        eventPublisher.publishEvent(
+                                new PaymentSucceededEvent(partyId, partyCycleId, target.getUserId()))
+                );
+
             } catch (Exception e) {
                 log.error("자동결제 실패. partyId={}, partyCycleId={}, memberId={}",
                         partyId, partyCycleId, target.getMemberId(), e);
@@ -98,6 +105,11 @@ public class AutoPaymentService {
                 memberPaymentMapper.markFailed(
                         partyCycleId, target.getMemberId(),
                         e.getMessage(), e.getClass().getSimpleName(), LocalDateTime.now());
+
+                registerAfterCommit(() ->
+                        eventPublisher.publishEvent(
+                                new PaymentFailedEvent(partyId, partyCycleId, target.getUserId()))
+                );
 
                 failCycleAndPublish(partyId, partyCycleId, "PAYMENT_API_FAILED");
                 return;

@@ -58,6 +58,10 @@ public class WebMessageTemplateService {
         return String.format("%s 파티 정산이 완료됐어요.", productName);
     }
 
+    public String settlementSkippedPaymentFailed(final String productName) {
+        return String.format("%s 이번 회차는 일부 결제 실패로 정산이 진행되지 않았어요.", productName);
+    }
+
     public String paymentSucceeded(final String productName) {
         return String.format("%s 파티 결제가 완료됐어요.", productName);
     }

@@ -20,6 +20,7 @@ import pbl2.sub119.backend.notification.event.event.PartyTerminatedEvent;
 import pbl2.sub119.backend.notification.event.event.PaymentFailedEvent;
 import pbl2.sub119.backend.notification.event.event.PaymentSucceededEvent;
 import pbl2.sub119.backend.notification.event.event.SettlementCompletedEvent;
+import pbl2.sub119.backend.notification.event.event.SettlementSkippedPaymentFailedEvent;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
 import pbl2.sub119.backend.notification.service.WebMessageTemplateService;
@@ -249,6 +250,20 @@ public class NotificationEventListener {
                         webTemplate.hostProvisionTimeoutTerminatedForMember(productName));
             }
         }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onSettlementSkippedPaymentFailed(final SettlementSkippedPaymentFailedEvent event) {
+        final Party party = partyMapper.findById(event.partyId());
+        if (party == null) {
+            return;
+        }
+
+        final String productName = resolveProductName(party.getProductId());
+        final String title = smsTemplate.getTitle(NotificationType.SETTLEMENT_SKIPPED_PAYMENT_FAILED);
+        sendSafely(event.hostUserId(), event.partyId(), NotificationType.SETTLEMENT_SKIPPED_PAYMENT_FAILED, title,
+                smsTemplate.settlementSkippedPaymentFailed(productName),
+                webTemplate.settlementSkippedPaymentFailed(productName));
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
