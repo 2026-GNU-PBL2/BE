@@ -90,13 +90,14 @@ public class PartyProvisionController implements PartyProvisionDocs {
 
     // 파티장이 이용 재설정
     @Override
-    public ResponseEntity<Void> resetProvision(
+    public ResponseEntity<PartyProvisionSetupResponse> resetProvision(
             @Auth final Accessor accessor,
             @PathVariable final Long partyId,
             @RequestBody @Valid final PartyProvisionResetRequest request
     ) {
-        partyProvisionCommandService.resetProvision(accessor.getUserId(), partyId, request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(
+                partyProvisionCommandService.resetProvision(accessor.getUserId(), partyId, request)
+        );
     }
 
     // 본인에게 필요한 이용 정보 조회

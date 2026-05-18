@@ -121,13 +121,15 @@ public class PartyProvisionCommandService {
         );
 
         if (isFirstRegistration) {
-            // 최초 등록: 멤버 rows 초기 생성 + 파티원 알림 발행
+            // 최초 등록: 멤버 rows 초기 생성
             initializeMembers(existingProvision.getId(), partyId, party.getHostUserId(), now);
-            publishProvisionRequiredEvent(partyId, existingProvision.getId(), party.getHostUserId(), request.provisionType());
         } else {
             // 재등록: 기존 멤버 rows 리셋
             resetMemberRows(existingProvision.getId(), partyId, party.getHostUserId(), now);
         }
+
+        // 최초 등록 및 재등록 모두 파티원에게 이용 정보 알림 발행
+        publishProvisionRequiredEvent(partyId, existingProvision.getId(), party.getHostUserId(), request.provisionType());
 
         publishProvisionSetupCompletedEvent(partyId);
 
@@ -250,7 +252,7 @@ public class PartyProvisionCommandService {
     }
 
     // 파티장이 provision 재설정
-    public void resetProvision(
+    public PartyProvisionSetupResponse resetProvision(
             final Long userId,
             final Long partyId,
             final PartyProvisionResetRequest request
@@ -274,12 +276,20 @@ public class PartyProvisionCommandService {
         partyProvisionMemberMapper.markAllResetRequired(
                 provision.getId(),
                 ProvisionMemberStatus.RESET_REQUIRED,
-                request.provisionMessage(),
+                null,
                 now,
                 now
         );
 
         restoreHostActive(partyId, party.getHostUserId(), now);
+
+        return new PartyProvisionSetupResponse(
+                provision.getId(),
+                partyId,
+                provision.getOperationType(),
+                ProvisionStatus.RESET_REQUIRED,
+                partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId())
+        );
     }
 
     // 현재 provision 대상 멤버 초기 생성

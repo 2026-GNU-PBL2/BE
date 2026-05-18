@@ -195,46 +195,29 @@ public interface PartyProvisionDocs {
     @Operation(
             summary = "파티 이용 재설정",
             description = """
-                    파티장이 초대 링크나 공유계정 정보를 다시 설정해야 할 때 사용합니다.
+                    파티장이 새 이용 정보를 등록하기 전에 파티원 확인을 잠그는 용도로 사용합니다.
 
-                    예를 들어 이런 경우에 사용할 수 있습니다.
-                    - 공유 계정 이메일 변경
-                    - 공유 계정 비밀번호 변경
-                    - 초대 링크 재발급
-                    - 이용 안내 문구 변경
+                    이 API를 호출하면 기존 파티원의 확인 상태가 RESET_REQUIRED 로 전환되어
+                    파티장이 새 이용 정보를 등록하기 전까지 파티원이 이용 확인을 진행할 수 없습니다.
 
-                    이 API를 호출하면 기존 파티원은 다시 확인 절차를 진행해야 합니다.
-
-                    request body 입력 안내
-                    - provisionMessage 는 재설정 사유 또는 파티원에게 보여줄 안내 메시지입니다.
+                    일반적인 재설정 흐름
+                    1. POST /provision/reset 호출 → 파티원 확인 잠금 (RESET_REQUIRED)
+                    2. POST /provision 호출 → 새 이용 정보 등록 → 파티원에게 자동 알림 발송
 
                     상태값 안내
-                    - 기존 ACTIVE 멤버도 RESET_REQUIRED 로 변경될 수 있습니다.
-                    - 이후 파티원은 다시 이용 정보를 확인해야 합니다.
+                    - 기존 ACTIVE 멤버도 RESET_REQUIRED 로 변경됩니다.
+                    - 이후 파티원은 파티장이 새 이용 정보를 등록한 뒤에야 확인 절차를 진행할 수 있습니다.
                     """,
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = PartyProvisionResetRequest.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "이용 재설정 요청 예시",
-                                            summary = "공유 계정 또는 링크를 다시 바꾼 경우",
-                                            value = """
-                                                    {
-                                                      "provisionMessage": "공유 계정 정보가 변경되어 다시 확인해 주세요."
-                                                    }
-                                                    """
-                                    )
-                            }
-                    )
-            ),
             responses = {
-                    @ApiResponse(responseCode = "200", description = "이용 재설정 성공")
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "이용 재설정 성공",
+                            content = @Content(schema = @Schema(implementation = PartyProvisionSetupResponse.class))
+                    )
             }
     )
     @PostMapping("/{partyId}/provision/reset")
-    ResponseEntity<Void> resetProvision(
+    ResponseEntity<PartyProvisionSetupResponse> resetProvision(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId,
             @RequestBody @Valid PartyProvisionResetRequest request
