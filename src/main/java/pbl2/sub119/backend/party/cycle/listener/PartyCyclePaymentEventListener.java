@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import pbl2.sub119.backend.payment.event.PartyCyclePaymentFailedEvent;
 
 @Slf4j
 @Component
+@Order(2)
 @RequiredArgsConstructor
 public class PartyCyclePaymentEventListener {
 

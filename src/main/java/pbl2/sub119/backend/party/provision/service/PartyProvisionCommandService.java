@@ -173,9 +173,11 @@ public class PartyProvisionCommandService {
                 now
         );
 
-        // 현재 호스트가 기존 provision 멤버였던 경우에만 ACTIVE 유지
+        // 기존 provision에서 HOST(파티장)로 등록된 유저가 현재 파티장과 동일한 경우에만 ACTIVE 유지
+        // 새 파티장이 기존엔 일반 멤버였다면 RESET_REQUIRED 유지 (파티장 역할로 재등록 필요)
         final boolean keepCurrentHostActive = existingProvisionMembers.stream()
-                .anyMatch(member -> member.getUserId().equals(party.getHostUserId()));
+                .anyMatch(member -> member.getUserId().equals(party.getHostUserId())
+                        && "파티장".equals(member.getOperationMessage()));
 
         resetMemberRows(provision.getId(), partyId, party.getHostUserId(), now);
 
@@ -189,6 +191,11 @@ public class PartyProvisionCommandService {
 
         if (keepCurrentHostActive) {
             restoreHostActive(partyId, party.getHostUserId(), now);
+        }
+
+        // 초대코드 방식 파티: provision 초기화 시 파티원에게 이용 정보 변경 안내
+        if (provision.getOperationType() == OperationType.INVITE_CODE) {
+            notifyInviteCodeMembersOnReset(partyId, provision.getId(), party.getHostUserId());
         }
     }
 
@@ -470,6 +477,31 @@ public class PartyProvisionCommandService {
         }
 
         return cryptoUtil.encrypt(request.sharedAccountPassword());
+    }
+
+    // 초대코드 방식 파티에서 provision RESET_REQUIRED 전환 시 파티원에게 안내 이벤트 발행
+    private void notifyInviteCodeMembersOnReset(
+            final Long partyId,
+            final Long provisionId,
+            final Long hostUserId
+    ) {
+        final List<Long> memberUserIds = partyMemberMapper
+                .findProvisionTargetMembersByPartyId(partyId)
+                .stream()
+                .filter(m -> !m.getUserId().equals(hostUserId))
+                .map(PartyMember::getUserId)
+                .toList();
+
+        if (memberUserIds.isEmpty()) {
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                eventPublisher.publishEvent(new InviteLinkRequiredEvent(partyId, provisionId, memberUserIds));
+            }
+        });
     }
 
     // provision 설정 완료 이벤트 발행 - 리스너가 @TransactionalEventListener(AFTER_COMMIT)이므로 트랜잭션 커밋 후 실행 보장

@@ -161,7 +161,7 @@ public class PartyLeaveService {
         }
     }
 
-    // 파티장이 탈퇴 예약 멤버 목록 조회
+    // 파티 소속 멤버(ACTIVE/LEAVE_RESERVED/SWITCH_WAITING)가 탈퇴 예약 목록 조회 가능
     @Transactional(readOnly = true)
     public List<PartyLeaveReservationMemberResponse> getLeaveReservations(
             final Long partyId,
@@ -172,8 +172,12 @@ public class PartyLeaveService {
             throw new PartyException(ErrorCode.PARTY_NOT_FOUND);
         }
 
-        if (!party.getHostUserId().equals(requesterUserId)) {
-            throw new PartyException(ErrorCode.PARTY_HOST_ONLY);
+        final PartyMember requester = partyMemberMapper.findByPartyIdAndUserId(partyId, requesterUserId);
+        if (requester == null
+                || (requester.getStatus() != PartyMemberStatus.ACTIVE
+                    && requester.getStatus() != PartyMemberStatus.LEAVE_RESERVED
+                    && requester.getStatus() != PartyMemberStatus.SWITCH_WAITING)) {
+            throw new PartyException(ErrorCode.PARTY_LEAVE_FORBIDDEN);
         }
 
         return partyMemberMapper.findLeaveReservedMembers(partyId)

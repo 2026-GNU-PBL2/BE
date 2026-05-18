@@ -201,4 +201,15 @@
         WHERE id = #{memberId}
     </update>
 
+    <!-- 결제일 D-1: SWITCH_WAITING HOST가 있고 다음 결제일(billing_due_at + 1개월)이 내일인 파티 -->
+    <select id="findPartiesWithSwitchWaitingHostDueTomorrow" resultType="java.lang.Long">
+        SELECT DISTINCT pm.party_id
+        FROM party_member pm
+        INNER JOIN party_cycle pc ON pm.party_id = pc.party_id
+        WHERE pm.status = 'SWITCH_WAITING'
+          AND pm.role = 'HOST'
+          AND pc.status = 'RUNNING'
+          AND DATE(DATE_ADD(pc.billing_due_at, INTERVAL 1 MONTH)) = DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+    </select>
+
 </mapper>

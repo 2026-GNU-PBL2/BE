@@ -16,6 +16,7 @@ import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
 import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 import pbl2.sub119.backend.payment.service.InitialPaymentCycleService;
 import pbl2.sub119.backend.payment.service.PartyPaymentReadinessService;
+import pbl2.sub119.backend.payment.service.RecurringPaymentService;
 
 @Slf4j
 @Component
@@ -24,6 +25,7 @@ public class PartyProvisionSetupCompletedEventListener {
 
     private final PartyPaymentReadinessService partyPaymentReadinessService;
     private final InitialPaymentCycleService initialPaymentCycleService;
+    private final RecurringPaymentService recurringPaymentService;
     private final PartyCycleMapper partyCycleMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -31,6 +33,9 @@ public class PartyProvisionSetupCompletedEventListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handle(PartyProvisionSetupCompletedEvent event) {
         final Long partyId = event.partyId();
+
+        // provision 완료 후 결제일이 지난 반복 회차가 있으면 지연 결제 트리거
+        recurringPaymentService.triggerDelayedPaymentIfDue(partyId);
 
         if (!partyPaymentReadinessService.isReady(partyId)) {
             log.info("파티 결제 준비 미완료. partyId={}", partyId);

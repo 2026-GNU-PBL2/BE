@@ -5,6 +5,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 
 @Slf4j
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class PartyCycleStateEventListener {
 

@@ -60,6 +60,61 @@ public class PartyCycleService {
         return partyMemberMapper.countRecurringBillableMembers(partyId);
     }
 
+    // D-1 파티장 사전 활성화: SWITCH_WAITING HOST만 처리 (결제 전날 호출)
+    // 기존 LEAVE_RESERVED HOST를 LEFT 처리하고, 신규 HOST를 ACTIVE로 사전 활성화한다.
+    @Transactional
+    public void activateSwitchWaitingHost(final Long partyId) {
+        final List<PartyMember> switchWaitingMembers = partyMemberMapper.findSwitchWaitingMembers(partyId);
+        final PartyMember newHostMember = switchWaitingMembers.stream()
+                .filter(m -> m.getRole() == PartyRole.HOST)
+                .findFirst()
+                .orElse(null);
+
+        if (newHostMember == null) {
+            return;
+        }
+
+        // 기존 LEAVE_RESERVED HOST → LEFT
+        final List<PartyMember> leaveReservedMembers = partyMemberMapper.findLeaveReservedMembers(partyId);
+        for (final PartyMember member : leaveReservedMembers) {
+            if (member.getRole() == PartyRole.HOST) {
+                partyMemberMapper.updateStatusAndLeftAt(member.getId(), PartyMemberStatus.LEFT);
+                partyHistoryService.saveHistory(
+                        partyId,
+                        member.getId(),
+                        PartyHistoryEventType.MEMBER_LEFT,
+                        "{\"userId\":" + member.getUserId() + ",\"role\":\"HOST\"}",
+                        member.getUserId()
+                );
+            }
+        }
+
+        // 신규 HOST → ACTIVE
+        partyMemberMapper.updateStatusAndActivatedAt(newHostMember.getId(), PartyMemberStatus.ACTIVE);
+        partyMapper.updateHostUserId(partyId, newHostMember.getUserId());
+
+        partyHistoryService.saveHistory(
+                partyId,
+                newHostMember.getId(),
+                PartyHistoryEventType.MEMBER_JOINED,
+                "{\"userId\":" + newHostMember.getUserId() + ",\"status\":\"ACTIVE\"}",
+                newHostMember.getUserId()
+        );
+
+        // provision 멤버 구성 변경 반영 (provision RESET_REQUIRED)
+        partyProvisionCommandService.handleCycleStart(partyId);
+
+        // 신규 파티장에게 OTT 이용 정보 등록 안내
+        final List<Long> memberUserIds = partyMemberMapper
+                .findProvisionTargetMembersByPartyId(partyId)
+                .stream()
+                .filter(m -> !m.getUserId().equals(newHostMember.getUserId()))
+                .map(pbl2.sub119.backend.party.common.entity.PartyMember::getUserId)
+                .toList();
+
+        eventPublisher.publishEvent(new HostChangedEvent(partyId, newHostMember.getUserId(), memberUserIds));
+    }
+
     private Party getPartyForUpdate(final Long partyId) {
         final Party party = partyMapper.findByIdForUpdate(partyId);
         if (party == null) {
