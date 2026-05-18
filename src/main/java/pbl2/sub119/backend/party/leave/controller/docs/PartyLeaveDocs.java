@@ -82,10 +82,13 @@ public interface PartyLeaveDocs {
     @Operation(
             summary = "탈퇴 예약 멤버 목록 조회",
             description = """
-                    파티장이 현재 탈퇴 예약된 멤버 목록을 조회합니다.
+                    현재 파티에 속한 멤버가 탈퇴 예약된 멤버 목록을 조회합니다.
+
+                    접근 가능 대상
+                    - ACTIVE, LEAVE_RESERVED, SWITCH_WAITING 상태인 파티 멤버 모두 조회할 수 있습니다.
 
                     이 API는 아래 화면에서 사용합니다.
-                    - 파티장 파티 관리 화면
+                    - 파티 관리 화면 (파티장 및 파티원 공통)
                     - 다음 회차에 결원이 발생할 멤버를 확인하는 화면
 
                     상태값 안내

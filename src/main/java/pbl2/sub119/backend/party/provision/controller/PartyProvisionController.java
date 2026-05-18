@@ -11,15 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.party.provision.controller.docs.PartyProvisionDocs;
-import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionDashboardResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMeResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionMemberResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionPasswordRevealResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
-import pbl2.sub119.backend.party.provision.dto.response.PartyRecruitStatusResponse;
+import pbl2.sub119.backend.party.provision.dto.response.*;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionQueryService;
 import pbl2.sub119.backend.party.provision.service.PartyRecruitStatusQueryService;
@@ -43,7 +36,7 @@ public class PartyProvisionController implements PartyProvisionDocs {
         );
     }
 
-    // 파티장이 provision 정보를 최초 등록하거나 다시 저장
+    // 파티장이 provision 정보를 최초 등록하거나 재설정 (공유계정/초대링크 변경 포함)
     @Override
     public ResponseEntity<PartyProvisionSetupResponse> setupProvision(
             @Auth final Accessor accessor,
@@ -86,17 +79,6 @@ public class PartyProvisionController implements PartyProvisionDocs {
         return ResponseEntity.ok(
                 partyProvisionCommandService.confirmProvision(accessor.getUserId(), partyId)
         );
-    }
-
-    // 파티장이 이용 재설정
-    @Override
-    public ResponseEntity<Void> resetProvision(
-            @Auth final Accessor accessor,
-            @PathVariable final Long partyId,
-            @RequestBody @Valid final PartyProvisionResetRequest request
-    ) {
-        partyProvisionCommandService.resetProvision(accessor.getUserId(), partyId, request);
-        return ResponseEntity.ok().build();
     }
 
     // 본인에게 필요한 이용 정보 조회

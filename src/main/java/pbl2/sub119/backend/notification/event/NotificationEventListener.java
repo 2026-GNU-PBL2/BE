@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
 import pbl2.sub119.backend.notification.event.event.HostChangedEvent;
+import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
 import pbl2.sub119.backend.notification.event.event.PartyRecruitmentCompletedEvent;
 import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
@@ -72,6 +73,22 @@ public class NotificationEventListener {
         sendSafely(event.hostUserId(), event.partyId(), NotificationType.HOST_PARTY_MATCHED, hostTitle,
                 smsTemplate.hostPartyMatched(productName),
                 webTemplate.hostPartyMatched(productName));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onHostProvisionDelayedNotice(final HostProvisionDelayedNoticeEvent event) {
+        final Party party = partyMapper.findById(event.partyId());
+        if (party == null) {
+            return;
+        }
+
+        final String productName = resolveProductName(party.getProductId());
+        final String title = smsTemplate.getTitle(NotificationType.HOST_PROVISION_DELAYED_NOTICE);
+        for (final Long userId : event.memberUserIds()) {
+            sendSafely(userId, event.partyId(), NotificationType.HOST_PROVISION_DELAYED_NOTICE, title,
+                    smsTemplate.hostProvisionDelayedNoticeForMember(productName),
+                    webTemplate.hostProvisionDelayedNoticeForMember(productName));
+        }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)

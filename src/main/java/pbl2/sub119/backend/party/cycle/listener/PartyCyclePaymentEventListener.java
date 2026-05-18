@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class PartyCyclePaymentEventListener {
     private final PartyMemberMapper partyMemberMapper;
     private final ObjectMapper objectMapper;
 
+    @Order(2)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPaymentCompleted(PartyCyclePaymentCompletedEvent event) {
@@ -47,6 +49,7 @@ public class PartyCyclePaymentEventListener {
         }
     }
 
+    @Order(2)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPaymentFailed(PartyCyclePaymentFailedEvent event) {
