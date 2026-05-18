@@ -20,6 +20,7 @@ import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
@@ -46,7 +47,7 @@ public class PartyProvisionCommandService {
     private final CryptoUtil cryptoUtil;
     private final ApplicationEventPublisher eventPublisher;
 
-    // 파티장이 provision 정보 최초 등록 또는 재설정 (공유계정/초대링크 변경 시에도 이 메서드 사용)
+    // 파티장이 provision 정보 최초 등록 또는 다시 저장
     public PartyProvisionSetupResponse setupProvision(
             final Long userId,
             final Long partyId,
@@ -120,15 +121,13 @@ public class PartyProvisionCommandService {
         );
 
         if (isFirstRegistration) {
-            // 최초 등록: 멤버 rows 초기 생성
+            // 최초 등록: 멤버 rows 초기 생성 + 파티원 알림 발행
             initializeMembers(existingProvision.getId(), partyId, party.getHostUserId(), now);
+            publishProvisionRequiredEvent(partyId, existingProvision.getId(), party.getHostUserId(), request.provisionType());
         } else {
             // 재등록: 기존 멤버 rows 리셋
             resetMemberRows(existingProvision.getId(), partyId, party.getHostUserId(), now);
         }
-
-        // 최초 등록 및 재등록 모두 파티원에게 이용 정보 알림 발행
-        publishProvisionRequiredEvent(partyId, existingProvision.getId(), party.getHostUserId(), request.provisionType());
 
         publishProvisionSetupCompletedEvent(partyId);
 
@@ -174,11 +173,9 @@ public class PartyProvisionCommandService {
                 now
         );
 
-        // 기존 provision에서 HOST(파티장)로 등록된 유저가 현재 파티장과 동일한 경우에만 ACTIVE 유지
-        // 새 파티장이 기존엔 일반 멤버였다면 RESET_REQUIRED 유지 (파티장 역할로 재등록 필요)
+        // 현재 호스트가 기존 provision 멤버였던 경우에만 ACTIVE 유지
         final boolean keepCurrentHostActive = existingProvisionMembers.stream()
-                .anyMatch(member -> member.getUserId().equals(party.getHostUserId())
-                        && "파티장".equals(member.getOperationMessage()));
+                .anyMatch(member -> member.getUserId().equals(party.getHostUserId()));
 
         resetMemberRows(provision.getId(), partyId, party.getHostUserId(), now);
 
@@ -190,18 +187,8 @@ public class PartyProvisionCommandService {
                 now
         );
 
-        // markAllResetRequired가 호스트 행의 operationMessage("파티장")도 덮어쓰므로 복원
-        // 복원하지 않으면 다음 사이클에서 keepCurrentHostActive가 항상 false가 되어 불필요한 RESET_REQUIRED 유발
-        partyProvisionMemberMapper.restoreOperationMessage(
-                provision.getId(), party.getHostUserId(), "파티장", now);
-
         if (keepCurrentHostActive) {
             restoreHostActive(partyId, party.getHostUserId(), now);
-        }
-
-        // 초대코드 방식 파티: provision 초기화 시 파티원에게 이용 정보 변경 안내
-        if (provision.getOperationType() == OperationType.INVITE_CODE) {
-            notifyInviteCodeMembersOnReset(partyId, provision.getId(), party.getHostUserId());
         }
     }
 
@@ -253,6 +240,39 @@ public class PartyProvisionCommandService {
                 updated.getConfirmedAt(),
                 updated.getActivatedAt()
         );
+    }
+
+    // 파티장이 provision 재설정
+    public void resetProvision(
+            final Long userId,
+            final Long partyId,
+            final PartyProvisionResetRequest request
+    ) {
+        final Party party = getParty(partyId);
+
+        // 파티장만 재설정 가능
+        validateHost(userId, party);
+
+        final PartyProvision provision = getProvision(partyId);
+        final LocalDateTime now = LocalDateTime.now();
+
+        partyProvisionMapper.markResetRequired(
+                provision.getId(),
+                ProvisionStatus.RESET_REQUIRED,
+                now,
+                now
+        );
+
+        // 일괄 RESET_REQUIRED 후 현재 호스트만 ACTIVE 복원
+        partyProvisionMemberMapper.markAllResetRequired(
+                provision.getId(),
+                ProvisionMemberStatus.RESET_REQUIRED,
+                request.provisionMessage(),
+                now,
+                now
+        );
+
+        restoreHostActive(partyId, party.getHostUserId(), now);
     }
 
     // 현재 provision 대상 멤버 초기 생성
@@ -450,31 +470,6 @@ public class PartyProvisionCommandService {
         }
 
         return cryptoUtil.encrypt(request.sharedAccountPassword());
-    }
-
-    // 초대코드 방식 파티에서 provision RESET_REQUIRED 전환 시 파티원에게 안내 이벤트 발행
-    private void notifyInviteCodeMembersOnReset(
-            final Long partyId,
-            final Long provisionId,
-            final Long hostUserId
-    ) {
-        final List<Long> memberUserIds = partyMemberMapper
-                .findProvisionTargetMembersByPartyId(partyId)
-                .stream()
-                .filter(m -> !m.getUserId().equals(hostUserId))
-                .map(PartyMember::getUserId)
-                .toList();
-
-        if (memberUserIds.isEmpty()) {
-            return;
-        }
-
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                eventPublisher.publishEvent(new InviteLinkRequiredEvent(partyId, provisionId, memberUserIds));
-            }
-        });
     }
 
     // provision 설정 완료 이벤트 발행 - 리스너가 @TransactionalEventListener(AFTER_COMMIT)이므로 트랜잭션 커밋 후 실행 보장

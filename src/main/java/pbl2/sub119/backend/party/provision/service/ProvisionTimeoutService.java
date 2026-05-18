@@ -13,8 +13,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import java.util.ArrayList;
-import java.util.List;
-import pbl2.sub119.backend.notification.event.event.HostProvisionDelayedNoticeEvent;
 import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionReminderEvent;
@@ -30,7 +28,6 @@ import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
 import pbl2.sub119.backend.party.common.service.PartyHistoryService;
-import pbl2.sub119.backend.party.cycle.service.PartyCycleService;
 import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
@@ -47,38 +44,11 @@ public class ProvisionTimeoutService {
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final PartyHistoryService partyHistoryService;
-    private final PartyCycleService partyCycleService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     @Lazy
     private ProvisionTimeoutService self;
-
-    // 결제일 D-1: SWITCH_WAITING 상태 대기 파티장을 사전 활성화
-    public void activateSwitchWaitingHostsBeforePayment() {
-        final List<Long> partyIds = partyMemberMapper.findPartiesWithSwitchWaitingHostDueTomorrow();
-
-        for (final Long partyId : partyIds) {
-            try {
-                self.activateSwitchWaitingHostInIsolation(partyId);
-            } catch (Exception e) {
-                log.error("D-1 파티장 사전 활성화 실패. partyId={}", partyId, e);
-            }
-        }
-    }
-
-    // D-1 파티장 교체 — 파티별 독립 트랜잭션
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void activateSwitchWaitingHostInIsolation(final Long partyId) {
-        final Party party = partyMapper.findById(partyId);
-        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
-            return;
-        }
-
-        partyCycleService.activateSwitchWaitingHost(partyId);
-
-        log.info("D-1 파티장 사전 활성화 완료. partyId={}", partyId);
-    }
 
     // 파티장 미등록 — 3시간 간격 주기 리마인드 (FULL 후 3h~24h)
     public void processHostProvisionAt24h() {
@@ -149,25 +119,9 @@ public class ProvisionTimeoutService {
         final int elapsedHours = (int) ChronoUnit.HOURS.between(
                 provision.getCreatedAt(), LocalDateTime.now());
 
-        // 파티장에게 리마인드
         eventPublisher.publishEvent(
                 new HostProvisionReminderEvent(provision.getPartyId(), party.getHostUserId(), elapsedHours)
         );
-
-        // 파티원에게 이용 정보 등록 지연 안내
-        final List<PartyMember> members = partyMemberMapper.findMembersByPartyId(provision.getPartyId());
-        final List<Long> memberUserIds = members.stream()
-                .filter(m -> !m.getUserId().equals(party.getHostUserId()))
-                .filter(m -> m.getStatus() != PartyMemberStatus.LEFT
-                        && m.getStatus() != PartyMemberStatus.REMOVED)
-                .map(PartyMember::getUserId)
-                .toList();
-
-        if (!memberUserIds.isEmpty()) {
-            eventPublisher.publishEvent(
-                    new HostProvisionDelayedNoticeEvent(provision.getPartyId(), memberUserIds)
-            );
-        }
 
         log.info("파티장 provision 리마인드 발행. partyId={}, elapsedHours={}", provision.getPartyId(), elapsedHours);
     }

@@ -10,8 +10,6 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
-import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
-import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
@@ -30,7 +28,6 @@ public class RecurringPaymentService {
     private final RecurringPaymentQueryMapper recurringPaymentQueryMapper;
     private final PartyCycleMapper partyCycleMapper;
     private final PaymentExecutionQueryMapper paymentExecutionQueryMapper;
-    private final PartyProvisionMapper partyProvisionMapper;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -53,30 +50,10 @@ public class RecurringPaymentService {
         }
     }
 
-    // provision 완료 후 결제일이 지난 사이클의 지연 결제 트리거 (특정 파티 대상)
-    @Transactional
-    public void triggerDelayedPaymentIfDue(final Long partyId) {
-        final LocalDateTime now = LocalDateTime.now();
-
-        recurringPaymentQueryMapper
-                .findDueRunningCycleByPartyId(partyId, PartyCycleStatus.RUNNING, OperationStatus.ACTIVE, now)
-                .ifPresent(target -> {
-                    log.info("provision 완료 후 지연 결제 트리거. partyId={}", partyId);
-                    createNextCycleAndPublish(target, target.getBillingDueAt().plusMonths(1));
-                });
-    }
-
     private void createNextCycleAndPublish(
             RecurringPaymentTarget target,
             LocalDateTime nextBillingDueAt
     ) {
-        // 현재 파티장의 provision이 RESET_REQUIRED이면 사이클 생성 보류
-        final var provision = partyProvisionMapper.findByPartyId(target.getPartyId());
-        if (provision != null && provision.getOperationStatus() == ProvisionStatus.RESET_REQUIRED) {
-            log.info("파티장 provision RESET_REQUIRED — 사이클 생성 보류. partyId={}", target.getPartyId());
-            return;
-        }
-
         int nextCycleNo = target.getCurrentCycleNo() + 1;
 
         PartyCycle existing = partyCycleMapper.findByPartyIdAndCycleNo(

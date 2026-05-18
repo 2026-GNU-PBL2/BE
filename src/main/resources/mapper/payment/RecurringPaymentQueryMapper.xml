@@ -13,22 +13,6 @@
         <result property="pricePerMemberSnapshot" column="price_per_member_snapshot"/>
     </resultMap>
 
-    <select id="findDueRunningCycleByPartyId" resultMap="RecurringPaymentTargetMap">
-        SELECT pc.party_id                  AS party_id,
-               pc.id                        AS current_cycle_id,
-               pc.cycle_no                  AS current_cycle_no,
-               pc.billing_due_at            AS billing_due_at,
-               pc.member_count_snapshot     AS member_count_snapshot,
-               pc.price_per_member_snapshot AS price_per_member_snapshot
-        FROM party_cycle pc
-                 INNER JOIN party p ON p.id = pc.party_id
-        WHERE pc.party_id = #{partyId}
-          AND pc.status = #{runningStatus}
-          AND p.operation_status = #{activeOperationStatus}
-          AND DATE_ADD(pc.billing_due_at, INTERVAL 1 MONTH) <![CDATA[<=]]> #{now}
-        LIMIT 1
-    </select>
-
     <select id="findRunningCycles" resultMap="RecurringPaymentTargetMap">
         SELECT pc.party_id                  AS party_id,
                pc.id                        AS current_cycle_id,

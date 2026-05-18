@@ -22,10 +22,6 @@ public class WebMessageTemplateService {
         return String.format("%s 이용 정보 등록 기한까지 %d시간 남았어요.", productName, remaining);
     }
 
-    public String hostProvisionDelayedNoticeForMember(final String productName) {
-        return String.format("%s 파티장이 아직 이용 정보를 등록하지 않았어요. 등록 완료 후 안내드릴게요.", productName);
-    }
-
     public String hostProvisionTimeoutTerminatedForHost(final String productName) {
         return String.format("%s 이용 정보 미등록으로 파티가 해체됐어요.", productName);
     }
