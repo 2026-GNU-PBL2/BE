@@ -24,7 +24,6 @@ import pbl2.sub119.backend.settlement.event.SettlementRequestedEvent;
 
 @Slf4j
 @Component
-@Order(1)
 @RequiredArgsConstructor
 public class PartyCycleStateEventListener {
 
@@ -32,6 +31,7 @@ public class PartyCycleStateEventListener {
     private final PartyMemberMapper partyMemberMapper;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Order(1)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPaymentCompleted(PartyCyclePaymentCompletedEvent event) {
@@ -60,6 +60,7 @@ public class PartyCycleStateEventListener {
         eventPublisher.publishEvent(new SettlementRequestedEvent(event.partyId(), event.partyCycleId()));
     }
 
+    @Order(1)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPaymentFailed(PartyCyclePaymentFailedEvent event) {

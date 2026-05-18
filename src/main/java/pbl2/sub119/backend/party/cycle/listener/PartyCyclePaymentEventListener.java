@@ -26,7 +26,6 @@ import pbl2.sub119.backend.payment.event.PartyCyclePaymentFailedEvent;
 
 @Slf4j
 @Component
-@Order(2)
 @RequiredArgsConstructor
 public class PartyCyclePaymentEventListener {
 
@@ -36,6 +35,7 @@ public class PartyCyclePaymentEventListener {
     private final PartyMemberMapper partyMemberMapper;
     private final ObjectMapper objectMapper;
 
+    @Order(2)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPaymentCompleted(PartyCyclePaymentCompletedEvent event) {
@@ -49,6 +49,7 @@ public class PartyCyclePaymentEventListener {
         }
     }
 
+    @Order(2)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onPaymentFailed(PartyCyclePaymentFailedEvent event) {

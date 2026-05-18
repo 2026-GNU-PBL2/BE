@@ -58,11 +58,8 @@ public class RecurringPaymentService {
     public void triggerDelayedPaymentIfDue(final Long partyId) {
         final LocalDateTime now = LocalDateTime.now();
 
-        recurringPaymentQueryMapper.findRunningCycles(PartyCycleStatus.RUNNING, OperationStatus.ACTIVE)
-                .stream()
-                .filter(t -> t.getPartyId().equals(partyId))
-                .filter(t -> !t.getBillingDueAt().plusMonths(1).isAfter(now))
-                .findFirst()
+        recurringPaymentQueryMapper
+                .findDueRunningCycleByPartyId(partyId, PartyCycleStatus.RUNNING, OperationStatus.ACTIVE, now)
                 .ifPresent(target -> {
                     log.info("provision 완료 후 지연 결제 트리거. partyId={}", partyId);
                     createNextCycleAndPublish(target, target.getBillingDueAt().plusMonths(1));

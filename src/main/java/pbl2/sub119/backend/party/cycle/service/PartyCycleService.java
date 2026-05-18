@@ -64,6 +64,12 @@ public class PartyCycleService {
     // 기존 LEAVE_RESERVED HOST를 LEFT 처리하고, 신규 HOST를 ACTIVE로 사전 활성화한다.
     @Transactional
     public void activateSwitchWaitingHost(final Long partyId) {
+        // for update로 배타 락 획득 후 TERMINATED 여부 재검증 (TOCTOU 방지)
+        final Party party = partyMapper.findByIdForUpdate(partyId);
+        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
+            return;
+        }
+
         final List<PartyMember> switchWaitingMembers = partyMemberMapper.findSwitchWaitingMembers(partyId);
         final PartyMember newHostMember = switchWaitingMembers.stream()
                 .filter(m -> m.getRole() == PartyRole.HOST)

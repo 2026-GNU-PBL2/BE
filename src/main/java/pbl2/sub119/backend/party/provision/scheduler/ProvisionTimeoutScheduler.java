@@ -13,8 +13,8 @@ public class ProvisionTimeoutScheduler {
 
     private final ProvisionTimeoutService provisionTimeoutService;
 
-    // 결제일 D-1 오전 9시: SWITCH_WAITING 대기 파티장 사전 활성화
-    @Scheduled(cron = "0 0 9 * * *")
+    // 결제일 D-1 오전 9시 (KST): SWITCH_WAITING 대기 파티장 사전 활성화
+    @Scheduled(cron = "0 0 9 * * *", zone = "Asia/Seoul")
     public void activateSwitchWaitingHostsBeforePayment() {
         log.info("D-1 파티장 사전 활성화 스케줄러 실행");
         try {

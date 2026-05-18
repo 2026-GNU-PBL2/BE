@@ -58,6 +58,13 @@ public interface PartyProvisionMemberMapper {
             @Param("updatedAt") LocalDateTime updatedAt
     );
 
+    void restoreOperationMessage(
+            @Param("partyOperationId") Long partyOperationId,
+            @Param("userId") Long userId,
+            @Param("operationMessage") String operationMessage,
+            @Param("updatedAt") LocalDateTime updatedAt
+    );
+
     void markAllResetRequired(
             @Param("partyOperationId") Long partyOperationId,
             @Param("memberStatus") ProvisionMemberStatus memberStatus,

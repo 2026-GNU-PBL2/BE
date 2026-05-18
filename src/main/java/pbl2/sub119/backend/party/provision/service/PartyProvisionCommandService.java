@@ -190,6 +190,11 @@ public class PartyProvisionCommandService {
                 now
         );
 
+        // markAllResetRequired가 호스트 행의 operationMessage("파티장")도 덮어쓰므로 복원
+        // 복원하지 않으면 다음 사이클에서 keepCurrentHostActive가 항상 false가 되어 불필요한 RESET_REQUIRED 유발
+        partyProvisionMemberMapper.restoreOperationMessage(
+                provision.getId(), party.getHostUserId(), "파티장", now);
+
         if (keepCurrentHostActive) {
             restoreHostActive(partyId, party.getHostUserId(), now);
         }
