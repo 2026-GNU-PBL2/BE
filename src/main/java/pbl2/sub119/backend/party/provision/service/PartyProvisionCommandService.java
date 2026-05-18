@@ -20,7 +20,6 @@ import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.exception.PartyException;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
-import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionConfirmResponse;
 import pbl2.sub119.backend.party.provision.dto.response.PartyProvisionSetupResponse;
@@ -47,7 +46,7 @@ public class PartyProvisionCommandService {
     private final CryptoUtil cryptoUtil;
     private final ApplicationEventPublisher eventPublisher;
 
-    // 파티장이 provision 정보 최초 등록 또는 다시 저장
+    // 파티장이 provision 정보 최초 등록 또는 재설정 (공유계정/초대링크 변경 시에도 이 메서드 사용)
     public PartyProvisionSetupResponse setupProvision(
             final Long userId,
             final Long partyId,
@@ -248,47 +247,6 @@ public class PartyProvisionCommandService {
                 updated.getMemberStatus(),
                 updated.getConfirmedAt(),
                 updated.getActivatedAt()
-        );
-    }
-
-    // 파티장이 provision 재설정
-    public PartyProvisionSetupResponse resetProvision(
-            final Long userId,
-            final Long partyId,
-            final PartyProvisionResetRequest request
-    ) {
-        final Party party = getParty(partyId);
-
-        // 파티장만 재설정 가능
-        validateHost(userId, party);
-
-        final PartyProvision provision = getProvision(partyId);
-        final LocalDateTime now = LocalDateTime.now();
-
-        partyProvisionMapper.markResetRequired(
-                provision.getId(),
-                ProvisionStatus.RESET_REQUIRED,
-                now,
-                now
-        );
-
-        // 일괄 RESET_REQUIRED 후 현재 호스트만 ACTIVE 복원
-        partyProvisionMemberMapper.markAllResetRequired(
-                provision.getId(),
-                ProvisionMemberStatus.RESET_REQUIRED,
-                null,
-                now,
-                now
-        );
-
-        restoreHostActive(partyId, party.getHostUserId(), now);
-
-        return new PartyProvisionSetupResponse(
-                provision.getId(),
-                partyId,
-                provision.getOperationType(),
-                ProvisionStatus.RESET_REQUIRED,
-                partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId())
         );
     }
 
