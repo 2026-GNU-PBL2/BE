@@ -14,10 +14,10 @@ public class SmsMessageTemplateService {
             case PAYMENT_FAILED -> "결제 실패";
             case SETTLEMENT_COMPLETED -> "정산 완료";
             case SETTLEMENT_SKIPPED_PAYMENT_FAILED -> "정산 미진행 안내";
+            case TEST_CARD_PAYMENT_NOTICE -> "카드 확인 결제 안내";
 
             case HOST_PROVISION_REQUIRED -> "이용 정보 등록 필요";
             case HOST_PROVISION_REMINDER -> "이용 정보 등록 기한 안내";
-            case HOST_PROVISION_DELAYED_NOTICE -> "이용 정보 등록 지연 안내";
             case HOST_PROVISION_TIMEOUT_TERMINATED -> "파티 해체 안내";
 
             case PROVISION_ACCOUNT_SHARED_REQUIRED -> "공유 계정 확인 필요";
@@ -69,14 +69,6 @@ public class SmsMessageTemplateService {
     public String hostProvisionTimeoutTerminatedForHost(final String productName) {
         return String.format(
                 "[Submate] %s 이용 정보를 기한 내 등록하지 않아 파티가 해체됐어요.\n파티원은 자동으로 새 파티 매칭이 시작됩니다.",
-                productName
-        );
-    }
-
-    // 파티장 미등록으로 파티원 지연 안내
-    public String hostProvisionDelayedNoticeForMember(final String productName) {
-        return String.format(
-                "[Submate] %s 파티장이 아직 이용 정보를 등록하지 않았어요.\n등록 완료 후 바로 안내드릴게요. 잠시만 기다려주세요.",
                 productName
         );
     }

@@ -255,15 +255,6 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 호스트 마커 복원: markAllResetRequired 후 호스트 행의 operation_message를 "파티장"으로 유지 -->
-    <update id="restoreOperationMessage">
-        UPDATE party_operation_member
-        SET operation_message = #{operationMessage},
-            updated_at        = #{updatedAt}
-        WHERE party_operation_id = #{partyOperationId}
-          AND user_id = #{userId}
-    </update>
-
     <!-- provision 재설정 필요 상태로 일괄 변경 -->
     <update id="markAllResetRequired">
         UPDATE party_operation_member

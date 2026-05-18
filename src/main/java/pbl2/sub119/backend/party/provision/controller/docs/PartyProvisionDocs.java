@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
 import pbl2.sub119.backend.party.provision.dto.response.*;
 
@@ -24,14 +25,9 @@ import pbl2.sub119.backend.party.provision.dto.response.*;
 public interface PartyProvisionDocs {
 
     @Operation(
-            summary = "파티 이용 정보 등록 / 재설정",
+            summary = "파티 이용 정보 등록",
             description = """
-                    파티장이 파티 이용에 필요한 정보를 등록하거나 재설정합니다.
-
-                    최초 등록과 재설정 모두 이 API 하나로 처리합니다.
-                    - 최초 등록 : provision 상태가 WAITING 일 때 호출합니다.
-                    - 재설정 : 공유 계정 또는 초대 링크를 새로 바꿔야 할 때 동일하게 호출합니다.
-                      재설정 시 파티원은 새 이용 정보로 다시 이용 확인 절차를 진행해야 하며, 알림이 자동 발송됩니다.
+                    파티장이 결제 전 또는 결제 준비 단계에서 파티 이용에 필요한 정보를 등록합니다.
 
                     이용 정보 제공 방식
                     - ACCOUNT_SHARE : 파티장이 공유 계정 이메일과 비밀번호를 등록하는 방식입니다.
@@ -46,8 +42,7 @@ public interface PartyProvisionDocs {
                     상태값 안내
                     - REQUIRED : 파티원이 아직 이용 확인을 하지 않아 확인이 필요한 상태입니다.
                     - ACTIVE : 파티원이 이용 확인까지 완료하여 현재 정상 이용 중인 상태입니다.
-                    - RESET_REQUIRED : 시스템이 파티장 교체 등의 이유로 재확인이 필요한 상태로 전환한 경우입니다.
-                      이 상태에서는 파티장이 이 API를 다시 호출해 새 이용 정보를 등록해야 합니다.
+                    - RESET_REQUIRED : 파티장이 이용 정보를 다시 변경하여 파티원이 다시 확인해야 하는 상태입니다.
 
                     결제 트리거 정책 안내
                     - 이 API는 운영 정보 등록/수정 전용입니다. 결제 재시도 수단이 아닙니다.
@@ -195,6 +190,54 @@ public interface PartyProvisionDocs {
     ResponseEntity<PartyProvisionConfirmResponse> confirmProvision(
             @Parameter(hidden = true) @Auth Accessor accessor,
             @PathVariable Long partyId
+    );
+
+    @Operation(
+            summary = "파티 이용 재설정",
+            description = """
+                    파티장이 초대 링크나 공유계정 정보를 다시 설정해야 할 때 사용합니다.
+
+                    예를 들어 이런 경우에 사용할 수 있습니다.
+                    - 공유 계정 이메일 변경
+                    - 공유 계정 비밀번호 변경
+                    - 초대 링크 재발급
+                    - 이용 안내 문구 변경
+
+                    이 API를 호출하면 기존 파티원은 다시 확인 절차를 진행해야 합니다.
+
+                    request body 입력 안내
+                    - provisionMessage 는 재설정 사유 또는 파티원에게 보여줄 안내 메시지입니다.
+
+                    상태값 안내
+                    - 기존 ACTIVE 멤버도 RESET_REQUIRED 로 변경될 수 있습니다.
+                    - 이후 파티원은 다시 이용 정보를 확인해야 합니다.
+                    """,
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = PartyProvisionResetRequest.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "이용 재설정 요청 예시",
+                                            summary = "공유 계정 또는 링크를 다시 바꾼 경우",
+                                            value = """
+                                                    {
+                                                      "provisionMessage": "공유 계정 정보가 변경되어 다시 확인해 주세요."
+                                                    }
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "이용 재설정 성공")
+            }
+    )
+    @PostMapping("/{partyId}/provision/reset")
+    ResponseEntity<Void> resetProvision(
+            @Parameter(hidden = true) @Auth Accessor accessor,
+            @PathVariable Long partyId,
+            @RequestBody @Valid PartyProvisionResetRequest request
     );
 
     @Operation(

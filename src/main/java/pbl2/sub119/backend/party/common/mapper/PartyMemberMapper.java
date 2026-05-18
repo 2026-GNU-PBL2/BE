@@ -69,7 +69,4 @@ public interface PartyMemberMapper {
             @Param("memberId") Long memberId,
             @Param("role") PartyRole role
     );
-
-    // 결제일 D-1 기준: SWITCH_WAITING HOST가 있고 다음 결제일이 내일인 파티 ID 목록 조회
-    List<Long> findPartiesWithSwitchWaitingHostDueTomorrow();
 }
