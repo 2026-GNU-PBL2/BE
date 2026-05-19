@@ -36,3 +36,10 @@ out/
 ### VS Code ###
 .vscode/
 .claude/
+
+### Python ###
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
