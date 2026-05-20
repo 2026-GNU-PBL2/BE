@@ -2,6 +2,7 @@ package pbl2.sub119.backend.party.provision.service;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,10 +12,11 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
-import java.util.ArrayList;
-import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
+import pbl2.sub119.backend.notification.event.event.HostChangedEvent;
 import pbl2.sub119.backend.notification.event.event.HostProvisionReminderEvent;
+import pbl2.sub119.backend.notification.event.event.MemberAutoRematchStartedEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionReminderEvent;
 import pbl2.sub119.backend.notification.event.event.MemberProvisionTimeoutNoticeEvent;
 import pbl2.sub119.backend.notification.event.event.PartyTerminatedEvent;
@@ -24,6 +26,9 @@ import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.enumerated.MatchWaitingStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
 import pbl2.sub119.backend.party.common.enumerated.PartyHistoryEventType;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
+import pbl2.sub119.backend.party.common.enumerated.RecruitStatus;
+import pbl2.sub119.backend.party.common.enumerated.VacancyType;
 import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
@@ -32,6 +37,7 @@ import pbl2.sub119.backend.party.provision.entity.PartyProvision;
 import pbl2.sub119.backend.party.provision.entity.PartyProvisionMember;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
+import pbl2.sub119.backend.payment.mapper.RecurringPaymentQueryMapper;
 
 @Slf4j
 @Service
@@ -45,10 +51,97 @@ public class ProvisionTimeoutService {
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final PartyHistoryService partyHistoryService;
     private final ApplicationEventPublisher eventPublisher;
+    private final RecurringPaymentQueryMapper recurringPaymentQueryMapper;
+    private final PartyProvisionCommandService partyProvisionCommandService;
 
     @Autowired
     @Lazy
     private ProvisionTimeoutService self;
+
+    // D-1: 결제일 24시간 이내 파티 중 파티장 교체 예정(LEAVE_RESERVED HOST + SWITCH_WAITING HOST) 처리
+    public void activateSwitchWaitingHost() {
+        final LocalDateTime windowEnd = LocalDateTime.now().plusHours(24);
+        final List<Long> partyIds = recurringPaymentQueryMapper.findPartyIdsWithSwitchWaitingHostDue(
+                PartyCycleStatus.RUNNING, OperationStatus.ACTIVE, windowEnd);
+
+        for (final Long partyId : partyIds) {
+            try {
+                self.activateSwitchWaitingHostInIsolation(partyId);
+            } catch (Exception e) {
+                log.error("D-1 파티장 사전 활성화 실패. partyId={}", partyId, e);
+            }
+        }
+    }
+
+    // D-1 파티장 교체 — 각 파티별 독립 트랜잭션
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void activateSwitchWaitingHostInIsolation(final Long partyId) {
+        final Party party = partyMapper.findByIdForUpdate(partyId);
+        if (party == null || party.getOperationStatus() == OperationStatus.TERMINATED) {
+            return;
+        }
+
+        final PartyMember leavingHost = partyMemberMapper.findLeaveReservedMembers(partyId).stream()
+                .filter(m -> m.getRole() == PartyRole.HOST)
+                .findFirst()
+                .orElse(null);
+        if (leavingHost == null) {
+            return;
+        }
+
+        final PartyMember newHost = partyMemberMapper.findSwitchWaitingMembers(partyId).stream()
+                .filter(m -> m.getRole() == PartyRole.HOST)
+                .findFirst()
+                .orElse(null);
+        if (newHost == null) {
+            return;
+        }
+
+        final LocalDateTime now = LocalDateTime.now();
+
+        partyMemberMapper.updateStatusAndLeftAt(leavingHost.getId(), PartyMemberStatus.LEFT);
+        partyHistoryService.saveHistory(partyId, leavingHost.getId(),
+                PartyHistoryEventType.MEMBER_LEFT,
+                "{\"userId\":" + leavingHost.getUserId() + ",\"role\":\"HOST\",\"reason\":\"d1_preactivation\"}",
+                leavingHost.getUserId());
+
+        partyMemberMapper.updateStatusAndActivatedAt(newHost.getId(), PartyMemberStatus.ACTIVE);
+        partyHistoryService.saveHistory(partyId, newHost.getId(),
+                PartyHistoryEventType.MEMBER_JOINED,
+                "{\"userId\":" + newHost.getUserId() + ",\"role\":\"HOST\",\"reason\":\"d1_preactivation\"}",
+                newHost.getUserId());
+
+        partyMapper.updateHostUserId(partyId, newHost.getUserId());
+
+        // 남은 LEAVE_RESERVED 멤버 기준으로 파티 상태 갱신
+        final int occupiedCount = partyMemberMapper.countOccupiedMembers(partyId);
+        partyMapper.updateCurrentMemberCount(partyId, occupiedCount);
+
+        final List<PartyMember> remainingLeaveReserved = partyMemberMapper.findLeaveReservedMembers(partyId);
+        if (remainingLeaveReserved.isEmpty()) {
+            partyMapper.updateVacancyType(partyId, VacancyType.NONE);
+            partyMapper.updateRecruitStatus(partyId,
+                    occupiedCount >= party.getCapacity() ? RecruitStatus.FULL : RecruitStatus.RECRUITING);
+        } else {
+            final boolean hasHostReservation = remainingLeaveReserved.stream()
+                    .anyMatch(m -> m.getRole() == PartyRole.HOST);
+            partyMapper.updateVacancyType(partyId, hasHostReservation ? VacancyType.HOST : VacancyType.MEMBER);
+            partyMapper.updateRecruitStatus(partyId, RecruitStatus.RECRUITING);
+        }
+
+        // provision 재설정 (멤버 구성 변경 반영)
+        partyProvisionCommandService.handleCycleStart(partyId);
+
+        // 파티원에게 파티장 변경 알림
+        final List<Long> memberUserIds = partyMemberMapper.findProvisionTargetMembersByPartyId(partyId)
+                .stream()
+                .filter(m -> !m.getUserId().equals(newHost.getUserId()))
+                .map(PartyMember::getUserId)
+                .toList();
+        eventPublisher.publishEvent(new HostChangedEvent(partyId, newHost.getUserId(), memberUserIds));
+
+        log.info("D-1 파티장 사전 활성화 완료. partyId={}, newHostUserId={}", partyId, newHost.getUserId());
+    }
 
     // 파티장 미등록 — 3시간 간격 주기 리마인드 (FULL 후 3h~24h)
     public void processHostProvisionAt24h() {

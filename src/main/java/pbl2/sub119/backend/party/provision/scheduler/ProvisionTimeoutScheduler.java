@@ -44,4 +44,16 @@ public class ProvisionTimeoutScheduler {
             log.error("파티원 provision 타임아웃 처리 중 오류 발생", e);
         }
     }
+
+    // D-1: 결제일 24시간 이내 파티장 교체 예정 파티 사전 활성화
+    @Scheduled(fixedRate = 60 * 60 * 1000L)
+    public void activateSwitchWaitingHost() {
+        log.info("D-1 파티장 사전 활성화 스케줄러 실행");
+
+        try {
+            provisionTimeoutService.activateSwitchWaitingHost();
+        } catch (Exception e) {
+            log.error("D-1 파티장 사전 활성화 처리 중 오류 발생", e);
+        }
+    }
 }

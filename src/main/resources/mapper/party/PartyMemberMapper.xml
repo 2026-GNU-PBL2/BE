@@ -66,6 +66,8 @@
         FROM party_member
         WHERE party_id = #{partyId}
         AND user_id = #{userId}
+        AND status NOT IN ('LEFT', 'REMOVED')
+        ORDER BY id DESC
         LIMIT 1
     </select>
 
@@ -75,6 +77,8 @@
         FROM party_member
         WHERE party_id = #{partyId}
         AND user_id = #{userId}
+        AND status NOT IN ('LEFT', 'REMOVED')
+        ORDER BY id DESC
         LIMIT 1
         FOR UPDATE
     </select>
@@ -164,6 +168,7 @@
             leave_reserved_at = CURRENT_TIMESTAMP
         WHERE party_id = #{partyId}
           AND user_id = #{userId}
+          AND status = 'ACTIVE'
     </update>
 
     <update id="clearLeaveReserved">
