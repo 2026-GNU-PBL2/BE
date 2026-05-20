@@ -12,6 +12,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.notification.event.event.AccountSharedCredentialRequiredEvent;
 import pbl2.sub119.backend.notification.event.event.InviteLinkRequiredEvent;
+import pbl2.sub119.backend.party.common.enumerated.PartyRole;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.party.event.PartyProvisionSetupCompletedEvent;
 import pbl2.sub119.backend.common.util.CryptoUtil;
@@ -173,9 +174,13 @@ public class PartyProvisionCommandService {
                 now
         );
 
-        // 현재 호스트가 기존 provision 멤버였던 경우에만 ACTIVE 유지
+        // 기존 provision에서 HOST 역할로 등록된 유저가 현재 파티장과 동일한 경우에만 ACTIVE 유지
         final boolean keepCurrentHostActive = existingProvisionMembers.stream()
-                .anyMatch(member -> member.getUserId().equals(party.getHostUserId()));
+                .filter(pm -> pm.getUserId().equals(party.getHostUserId()))
+                .anyMatch(pm -> {
+                    final PartyMember partyMember = partyMemberMapper.findById(pm.getPartyMemberId());
+                    return partyMember != null && partyMember.getRole() == PartyRole.HOST;
+                });
 
         resetMemberRows(provision.getId(), partyId, party.getHostUserId(), now);
 
@@ -189,6 +194,26 @@ public class PartyProvisionCommandService {
 
         if (keepCurrentHostActive) {
             restoreHostActive(partyId, party.getHostUserId(), now);
+        }
+
+        // 초대코드 방식 파티: 파티원에게 새 초대코드 필요 알림 발송
+        if (provision.getOperationType() == OperationType.INVITE_CODE) {
+            final List<Long> memberUserIds = partyMemberMapper
+                    .findProvisionTargetMembersByPartyId(partyId)
+                    .stream()
+                    .filter(m -> !m.getUserId().equals(party.getHostUserId()))
+                    .map(PartyMember::getUserId)
+                    .toList();
+            if (!memberUserIds.isEmpty()) {
+                TransactionSynchronizationManager.registerSynchronization(
+                        new TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                eventPublisher.publishEvent(
+                                        new InviteLinkRequiredEvent(partyId, provision.getId(), memberUserIds));
+                            }
+                        });
+            }
         }
     }
 

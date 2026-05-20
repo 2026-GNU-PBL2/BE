@@ -6,6 +6,7 @@ import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -14,5 +15,17 @@ public interface RecurringPaymentQueryMapper {
     List<RecurringPaymentTarget> findRunningCycles(
             @Param("runningStatus") PartyCycleStatus runningStatus,
             @Param("activeOperationStatus") OperationStatus activeOperationStatus
+    );
+
+    RecurringPaymentTarget findRunningCycleByPartyId(
+            @Param("partyId") Long partyId,
+            @Param("runningStatus") PartyCycleStatus runningStatus,
+            @Param("activeOperationStatus") OperationStatus activeOperationStatus
+    );
+
+    List<Long> findPartyIdsWithSwitchWaitingHostDue(
+            @Param("runningStatus") PartyCycleStatus runningStatus,
+            @Param("activeOperationStatus") OperationStatus activeOperationStatus,
+            @Param("windowEnd") LocalDateTime windowEnd
     );
 }

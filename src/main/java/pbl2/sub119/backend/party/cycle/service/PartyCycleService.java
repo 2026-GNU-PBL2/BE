@@ -3,11 +3,16 @@ package pbl2.sub119.backend.party.cycle.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
+import pbl2.sub119.backend.notification.event.event.PartyTerminatedEvent;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.enumerated.*;
@@ -18,6 +23,8 @@ import pbl2.sub119.backend.party.common.service.PartyHistoryService;
 import pbl2.sub119.backend.party.provision.service.PartyProvisionCommandService;
 import pbl2.sub119.backend.notification.event.event.HostChangedEvent;
 import pbl2.sub119.backend.party.common.enumerated.PartyRole;
+import pbl2.sub119.backend.payment.entity.PartyCycle;
+import pbl2.sub119.backend.payment.mapper.PartyCycleMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +34,12 @@ public class PartyCycleService {
     private final PartyMemberMapper partyMemberMapper;
     private final PartyHistoryService partyHistoryService;
     private final PartyProvisionCommandService partyProvisionCommandService;
+    private final PartyCycleMapper partyCycleMapper;
     private final ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    @Lazy
+    private PartyCycleService self;
 
     // 회차 결제 성공 후 이용 주기 시작 시 서비스 상태 반영 (첫 회차 / 반복 회차 공통)
     @Transactional
@@ -44,7 +56,7 @@ public class PartyCycleService {
 
         // 탈퇴 예약자 전원 퇴장 후 잔류 멤버 없으면 파티 해체
         if (occupiedCount == 0) {
-            terminateEmptyParty(partyId);
+            terminateEmptyParty(partyId, leaveReservedMembers);
             return;
         }
 
@@ -58,6 +70,12 @@ public class PartyCycleService {
     @Transactional(readOnly = true)
     public int countRecurringBillableMembers(final Long partyId) {
         return partyMemberMapper.countRecurringBillableMembers(partyId);
+    }
+
+    // 전원 탈퇴 예약 파티 해체 — 결제 없이 직접 해체 처리
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void dissolveAllLeaveReservedParty(final Long partyId) {
+        handleCycleStart(partyId);
     }
 
     private Party getPartyForUpdate(final Long partyId) {
@@ -115,12 +133,28 @@ public class PartyCycleService {
         }
     }
 
-    private void terminateEmptyParty(final Long partyId) {
+    private void terminateEmptyParty(final Long partyId, final List<PartyMember> formerMembers) {
         final LocalDateTime now = LocalDateTime.now();
         partyMapper.terminateParty(partyId, now);
         partyMapper.updateRecruitStatus(partyId, RecruitStatus.CLOSED);
         partyMapper.updateVacancyType(partyId, VacancyType.NONE);
         partyMapper.updateCurrentMemberCount(partyId, 0);
+
+        final PartyCycle runningCycle = partyCycleMapper.findLatestPendingOrRunningCycle(
+                partyId, PartyCycleStatus.PAYMENT_PENDING, PartyCycleStatus.RUNNING);
+        if (runningCycle != null && runningCycle.getStatus() == PartyCycleStatus.RUNNING) {
+            partyCycleMapper.closeCycle(runningCycle.getId(), PartyCycleStatus.RUNNING, PartyCycleStatus.CLOSED, now);
+        }
+
+        partyHistoryService.saveHistory(
+                partyId, null, PartyHistoryEventType.PARTY_TERMINATED,
+                "{\"reason\":\"all_leave_reserved\"}", null
+        );
+
+        final List<Long> memberUserIds = formerMembers.stream()
+                .map(PartyMember::getUserId)
+                .toList();
+        eventPublisher.publishEvent(new PartyTerminatedEvent(partyId, memberUserIds, "전원 탈퇴 예약으로 파티 해체"));
     }
 
     private void refreshPartyState(

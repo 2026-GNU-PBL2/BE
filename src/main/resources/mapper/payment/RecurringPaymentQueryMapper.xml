@@ -27,4 +27,39 @@
         ORDER BY pc.id ASC
     </select>
 
+    <select id="findRunningCycleByPartyId" resultMap="RecurringPaymentTargetMap">
+        SELECT pc.party_id                  AS party_id,
+               pc.id                        AS current_cycle_id,
+               pc.cycle_no                  AS current_cycle_no,
+               pc.billing_due_at            AS billing_due_at,
+               pc.member_count_snapshot     AS member_count_snapshot,
+               pc.price_per_member_snapshot AS price_per_member_snapshot
+        FROM party_cycle pc
+                 INNER JOIN party p ON p.id = pc.party_id
+        WHERE pc.party_id = #{partyId}
+          AND pc.status = #{runningStatus}
+          AND p.operation_status = #{activeOperationStatus}
+        ORDER BY pc.cycle_no DESC
+        LIMIT 1
+    </select>
+
+    <!-- D-1 파티장 사전 활성화 대상: LEAVE_RESERVED HOST + SWITCH_WAITING HOST 있고 다음 결제일이 windowEnd 이내 -->
+    <select id="findPartyIdsWithSwitchWaitingHostDue" resultType="long">
+        SELECT DISTINCT pc.party_id
+        FROM party_cycle pc
+                 INNER JOIN party p ON p.id = pc.party_id
+                 INNER JOIN party_member pm_leave
+                            ON pm_leave.party_id = pc.party_id
+                                AND pm_leave.role = 'HOST'
+                                AND pm_leave.status = 'LEAVE_RESERVED'
+                 INNER JOIN party_member pm_switch
+                            ON pm_switch.party_id = pc.party_id
+                                AND pm_switch.role = 'HOST'
+                                AND pm_switch.status = 'SWITCH_WAITING'
+        WHERE pc.status = #{runningStatus}
+          AND p.operation_status = #{activeOperationStatus}
+          AND TIMESTAMPADD(MONTH, 1, pc.billing_due_at) > NOW()
+          AND TIMESTAMPADD(MONTH, 1, pc.billing_due_at) &lt;= #{windowEnd}
+    </select>
+
 </mapper>
