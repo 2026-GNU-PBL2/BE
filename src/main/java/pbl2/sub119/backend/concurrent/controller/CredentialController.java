@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
-import pbl2.sub119.backend.concurrent.controller.docs.CredentialDocs;
+import pbl2.sub119.backend.concurrent.controller.docs.ConcurrentDocs;
 import pbl2.sub119.backend.concurrent.dto.response.CredentialResponse;
 import pbl2.sub119.backend.concurrent.service.CredentialService;
 import pbl2.sub119.backend.concurrent.service.DeviceCollectionService;
@@ -21,7 +21,7 @@ import pbl2.sub119.backend.concurrent.service.DeviceCollectionService;
 @RestController
 @RequestMapping("/api/v1/credentials")
 @RequiredArgsConstructor
-public class CredentialController implements CredentialDocs {
+public class CredentialController implements ConcurrentDocs.Credential {
 
     private final CredentialService credentialService;
     private final DeviceCollectionService deviceCollectionService;

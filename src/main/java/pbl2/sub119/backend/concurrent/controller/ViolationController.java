@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
-import pbl2.sub119.backend.concurrent.controller.docs.ViolationDocs;
+import pbl2.sub119.backend.concurrent.controller.docs.ConcurrentDocs;
 import pbl2.sub119.backend.concurrent.dto.response.ViolationHistoryResponse;
 import pbl2.sub119.backend.concurrent.service.ViolationQueryService;
 
 @RestController
 @RequestMapping("/api/v1/violations")
 @RequiredArgsConstructor
-public class ViolationController implements ViolationDocs {
+public class ViolationController implements ConcurrentDocs.Violation {
 
     private final ViolationQueryService violationQueryService;
 

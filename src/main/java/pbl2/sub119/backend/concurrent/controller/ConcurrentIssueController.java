@@ -14,7 +14,7 @@ import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.concurrent.dto.request.LeaderActionRequest;
 import pbl2.sub119.backend.concurrent.dto.request.ReportRequest;
-import pbl2.sub119.backend.concurrent.controller.docs.ConcurrentIssueDocs;
+import pbl2.sub119.backend.concurrent.controller.docs.ConcurrentDocs;
 import pbl2.sub119.backend.concurrent.dto.response.IncidentHistoryResponse;
 import pbl2.sub119.backend.concurrent.dto.response.IncidentResult;
 import pbl2.sub119.backend.concurrent.dto.response.ResolveResult;
@@ -24,7 +24,7 @@ import pbl2.sub119.backend.concurrent.service.IncidentService;
 @RestController
 @RequestMapping("/api/v1/concurrent-issues")
 @RequiredArgsConstructor
-public class ConcurrentIssueController implements ConcurrentIssueDocs {
+public class ConcurrentIssueController implements ConcurrentDocs.Issue {
 
     private final IncidentService incidentService;
     private final ConcurrentIncidentMapper incidentMapper;

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
-import pbl2.sub119.backend.concurrent.controller.docs.PartyMemberDeviceDocs;
+import pbl2.sub119.backend.concurrent.controller.docs.ConcurrentDocs;
 import pbl2.sub119.backend.concurrent.dto.request.ManualDeviceRegisterRequest;
 import pbl2.sub119.backend.concurrent.dto.response.DeviceRegisterResult;
 import pbl2.sub119.backend.concurrent.service.DeviceCollectionService;
@@ -18,7 +18,7 @@ import pbl2.sub119.backend.concurrent.service.DeviceCollectionService;
 @RestController
 @RequestMapping("/api/v1/party-member-devices")
 @RequiredArgsConstructor
-public class PartyMemberDeviceController implements PartyMemberDeviceDocs {
+public class PartyMemberDeviceController implements ConcurrentDocs.PartyMemberDevice {
 
     private final DeviceCollectionService deviceCollectionService;
 

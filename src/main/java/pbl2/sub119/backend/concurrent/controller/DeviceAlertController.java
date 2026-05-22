@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
-import pbl2.sub119.backend.concurrent.controller.docs.DeviceAlertDocs;
+import pbl2.sub119.backend.concurrent.controller.docs.ConcurrentDocs;
 import pbl2.sub119.backend.concurrent.dto.request.DeviceReportRequest;
 import pbl2.sub119.backend.concurrent.dto.request.DeviceResponseRequest;
 import pbl2.sub119.backend.concurrent.dto.response.DeviceReportResult;
@@ -20,7 +20,7 @@ import pbl2.sub119.backend.concurrent.service.DeviceDetectionService;
 @RestController
 @RequestMapping("/api/v1/device-alerts")
 @RequiredArgsConstructor
-public class DeviceAlertController implements DeviceAlertDocs {
+public class DeviceAlertController implements ConcurrentDocs.DeviceAlert {
 
     private final DeviceDetectionService deviceDetectionService;
 
