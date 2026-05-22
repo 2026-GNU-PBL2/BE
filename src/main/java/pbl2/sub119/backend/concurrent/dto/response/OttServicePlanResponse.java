@@ -10,5 +10,4 @@ public class OttServicePlanResponse {
     private String serviceName;
     private String planName;
     private int concurrentLimit;
-    private String resolution;
 }

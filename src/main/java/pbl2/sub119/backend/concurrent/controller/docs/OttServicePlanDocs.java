@@ -13,7 +13,7 @@ import pbl2.sub119.backend.concurrent.dto.response.OttServicePlanResponse;
 
 @Tag(
         name = "OTT Service Plan API",
-        description = "OTT 서비스별 플랜 정보(동시접속 허용 수, 해상도) 조회 API"
+        description = "OTT 서비스별 플랜 정보(동시접속 허용 수) 조회 API"
 )
 public interface OttServicePlanDocs {
 
@@ -24,14 +24,12 @@ public interface OttServicePlanDocs {
 
                     이 API는 아래 화면에서 사용합니다.
                     - 파티 생성 화면 → 서비스 플랜 선택 드롭다운
-                    - 동시접속 허용 기기 수 및 해상도 안내 화면
                     - 공유 계정형 파티 신청 전 플랜 조건 확인 화면
 
                     응답 필드 안내
-                    - serviceName : OTT 서비스 식별자입니다. (예: NETFLIX, TVING, WATCHA, DISNEY_PLUS, WAVVE)
-                    - planName : 플랜명입니다. (예: 베이직, 스탠다드, 프리미엄)
+                    - serviceName : OTT 서비스 식별자입니다. (예: NETFLIX, TVING, WATCHA, DISNEY_PLUS, APPLE_TV, WAVVE, LAFTEL)
+                    - planName : 플랜명입니다. 해상도가 포함됩니다. (예: 프리미엄(4K), 프리미엄(FHD), Apple TV+)
                     - concurrentLimit : 동시에 접속 가능한 기기 수입니다.
-                    - resolution : 지원 해상도입니다. (예: HD, FHD, 4K)
                     """,
             responses = {
                     @ApiResponse(

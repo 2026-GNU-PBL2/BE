@@ -8,7 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import pbl2.sub119.backend.concurrent.entity.ConcurrentIncident;
+import pbl2.sub119.backend.concurrent.entity.DeviceDetectionEvent;
+import pbl2.sub119.backend.concurrent.enumerated.DeviceDetectionStatus;
 import pbl2.sub119.backend.concurrent.mapper.ConcurrentIncidentMapper;
+import pbl2.sub119.backend.concurrent.mapper.DeviceDetectionMapper;
 import pbl2.sub119.backend.concurrent.service.EscalationService;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
@@ -24,6 +27,7 @@ import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
 public class EscalationScheduler {
 
     private final ConcurrentIncidentMapper incidentMapper;
+    private final DeviceDetectionMapper deviceDetectionMapper;
     private final PartyMapper partyMapper;
     private final SubProductMapper subProductMapper;
     private final EscalationService escalationService;
@@ -107,6 +111,21 @@ public class EscalationScheduler {
                 log.info("관리자 에스컬레이션. incidentId={}, partyId={}", incident.getId(), incident.getPartyId());
             } catch (Exception e) {
                 log.error("관리자 에스컬레이션 실패. incidentId={}", incident.getId(), e);
+            }
+        }
+    }
+
+    // 24시간 경과 PENDING 기기 감지 이벤트 → EXPIRED 처리
+    @Scheduled(fixedDelay = 900_000)
+    public void expireDeviceAlerts() {
+        final List<DeviceDetectionEvent> targets = deviceDetectionMapper.findExpiredPending(LocalDateTime.now());
+
+        for (final DeviceDetectionEvent event : targets) {
+            try {
+                deviceDetectionMapper.updateStatus(event.getId(), DeviceDetectionStatus.EXPIRED);
+                log.info("기기 감지 이벤트 만료 처리. alertId={}, partyId={}", event.getId(), event.getPartyId());
+            } catch (Exception e) {
+                log.error("기기 감지 이벤트 만료 처리 실패. alertId={}", event.getId(), e);
             }
         }
     }
