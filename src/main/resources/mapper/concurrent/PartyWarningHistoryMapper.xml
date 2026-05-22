@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.concurrent.mapper.PartyWarningHistoryMapper">
+
+    <resultMap id="warningHistoryResultMap" type="pbl2.sub119.backend.concurrent.entity.PartyWarningHistory">
+        <id property="id" column="id"/>
+        <result property="partyId" column="party_id"/>
+        <result property="incidentId" column="incident_id"/>
+        <result property="level" column="level"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="pbl2.sub119.backend.concurrent.entity.PartyWarningHistory"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO party_warning_history (party_id, incident_id, level, created_at)
+        VALUES (#{partyId}, #{incidentId}, #{level}, NOW())
+    </insert>
+
+    <select id="findByPartyId" resultMap="warningHistoryResultMap">
+        SELECT * FROM party_warning_history WHERE party_id = #{partyId} ORDER BY created_at DESC
+    </select>
+
+    <select id="countByPartyId" resultType="int">
+        SELECT COUNT(*) FROM party_warning_history WHERE party_id = #{partyId}
+    </select>
+
+</mapper>

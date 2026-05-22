@@ -18,6 +18,8 @@
         <result property="updatedAt" column="updated_at"/>
         <result property="terminatedAt" column="terminated_at"/>
         <result property="pricePerMemberSnapshot" column="price_per_member_snapshot"/>
+        <result property="dissolutionDate" column="dissolution_date"/>
+        <result property="warningLevel" column="warning_level"/>
     </resultMap>
 
     <!-- 새 멤버 등록 -->
@@ -63,7 +65,9 @@
             created_at,
             updated_at,
             terminated_at,
-            price_per_member_snapshot
+            price_per_member_snapshot,
+            dissolution_date,
+            warning_level
         FROM party
         WHERE id = #{partyId}
     </select>
@@ -82,7 +86,9 @@
             created_at,
             updated_at,
             terminated_at,
-            price_per_member_snapshot
+            price_per_member_snapshot,
+            dissolution_date,
+            warning_level
         FROM party
         WHERE id = #{partyId}
             FOR UPDATE
@@ -102,7 +108,9 @@
             created_at,
             updated_at,
             terminated_at,
-            price_per_member_snapshot
+            price_per_member_snapshot,
+            dissolution_date,
+            warning_level
         FROM party
         WHERE product_id = #{productId}
         ORDER BY created_at ASC
@@ -162,7 +170,9 @@
             created_at,
             updated_at,
             terminated_at,
-            price_per_member_snapshot
+            price_per_member_snapshot,
+            dissolution_date,
+            warning_level
         FROM party
         WHERE product_id = #{productId}
           AND recruit_status = 'RECRUITING'
@@ -188,5 +198,42 @@
             updated_at       = #{terminatedAt}
         WHERE id = #{partyId}
     </update>
+
+    <!-- 동시접속 제어: 해체 예정일 설정 -->
+    <update id="updateDissolutionDate">
+        UPDATE party
+        SET dissolution_date = #{dissolutionDate},
+            updated_at       = NOW()
+        WHERE id = #{partyId}
+    </update>
+
+    <!-- 동시접속 제어: 경고 레벨 갱신 -->
+    <update id="updateWarningLevel">
+        UPDATE party
+        SET warning_level = #{warningLevel},
+            updated_at    = NOW()
+        WHERE id = #{partyId}
+    </update>
+
+    <!-- 동시접속 제어: 자정 해체 대상 파티 조회 -->
+    <select id="findByDissolutionDate" resultMap="partyResultMap">
+        SELECT
+            id,
+            product_id,
+            host_user_id,
+            capacity,
+            current_member_count,
+            recruit_status,
+            operation_status,
+            vacancy_type,
+            created_at,
+            updated_at,
+            terminated_at,
+            price_per_member_snapshot,
+            dissolution_date,
+            warning_level
+        FROM party
+        WHERE dissolution_date = #{dissolutionDate}
+    </select>
 
 </mapper>

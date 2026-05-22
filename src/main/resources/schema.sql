@@ -427,3 +427,77 @@ CREATE INDEX idx_pwr_status_created
 
 CREATE UNIQUE INDEX uk_pwr_internal_payout_ref
     ON point_withdraw_request(internal_payout_ref);
+
+-- concurrent_incident (2026.05.21 / kjh)
+CREATE TABLE IF NOT EXISTS concurrent_incident (
+    id                 BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id           BIGINT NOT NULL,
+    reported_by        BIGINT,
+    detection_source   VARCHAR(30) NOT NULL,
+    report_type        VARCHAR(40),
+    status             VARCHAR(30) NOT NULL DEFAULT 'OPEN',
+    first_warned_at    DATETIME,
+    host_deadline      DATETIME,
+    dissolution_date   DATE,
+    admin_escalated_at DATETIME,
+    resolved_at        DATETIME,
+    web_notified       TINYINT(1) NOT NULL DEFAULT 0,
+    sms_notified       TINYINT(1) NOT NULL DEFAULT 0,
+    created_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- party_warning_history (2026.05.21 / kjh)
+CREATE TABLE IF NOT EXISTS party_warning_history (
+    id          BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id    BIGINT NOT NULL,
+    incident_id BIGINT NOT NULL,
+    level       VARCHAR(10) NOT NULL,
+    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- user_violation_record (2026.05.21 / kjh)
+CREATE TABLE IF NOT EXISTS user_violation_record (
+    id             BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id        BIGINT NOT NULL,
+    party_id       BIGINT NOT NULL,
+    incident_id    BIGINT,
+    violation_type VARCHAR(40) NOT NULL,
+    weight         DECIMAL(3,1) NOT NULL DEFAULT 1.0,
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- device_detection_event (2026.05.21 / kjh)
+CREATE TABLE IF NOT EXISTS device_detection_event (
+    id                  BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    party_id            BIGINT NOT NULL,
+    detected_device     VARCHAR(100),
+    detected_location   VARCHAR(100),
+    detected_at         DATETIME NOT NULL,
+    status              VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    notified_user_ids   TEXT,
+    response_count      INT NOT NULL DEFAULT 0,
+    mine_count          INT NOT NULL DEFAULT 0,
+    unknown_count       INT NOT NULL DEFAULT 0,
+    expires_at          DATETIME NOT NULL,
+    created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- party_member_device (2026.05.21 / kjh)
+CREATE TABLE IF NOT EXISTS party_member_device (
+    id                  BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_id             BIGINT NOT NULL,
+    party_id            BIGINT,
+    device_type         VARCHAR(20),
+    os                  VARCHAR(50),
+    browser             VARCHAR(50),
+    ip_location         VARCHAR(100),
+    is_vpn              TINYINT(1) NOT NULL DEFAULT 0,
+    registration_method VARCHAR(20),
+    registered_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- party 컬럼 추가 (2026.05.21 / kjh)
+ALTER TABLE party ADD COLUMN IF NOT EXISTS dissolution_date DATE NULL;
+ALTER TABLE party ADD COLUMN IF NOT EXISTS warning_level   TINYINT NOT NULL DEFAULT 0;
