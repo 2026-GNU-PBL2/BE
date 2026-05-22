@@ -163,6 +163,7 @@
         FROM party_operation_member pom
                  INNER JOIN users u ON u.id = pom.user_id
         WHERE pom.party_operation_id = #{partyOperationId}
+          AND pom.user_id != #{hostUserId}
         ORDER BY pom.id ASC
     </select>
 

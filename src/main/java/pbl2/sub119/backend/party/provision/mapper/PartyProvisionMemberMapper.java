@@ -27,7 +27,8 @@ public interface PartyProvisionMemberMapper {
     );
 
     List<PartyProvisionMemberResponse> findResponsesByPartyOperationId(
-            @Param("partyOperationId") Long partyOperationId
+            @Param("partyOperationId") Long partyOperationId,
+            @Param("hostUserId") Long hostUserId
     );
 
     List<PartyProvisionMemberResponse> findMemberEmailsByPartyId(
