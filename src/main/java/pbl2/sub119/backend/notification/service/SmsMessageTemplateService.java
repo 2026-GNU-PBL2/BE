@@ -19,6 +19,7 @@ public class SmsMessageTemplateService {
             case HOST_PROVISION_REQUIRED -> "이용 정보 등록 필요";
             case HOST_PROVISION_REMINDER -> "이용 정보 등록 기한 안내";
             case HOST_PROVISION_TIMEOUT_TERMINATED -> "파티 해체 안내";
+            case HOST_PROVISION_DELAYED_NOTICE -> "이용 정보 등록 지연 안내";
 
             case PROVISION_ACCOUNT_SHARED_REQUIRED -> "공유 계정 확인 필요";
             case PROVISION_INVITE_CODE_REQUIRED -> "초대 링크 수락 필요";
@@ -28,6 +29,16 @@ public class SmsMessageTemplateService {
 
             case PARTY_TERMINATED -> "파티 해체 안내";
             case MEMBER_AUTO_REMATCH_STARTED -> "자동 재매칭 시작";
+
+            case CONCURRENT_WARNING_1 -> "동시접속 위반 경고";
+            case HOST_ACTION_REQUIRED_24H -> "파티장 조치 요청";
+            case HOST_URGENT_PASSWORD_CHANGE -> "비밀번호 변경 긴급 안내";
+            case HOST_RENOTIFY -> "파티 해체 예정 재안내";
+            case PARTY_DISSOLVING -> "파티 해체 예정 안내";
+            case CREDENTIALS_UPDATED -> "이용 정보 재등록 안내";
+            case DEVICE_ALERT -> "기기 감지 확인 요청";
+            case DEVICE_CHECK_REQUEST -> "기기 확인 요청";
+            case PARTY_DISSOLVED_FINAL -> "파티 해체 완료 안내";
         };
     }
 
@@ -157,6 +168,78 @@ public class SmsMessageTemplateService {
     public String paymentFailed(final String productName) {
         return String.format(
                 "[Submate] %s 자동 결제에 실패했어요.\n결제 정보를 확인하지 않으면 이용이 제한될 수 있어요.\n웹에서 확인해주세요.",
+                productName
+        );
+    }
+
+    // 동시접속 1차 경고 — 파티원 전체
+    public String concurrentWarning1(final String productName) {
+        return String.format(
+                "[Submate] %s 파티에서 동시접속 위반이 감지됐어요.\n계정 공유 규칙을 준수해주세요.\n위반 반복 시 파티가 해체될 수 있습니다.",
+                productName
+        );
+    }
+
+    // 파티장 24시간 조치 요청
+    public String hostActionRequired24h(final String productName, final String deadline) {
+        return String.format(
+                "[Submate] %s 파티에서 동시접속 위반이 신고됐어요.\n%s 까지 비밀번호를 변경하고 파티원에게 이용 정보를 재공유해주세요.\n미조치 시 파티 해체 절차가 진행됩니다.",
+                productName, deadline
+        );
+    }
+
+    // 파티장 긴급 안내 — 2차, 12시간
+    public String hostUrgentPasswordChange(final String productName, final String deadline, final String dissolutionDate) {
+        return String.format(
+                "[Submate] %s 파티 동시접속 위반 재신고가 접수됐어요.\n%s 까지 조치하지 않으면 %s 파티가 해체됩니다.\n지금 바로 비밀번호를 변경해주세요.",
+                productName, deadline, dissolutionDate
+        );
+    }
+
+    // 재알림 (4h/8h 경과)
+    public String hostRenotify(final String productName, final String deadline) {
+        return String.format(
+                "[Submate] %s 파티 동시접속 위반 조치가 아직 완료되지 않았어요.\n%s 까지 비밀번호를 변경하지 않으면 파티가 해체됩니다.",
+                productName, deadline
+        );
+    }
+
+    // 파티원 해체 예정 안내
+    public String partyDissolvingMember(final String productName, final String dissolutionDate) {
+        return String.format(
+                "[Submate] %s 파티가 동시접속 위반으로 %s 해체될 예정이에요.\n새 파티 매칭은 해체 후 자동으로 시작됩니다.",
+                productName, dissolutionDate
+        );
+    }
+
+    // 파티원 이용 정보 재등록 안내
+    public String credentialsUpdated(final String productName) {
+        return String.format(
+                "[Submate] %s 파티 이용 정보가 업데이트됐어요.\n웹에서 새 계정 정보를 확인해주세요.",
+                productName
+        );
+    }
+
+    // 파티원에게 기기 확인 요청 (신고 발생 시)
+    public String deviceCheckRequest(final String device, final String location) {
+        return String.format(
+                "[Submate] 낯선 기기가 감지됐어요.\n기기: %s / 위치: %s\n본인 기기인지 앱에서 확인해주세요.",
+                device, location
+        );
+    }
+
+    // 기기 감지 확인 요청
+    public String deviceAlert(final String device, final String location) {
+        return String.format(
+                "[Submate] 새로운 기기가 감지됐어요.\n기기: %s / 위치: %s\n본인 기기가 맞는지 웹에서 확인해주세요.",
+                device, location
+        );
+    }
+
+    // 해체 완료 알림
+    public String partyDissolvedFinal(final String productName) {
+        return String.format(
+                "[Submate] %s 파티가 동시접속 위반으로 해체됐어요.\n자동으로 새 파티 매칭이 시작됩니다.",
                 productName
         );
     }

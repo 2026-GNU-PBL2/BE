@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.common.mapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
@@ -61,8 +62,23 @@ public interface PartyMapper {
     int increaseCurrentMemberCountIfNotFull(Long partyId);
 
     // provision 타임아웃으로 파티 해체 처리
-    void terminateParty(
+    int terminateParty(
             @Param("partyId") Long partyId,
             @Param("terminatedAt") LocalDateTime terminatedAt
     );
+
+    // 동시접속 제어: 해체 예정일 설정
+    void updateDissolutionDate(
+            @Param("partyId") Long partyId,
+            @Param("dissolutionDate") LocalDate dissolutionDate
+    );
+
+    // 동시접속 제어: 경고 레벨 갱신 (0=정상, 1=1차, 2=해체예정)
+    void updateWarningLevel(
+            @Param("partyId") Long partyId,
+            @Param("warningLevel") int warningLevel
+    );
+
+    // 동시접속 제어: 자정 해체 스케줄러용 조회
+    List<Party> findByDissolutionDate(@Param("dissolutionDate") LocalDate dissolutionDate);
 }

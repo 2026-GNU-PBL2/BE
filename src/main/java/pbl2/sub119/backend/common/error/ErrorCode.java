@@ -121,7 +121,17 @@ public enum ErrorCode {
     SETTLEMENT_WITHDRAW_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "WITHDRAW002", "SETTLEMENT 유형의 인증된 대표 계좌가 없습니다."),
     SETTLEMENT_WITHDRAW_BALANCE_INSUFFICIENT(HttpStatus.BAD_REQUEST, "WITHDRAW003", "포인트 잔액이 부족합니다."),
     SETTLEMENT_WITHDRAW_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "WITHDRAW004", "환급 요청을 찾을 수 없습니다."),
-    SETTLEMENT_WITHDRAW_INVALID_STATUS(HttpStatus.CONFLICT, "WITHDRAW005", "이미 처리되었거나 처리할 수 없는 환급 요청 상태입니다.");
+    SETTLEMENT_WITHDRAW_INVALID_STATUS(HttpStatus.CONFLICT, "WITHDRAW005", "이미 처리되었거나 처리할 수 없는 환급 요청 상태입니다."),
+
+    // Concurrent Incident
+    CONCURRENT_NOT_ACCOUNT_SHARE(HttpStatus.BAD_REQUEST, "CONCURRENT001", "공유 계정 방식 파티에서만 신고할 수 있습니다."),
+    CONCURRENT_INCIDENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONCURRENT002", "인시던트를 찾을 수 없습니다."),
+    CONCURRENT_NOT_PARTY_MEMBER(HttpStatus.FORBIDDEN, "CONCURRENT003", "해당 파티 소속이 아닙니다."),
+    CONCURRENT_NOT_RESOLVABLE(HttpStatus.BAD_REQUEST, "CONCURRENT004", "현재 상태에서 조치 완료 처리가 불가합니다."),
+    DEVICE_ALERT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONCURRENT005", "기기 감지 알림을 찾을 수 없습니다."),
+    DEVICE_ALERT_EXPIRED(HttpStatus.BAD_REQUEST, "CONCURRENT006", "만료된 기기 감지 알림입니다."),
+    DEVICE_ALERT_ALREADY_RESPONDED(HttpStatus.BAD_REQUEST, "CONCURRENT007", "이미 응답한 기기 감지 알림입니다."),
+    CONCURRENT_NOT_HOST(HttpStatus.FORBIDDEN, "CONCURRENT008", "파티장만 수행할 수 있는 작업입니다.");
 
     private final HttpStatus status;
     private final String code;

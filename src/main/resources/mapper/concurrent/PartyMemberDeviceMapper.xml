@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.concurrent.mapper.PartyMemberDeviceMapper">
+
+    <resultMap id="partyMemberDeviceResultMap" type="pbl2.sub119.backend.concurrent.entity.PartyMemberDevice">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="partyId" column="party_id"/>
+        <result property="deviceType" column="device_type"/>
+        <result property="os" column="os"/>
+        <result property="browser" column="browser"/>
+        <result property="ipLocation" column="ip_location"/>
+        <result property="vpn" column="is_vpn"/>
+        <result property="registrationMethod" column="registration_method"/>
+        <result property="registeredAt" column="registered_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="pbl2.sub119.backend.concurrent.entity.PartyMemberDevice"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO party_member_device (
+            user_id, party_id, device_type, os, browser, ip_location,
+            is_vpn, registration_method, registered_at
+        ) VALUES (
+            #{userId}, #{partyId}, #{deviceType}, #{os}, #{browser}, #{ipLocation},
+            #{vpn}, #{registrationMethod}, NOW()
+        )
+    </insert>
+
+    <select id="findByUserId" resultMap="partyMemberDeviceResultMap">
+        SELECT * FROM party_member_device WHERE user_id = #{userId} ORDER BY registered_at DESC
+    </select>
+
+    <select id="findByPartyId" resultMap="partyMemberDeviceResultMap">
+        SELECT * FROM party_member_device WHERE party_id = #{partyId} ORDER BY registered_at DESC
+    </select>
+
+    <select id="findByUserIdAndPartyId" resultMap="partyMemberDeviceResultMap">
+        SELECT * FROM party_member_device
+        WHERE user_id = #{userId} AND party_id = #{partyId}
+        ORDER BY registered_at DESC
+        LIMIT 1
+    </select>
+
+</mapper>

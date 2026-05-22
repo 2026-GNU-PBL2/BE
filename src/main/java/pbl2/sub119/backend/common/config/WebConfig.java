@@ -50,6 +50,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/swagger-ui/**",    // Swagger UI 제외
                         "/v3/api-docs/**",   // OpenAPI Spec 제외
                         "/favicon.ico");
+
     }
 
     @Override

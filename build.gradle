@@ -68,6 +68,9 @@ dependencies {
 
 	//solapi
 	implementation 'com.solapi:sdk:1.0.3'
+
+	//UserAgent 파싱 (동시접속 기기 수집)
+	implementation 'eu.bitwalker:UserAgentUtils:1.21'
 }
 
 tasks.named('test') {

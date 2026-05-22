@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.common.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,4 +30,6 @@ public class Party {
     private LocalDateTime updatedAt;
     private LocalDateTime terminatedAt;
     private Integer pricePerMemberSnapshot;
+    private LocalDate dissolutionDate;
+    private Integer warningLevel;
 }

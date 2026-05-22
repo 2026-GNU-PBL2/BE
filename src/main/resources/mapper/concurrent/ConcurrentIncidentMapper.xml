@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="pbl2.sub119.backend.concurrent.mapper.ConcurrentIncidentMapper">
+
+    <resultMap id="incidentResultMap" type="pbl2.sub119.backend.concurrent.entity.ConcurrentIncident">
+        <id property="id" column="id"/>
+        <result property="partyId" column="party_id"/>
+        <result property="reportedBy" column="reported_by"/>
+        <result property="detectionSource" column="detection_source"/>
+        <result property="reportType" column="report_type"/>
+        <result property="status" column="status"/>
+        <result property="firstWarnedAt" column="first_warned_at"/>
+        <result property="hostDeadline" column="host_deadline"/>
+        <result property="dissolutionDate" column="dissolution_date"/>
+        <result property="adminEscalatedAt" column="admin_escalated_at"/>
+        <result property="resolvedAt" column="resolved_at"/>
+        <result property="webNotified" column="web_notified"/>
+        <result property="smsNotified" column="sms_notified"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="pbl2.sub119.backend.concurrent.entity.ConcurrentIncident"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO concurrent_incident (
+            party_id, reported_by, detection_source, report_type,
+            status, created_at, updated_at
+        ) VALUES (
+            #{partyId}, #{reportedBy}, #{detectionSource}, #{reportType},
+            #{status}, NOW(), NOW()
+        )
+    </insert>
+
+    <select id="findById" resultMap="incidentResultMap">
+        SELECT * FROM concurrent_incident WHERE id = #{id}
+    </select>
+
+    <select id="findByPartyId" resultMap="incidentResultMap">
+        SELECT * FROM concurrent_incident WHERE party_id = #{partyId} ORDER BY created_at DESC
+    </select>
+
+    <select id="existsByPartyIdAndStatus" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM concurrent_incident
+        WHERE party_id = #{partyId} AND status = #{status}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE concurrent_incident
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateFirstWarned">
+        UPDATE concurrent_incident
+        SET status          = 'FIRST_WARNING_SENT',
+            first_warned_at = #{firstWarnedAt},
+            host_deadline   = #{hostDeadline},
+            updated_at      = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateDissolutionDate">
+        UPDATE concurrent_incident
+        SET dissolution_date = #{dissolutionDate},
+            status           = 'DISSOLUTION_SCHEDULED',
+            updated_at       = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateResolved">
+        UPDATE concurrent_incident
+        SET status      = 'RESOLVED',
+            resolved_at = NOW(),
+            updated_at  = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateAdminEscalated">
+        UPDATE concurrent_incident
+        SET admin_escalated_at = NOW(),
+            updated_at         = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateWebNotified">
+        UPDATE concurrent_incident
+        SET web_notified = 1, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSmsNotified">
+        UPDATE concurrent_incident
+        SET sms_notified = 1, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 4시간 경과, 웹 미발송, DISSOLUTION_SCHEDULED 상태 -->
+    <select id="findForWebRenotification" resultMap="incidentResultMap">
+        SELECT * FROM concurrent_incident
+        WHERE status = 'DISSOLUTION_SCHEDULED'
+          AND web_notified = 0
+          AND created_at &lt;= #{threshold}
+    </select>
+
+    <!-- 8시간 경과, SMS 미발송, DISSOLUTION_SCHEDULED 상태 -->
+    <select id="findForSmsRenotification" resultMap="incidentResultMap">
+        SELECT * FROM concurrent_incident
+        WHERE status = 'DISSOLUTION_SCHEDULED'
+          AND sms_notified = 0
+          AND created_at &lt;= #{threshold}
+    </select>
+
+    <!-- host_deadline 초과, 파티장 에스컬레이션 미처리 -->
+    <select id="findForAdminEscalation" resultMap="incidentResultMap">
+        SELECT * FROM concurrent_incident
+        WHERE host_deadline IS NOT NULL
+          AND host_deadline &lt; #{now}
+          AND admin_escalated_at IS NULL
+          AND status NOT IN ('RESOLVED', 'PARTY_DISSOLVED')
+    </select>
+
+</mapper>

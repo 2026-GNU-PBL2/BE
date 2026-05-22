@@ -40,6 +40,22 @@
         updated_at
     </sql>
 
+    <sql id="partyOperationColumnsWithPoAlias">
+        po.id,
+    po.party_id,
+    po.operation_type,
+    po.operation_status,
+    po.invite_value,
+    po.shared_account_email,
+    po.shared_account_password_encrypted,
+    po.operation_guide,
+    po.operation_started_at,
+    po.operation_completed_at,
+    po.last_reset_at,
+    po.created_at,
+    po.updated_at
+    </sql>
+
     <!-- 파티 기준 현재 운영 정보 단건 조회 -->
     <select id="findByPartyId" resultMap="partyOperationResultMap">
         SELECT
@@ -167,13 +183,13 @@
     <!-- 24시간 초과 -> 파티 해체 -->
     <select id="findTimedOutProvisions" resultMap="partyOperationResultMap">
         SELECT
-        <include refid="partyOperationColumns"/>
+         <include refid="partyOperationColumnsWithPoAlias"/>
         FROM party_operation po
-                 INNER JOIN party p ON p.id = po.party_id
+        INNER JOIN party p ON p.id = po.party_id
         WHERE po.operation_status != 'ACTIVE'
-          AND po.operation_started_at IS NULL
-          AND p.operation_status != 'TERMINATED'
-          AND TIMESTAMPDIFF(HOUR, po.created_at, NOW()) >= 24
+        AND po.operation_started_at IS NULL
+        AND p.operation_status != 'TERMINATED'
+        AND po.created_at <![CDATA[<=]]> DATEADD('HOUR', -24, CURRENT_TIMESTAMP)
     </select>
 
     <!--
@@ -183,19 +199,7 @@
     -->
     <select id="findHostProvisionAt24hDue" resultMap="partyOperationResultMap">
         SELECT
-            po.id,
-            po.party_id,
-            po.operation_type,
-            po.operation_status,
-            po.invite_value,
-            po.shared_account_email,
-            po.shared_account_password_encrypted,
-            po.operation_guide,
-            po.operation_started_at,
-            po.operation_completed_at,
-            po.last_reset_at,
-            po.created_at,
-            po.updated_at
+        <include refid="partyOperationColumnsWithPoAlias"/>
         FROM party_operation po
                  INNER JOIN party p ON p.id = po.party_id
         WHERE po.operation_status != 'ACTIVE'
@@ -215,7 +219,7 @@
                 WHERE n.party_id = po.party_id
                   AND n.user_id = p.host_user_id
                   AND n.type = 'HOST_PROVISION_REMINDER'
-            ) <![CDATA[<=]]> NOW() - INTERVAL #{reminderIntervalHours} HOUR
+            ) <![CDATA[<=]]> DATEADD('HOUR', -#{reminderIntervalHours}, NOW())
           )
     </select>
 

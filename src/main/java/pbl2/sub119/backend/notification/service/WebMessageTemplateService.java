@@ -73,4 +73,40 @@ public class WebMessageTemplateService {
     public String testCardPaymentNotice() {
         return "카드 확인을 위해 100원이 결제됐어요. 곧바로 환불됩니다.";
     }
+
+    public String concurrentWarning1(final String productName) {
+        return String.format("%s 파티에서 동시접속 위반이 감지됐어요. 규칙을 준수해주세요.", productName);
+    }
+
+    public String hostActionRequired24h(final String productName, final String deadline) {
+        return String.format("%s 파티 동시접속 위반 신고가 접수됐어요. %s 까지 비밀번호를 변경하고 이용 정보를 재공유해주세요.", productName, deadline);
+    }
+
+    public String hostUrgentPasswordChange(final String productName, final String deadline, final String dissolutionDate) {
+        return String.format("%s 파티 동시접속 위반 재신고가 접수됐어요. %s 까지 미조치 시 %s 파티가 해체돼요.", productName, deadline, dissolutionDate);
+    }
+
+    public String hostRenotify(final String productName, final String deadline) {
+        return String.format("%s 파티 조치 기한이 %s 로 다가왔어요. 지금 바로 비밀번호를 변경해주세요.", productName, deadline);
+    }
+
+    public String partyDissolvingMember(final String productName, final String dissolutionDate) {
+        return String.format("%s 파티가 동시접속 위반으로 %s 해체될 예정이에요.", productName, dissolutionDate);
+    }
+
+    public String credentialsUpdated(final String productName) {
+        return String.format("%s 파티 이용 정보가 업데이트됐어요. 새 계정 정보를 확인해주세요.", productName);
+    }
+
+    public String deviceCheckRequest(final String device, final String location) {
+        return String.format("낯선 기기(%s)가 %s에서 감지됐어요. 본인 기기인지 확인하고 응답해주세요.", device, location);
+    }
+
+    public String deviceAlert(final String device, final String location) {
+        return String.format("새로운 기기(%s, %s)가 감지됐어요. 본인 기기인지 확인해주세요.", device, location);
+    }
+
+    public String partyDissolvedFinal(final String productName) {
+        return String.format("%s 파티가 동시접속 위반으로 해체됐어요. 새 파티 매칭이 자동으로 시작돼요.", productName);
+    }
 }
