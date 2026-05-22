@@ -24,6 +24,11 @@
                  INNER JOIN party p ON p.id = pc.party_id
         WHERE pc.status = #{runningStatus}
           AND p.operation_status = #{activeOperationStatus}
+          AND NOT EXISTS (
+              SELECT 1 FROM party_operation po
+              WHERE po.party_id = pc.party_id
+                AND po.operation_status = 'RESET_REQUIRED'
+          )
         ORDER BY pc.id ASC
     </select>
 
