@@ -100,7 +100,7 @@ public class PartyProvisionCommandService {
                     partyId,
                     provision.getOperationType(),
                     provision.getOperationStatus(),
-                    partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId())
+                    partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId(), party.getHostUserId())
             );
         }
 
@@ -137,7 +137,7 @@ public class PartyProvisionCommandService {
                 partyId,
                 request.provisionType(),
                 ProvisionStatus.IN_PROGRESS,
-                partyProvisionMemberMapper.findResponsesByPartyOperationId(existingProvision.getId())
+                partyProvisionMemberMapper.findResponsesByPartyOperationId(existingProvision.getId(), party.getHostUserId())
         );
     }
 

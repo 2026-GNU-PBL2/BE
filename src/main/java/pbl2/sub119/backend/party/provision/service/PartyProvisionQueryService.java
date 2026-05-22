@@ -40,7 +40,7 @@ public class PartyProvisionQueryService {
         final PartyProvision provision = getProvisionByPartyId(partyId);
 
         final List<PartyProvisionMemberResponse> members =
-                partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId());
+                partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId(), party.getHostUserId());
 
         final int totalMemberCount = members.size();
 
@@ -78,7 +78,7 @@ public class PartyProvisionQueryService {
             return partyProvisionMemberMapper.findMemberEmailsByPartyId(partyId, party.getHostUserId());
         }
 
-        return partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId());
+        return partyProvisionMemberMapper.findResponsesByPartyOperationId(provision.getId(), party.getHostUserId());
     }
 
     // 본인에게 필요한 이용 정보 조회
