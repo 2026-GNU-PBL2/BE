@@ -11,6 +11,7 @@ import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
 import pbl2.sub119.backend.notification.service.WebMessageTemplateService;
+import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
@@ -58,14 +59,17 @@ public class CredentialService {
     // 파티장이 비밀번호를 변경하고 파티원 전체에 이용 정보 재등록 알림 발송
     @Transactional
     public void notifyCredentialsUpdated(final Long partyId, final Long hostUserId) {
+        final Party party = partyMapper.findById(partyId);
+        if (party == null) {
+            throw new ConcurrentException(ErrorCode.NOT_FOUND);
+        }
         final PartyMember host = partyMemberMapper.findByPartyIdAndUserId(partyId, hostUserId);
-        if (host == null) {
-            throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_PARTY_MEMBER);
+        if (host == null || !party.getHostUserId().equals(hostUserId)) {
+            throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_HOST);
         }
 
-        final String productName = subProductMapper.findById(
-                partyMapper.findById(partyId).getProductId()
-        ).map(p -> p.getServiceName()).orElse("서비스");
+        final String productName = subProductMapper.findById(party.getProductId())
+                .map(p -> p.getServiceName()).orElse("서비스");
 
         final List<PartyMember> members = partyMemberMapper.findMembersByPartyId(partyId);
         for (final PartyMember member : members) {

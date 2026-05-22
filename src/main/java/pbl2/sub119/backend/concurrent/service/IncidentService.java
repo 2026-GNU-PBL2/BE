@@ -83,6 +83,10 @@ public class IncidentService {
         if (!incident.getPartyId().equals(partyId)) {
             throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_PARTY_MEMBER);
         }
+        final Party party = partyMapper.findById(partyId);
+        if (party == null || !party.getHostUserId().equals(hostUserId)) {
+            throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_HOST);
+        }
         if (incident.getStatus() != IncidentStatus.FIRST_WARNING_SENT
                 && incident.getStatus() != IncidentStatus.DISSOLUTION_SCHEDULED) {
             throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_RESOLVABLE);

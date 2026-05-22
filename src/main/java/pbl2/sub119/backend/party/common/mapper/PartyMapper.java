@@ -62,7 +62,7 @@ public interface PartyMapper {
     int increaseCurrentMemberCountIfNotFull(Long partyId);
 
     // provision 타임아웃으로 파티 해체 처리
-    void terminateParty(
+    int terminateParty(
             @Param("partyId") Long partyId,
             @Param("terminatedAt") LocalDateTime terminatedAt
     );

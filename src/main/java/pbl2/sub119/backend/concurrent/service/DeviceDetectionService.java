@@ -112,8 +112,15 @@ public class DeviceDetectionService {
         if (event == null) {
             throw new ConcurrentException(ErrorCode.DEVICE_ALERT_NOT_FOUND);
         }
-        if (event.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (event.getStatus() != DeviceDetectionStatus.PENDING
+                || event.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ConcurrentException(ErrorCode.DEVICE_ALERT_EXPIRED);
+        }
+        if (partyMemberMapper.findByPartyIdAndUserId(event.getPartyId(), userId) == null) {
+            throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_PARTY_MEMBER);
+        }
+        if (deviceDetectionMapper.markUserRespondedIfAbsent(alertId, userId) == 0) {
+            throw new ConcurrentException(ErrorCode.DEVICE_ALERT_ALREADY_RESPONDED);
         }
 
         if (isMyDevice) {
@@ -124,14 +131,14 @@ public class DeviceDetectionService {
 
         final DeviceDetectionEvent updated = deviceDetectionMapper.findById(alertId);
         final int total = updated.getMineCount() + updated.getUnknownCount();
-        final boolean unknownMajority = total > 0
-                && updated.getUnknownCount() * 2 > total;
 
-        if (unknownMajority) {
-            deviceDetectionMapper.updateStatus(alertId, DeviceDetectionStatus.REPORTED_UNKNOWN);
-            notifyHostOnUnknownMajority(updated);
-        } else if (updated.getMineCount() * 2 > total) {
-            deviceDetectionMapper.updateStatus(alertId, DeviceDetectionStatus.CONFIRMED_MINE);
+        if (total > 0 && updated.getUnknownCount() * 2 > total) {
+            final int affected = deviceDetectionMapper.updateStatusIfPending(alertId, DeviceDetectionStatus.REPORTED_UNKNOWN);
+            if (affected > 0) {
+                notifyHostOnUnknownMajority(updated);
+            }
+        } else if (total > 0 && updated.getMineCount() * 2 > total) {
+            deviceDetectionMapper.updateStatusIfPending(alertId, DeviceDetectionStatus.CONFIRMED_MINE);
         }
 
         final DeviceDetectionEvent result = deviceDetectionMapper.findById(alertId);

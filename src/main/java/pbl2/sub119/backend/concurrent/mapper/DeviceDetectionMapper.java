@@ -26,5 +26,11 @@ public interface DeviceDetectionMapper {
 
     void incrementResponseCount(@Param("id") Long id);
 
+    // 중복 응답 방지: 미응답자에게만 1을 반환, 이미 응답했으면 0 반환
+    int markUserRespondedIfAbsent(@Param("id") Long id, @Param("userId") Long userId);
+
+    // 상태 전환 1회 보장: PENDING 상태일 때만 업데이트, 영향 행 수 반환
+    int updateStatusIfPending(@Param("id") Long id, @Param("status") DeviceDetectionStatus status);
+
     List<DeviceDetectionEvent> findExpiredPending(@Param("now") java.time.LocalDateTime now);
 }

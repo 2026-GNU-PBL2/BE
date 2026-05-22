@@ -21,7 +21,6 @@ import pbl2.sub119.backend.party.common.entity.MatchWaitingQueue;
 import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.enumerated.MatchWaitingStatus;
-import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
 import pbl2.sub119.backend.party.common.mapper.MatchWaitingQueueMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
@@ -44,14 +43,13 @@ public class EscalationService {
 
     @Transactional
     public void dissolveParty(final Party party) {
-        if (party.getOperationStatus() == OperationStatus.TERMINATED) {
-            return;
-        }
-
         final LocalDateTime now = LocalDateTime.now();
         final Long partyId = party.getId();
 
-        partyMapper.terminateParty(partyId, now);
+        // DB 상태 기준 조건부 업데이트: 이미 TERMINATED이면 0 반환 → 멱등 처리
+        if (partyMapper.terminateParty(partyId, now) == 0) {
+            return;
+        }
 
         final String productName = subProductMapper.findById(party.getProductId())
                 .map(p -> p.getServiceName())

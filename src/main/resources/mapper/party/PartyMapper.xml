@@ -197,6 +197,7 @@
             terminated_at    = #{terminatedAt},
             updated_at       = #{terminatedAt}
         WHERE id = #{partyId}
+          AND operation_status != 'TERMINATED'
     </update>
 
     <!-- 동시접속 제어: 해체 예정일 설정 -->
