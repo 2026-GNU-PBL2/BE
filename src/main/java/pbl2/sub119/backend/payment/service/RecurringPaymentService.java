@@ -10,6 +10,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import pbl2.sub119.backend.common.enumerated.PartyCycleStatus;
 import pbl2.sub119.backend.party.common.enumerated.OperationStatus;
+import pbl2.sub119.backend.party.cycle.service.PartyCycleService;
 import pbl2.sub119.backend.payment.dto.RecurringPaymentTarget;
 import pbl2.sub119.backend.payment.entity.PartyCycle;
 import pbl2.sub119.backend.payment.event.PaymentExecutionRequestedEvent;
@@ -29,6 +30,7 @@ public class RecurringPaymentService {
     private final PartyCycleMapper partyCycleMapper;
     private final PaymentExecutionQueryMapper paymentExecutionQueryMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final PartyCycleService partyCycleService;
 
     @Transactional
     public void processDueCycles() {
@@ -50,6 +52,28 @@ public class RecurringPaymentService {
         }
     }
 
+    @Transactional
+    public void triggerDelayedPaymentForParty(Long partyId) {
+        RecurringPaymentTarget target = recurringPaymentQueryMapper.findRunningCycleByPartyId(
+                partyId,
+                PartyCycleStatus.RUNNING,
+                OperationStatus.ACTIVE
+        );
+
+        if (target == null) {
+            log.info("지연 결제 트리거 스킵. RUNNING 사이클 없음 또는 파티 비활성. partyId={}", partyId);
+            return;
+        }
+
+        LocalDateTime nextBillingDueAt = target.getBillingDueAt().plusMonths(1);
+        if (nextBillingDueAt.isAfter(LocalDateTime.now())) {
+            log.info("지연 결제 트리거 스킵. 다음 결제일 미도래. partyId={}, nextBillingDueAt={}", partyId, nextBillingDueAt);
+            return;
+        }
+
+        createNextCycleAndPublish(target, nextBillingDueAt);
+    }
+
     private void createNextCycleAndPublish(
             RecurringPaymentTarget target,
             LocalDateTime nextBillingDueAt
@@ -67,6 +91,12 @@ public class RecurringPaymentService {
         LocalDateTime now = LocalDateTime.now();
         // 다음 회차 snapshot은 반복회차 실제 과금 대상과 동일하게 ACTIVE MEMBER 수로 저장한다.
         int billableMemberCount = paymentExecutionQueryMapper.countActiveMembersByPartyId(target.getPartyId());
+
+        if (billableMemberCount == 0) {
+            log.info("과금 대상 0명. 파티 해체 판단으로 위임. partyId={}", target.getPartyId());
+            partyCycleService.dissolveAllLeaveReservedParty(target.getPartyId());
+            return;
+        }
 
         PartyCycle nextCycle = PartyCycle.builder()
                 .partyId(target.getPartyId())
