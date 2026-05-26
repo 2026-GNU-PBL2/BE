@@ -20,6 +20,9 @@ public interface ConcurrentIncidentMapper {
             @Param("status") IncidentStatus status
     );
 
+    // 1차 경고를 받은 이력이 있는 파티인지 확인 (FIRST_WARNING_SENT 또는 RESOLVED 포함)
+    boolean hasAnyPriorWarning(@Param("partyId") Long partyId);
+
     void updateStatus(
             @Param("id") Long id,
             @Param("status") IncidentStatus status

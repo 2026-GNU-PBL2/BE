@@ -25,6 +25,7 @@ import pbl2.sub119.backend.concurrent.dto.request.ReportRequest;
 import pbl2.sub119.backend.concurrent.dto.response.CredentialResponse;
 import pbl2.sub119.backend.concurrent.dto.response.DeviceRegisterResult;
 import pbl2.sub119.backend.concurrent.dto.response.DeviceReportResult;
+import pbl2.sub119.backend.concurrent.dto.response.PartyMemberDeviceResponse;
 import pbl2.sub119.backend.concurrent.dto.response.DeviceResponseResult;
 import pbl2.sub119.backend.concurrent.dto.response.IncidentHistoryResponse;
 import pbl2.sub119.backend.concurrent.dto.response.IncidentResult;
@@ -172,7 +173,8 @@ public class ConcurrentDocs {
                                 content = @Content(schema = @Schema(implementation = ResolveResult.class))
                         ),
                         @ApiResponse(responseCode = "404", description = "CONCURRENT002 - 인시던트를 찾을 수 없습니다."),
-                        @ApiResponse(responseCode = "400", description = "CONCURRENT004 - 이미 처리된 인시던트입니다.")
+                        @ApiResponse(responseCode = "400", description = "CONCURRENT004 - 현재 상태에서 조치 완료 처리가 불가합니다."),
+                        @ApiResponse(responseCode = "400", description = "CONCURRENT009 - 이용 재등록을 먼저 완료해야 조치 완료 처리가 가능합니다.")
                 }
         )
         @PostMapping("/{partyId}/resolve")
@@ -199,7 +201,8 @@ public class ConcurrentDocs {
                         - PARTY_DISSOLVED : 파티가 해체된 상태입니다.
 
                         상태값 안내 (detectionSource)
-                        - MEMBER_REPORT : 멤버 신고로 감지된 인시던트입니다.
+                        - MEMBER_REPORT : 파티 멤버가 동시접속 위반을 직접 신고하여 생성된 인시던트입니다.
+                        - DEVICE_DETECTION : 낯선 기기 감지 신고 후 파티원 응답 결과(전원 모르는 기기)로 자동 생성된 인시던트입니다.
                         """,
                 responses = {
                         @ApiResponse(
@@ -258,33 +261,6 @@ public class ConcurrentDocs {
                 @PathVariable Long partyId
         );
 
-        @Operation(
-                summary = "비밀번호 변경 후 파티원 재알림",
-                description = """
-                        파티장이 공유 계정 비밀번호를 변경한 뒤 파티원 전체에게 변경 알림을 발송합니다.
-
-                        이 API는 아래 화면에서 사용합니다.
-                        - 파티장 이용 관리 화면 → 비밀번호 변경 완료 후 알림 보내기 버튼
-                        - 경고 조치 완료 화면 → 비밀번호 변경 안내 발송 버튼
-
-                        동작 안내
-                        - 파티장 본인을 제외한 모든 파티원에게 "이용 정보가 변경되었습니다" 알림을 발송합니다.
-                        - 파티원은 이 알림을 받으면 계정 정보 조회 API를 통해 변경된 비밀번호를 확인할 수 있습니다.
-
-                        안내
-                        - 파티장만 호출할 수 있습니다.
-                        - 응답 바디는 없습니다.
-                        """,
-                responses = {
-                        @ApiResponse(responseCode = "200", description = "알림 발송 성공"),
-                        @ApiResponse(responseCode = "403", description = "CONCURRENT003 - 해당 파티의 멤버가 아닙니다.")
-                }
-        )
-        @PostMapping("/{partyId}/notify-update")
-        ResponseEntity<Void> notifyUpdate(
-                @Parameter(hidden = true) @Auth Accessor accessor,
-                @PathVariable Long partyId
-        );
     }
 
     @Tag(name = "Concurrent API")
@@ -300,7 +276,7 @@ public class ConcurrentDocs {
                         - 파티원 화면 → 동시 시청 제한 알림 수신 후 '낯선 기기 신고' 버튼
 
                         신고 후 동작
-                        - 전체 파티원에게 "내 기기인지 확인해주세요" 알림이 발송됩니다.
+                        - 신고자를 제외한 파티원에게 "내 기기인지 확인해주세요" 알림이 발송됩니다.
                         - 각 파티원은 응답 API(/device-alerts/{alertId}/respond)로 응답합니다.
                         - 응답 기한은 24시간입니다.
 
@@ -320,7 +296,17 @@ public class ConcurrentDocs {
                                                 value = """
                                                         {
                                                           "detectedDevice": "Windows PC",
-                                                          "detectedLocation": "부산"
+                                                          "detectedLocation": "부산",
+                                                          "detectedAt": "2026-05-25T22:30:00"
+                                                        }
+                                                        """
+                                        ),
+                                        @ExampleObject(
+                                                name = "감지 시각 생략 예시 (신고 시점으로 자동 설정)",
+                                                value = """
+                                                        {
+                                                          "detectedDevice": "iPhone 15",
+                                                          "detectedLocation": "서울"
                                                         }
                                                         """
                                         )
@@ -380,14 +366,18 @@ public class ConcurrentDocs {
                         - 기기 감지 알림 팝업 → "내 기기입니다" / "모르는 기기입니다" 버튼
 
                         응답 처리 안내
-                        - 파티원 과반수가 "내 기기입니다"로 응답하면 CONFIRMED_MINE 상태로 종료됩니다.
-                        - 파티원 과반수가 "모르는 기기입니다"로 응답하면 파티장에게 즉시 경보 알림이 발송됩니다.
+                        - 1명이라도 "내 기기입니다"로 응답하면 즉시 CONFIRMED_MINE 상태로 종료됩니다.
+                          → 비밀번호 변경 없이 동시접속·외부 공유 금지 경고 알림이 전체 파티원에게 발송됩니다.
+                        - 신고자를 제외한 모든 파티원이 "모르는 기기입니다"로 응답하고 mine_count = 0이면 REPORTED_UNKNOWN 상태로 전환됩니다.
+                          → 동시접속 위반으로 처리되어 1차 또는 2차 경고 인시던트가 자동 생성됩니다.
+                          → 파티원 전체에게 경고 알림, 파티장에게 조치 요청 알림이 발송됩니다.
                         - 응답 기한이 지난 알림(EXPIRED)에는 응답할 수 없습니다.
+                          → 만료 시점까지 mine_count = 0이면 동일하게 인시던트가 자동 생성됩니다.
 
                         상태값 안내 (status)
                         - PENDING : 아직 응답이 집계 중인 상태입니다.
-                        - CONFIRMED_MINE : 과반수가 내 기기로 응답한 상태입니다.
-                        - REPORTED_UNKNOWN : 과반수가 모르는 기기로 응답해 파티장 알림이 발송된 상태입니다.
+                        - CONFIRMED_MINE : 1명 이상이 내 기기로 응답한 상태입니다.
+                        - REPORTED_UNKNOWN : 신고자 제외 전원이 모르는 기기로 응답해 인시던트가 생성된 상태입니다.
                         - EXPIRED : 응답 기한이 만료된 상태입니다.
 
                         응답 필드 안내
@@ -428,7 +418,8 @@ public class ConcurrentDocs {
                                 content = @Content(schema = @Schema(implementation = DeviceResponseResult.class))
                         ),
                         @ApiResponse(responseCode = "404", description = "CONCURRENT005 - 감지 알림을 찾을 수 없습니다."),
-                        @ApiResponse(responseCode = "400", description = "CONCURRENT006 - 만료된 감지 알림입니다.")
+                        @ApiResponse(responseCode = "400", description = "CONCURRENT006 - 만료된 감지 알림입니다."),
+                        @ApiResponse(responseCode = "400", description = "CONCURRENT007 - 이미 응답한 감지 알림입니다.")
                 }
         )
         @PostMapping("/{alertId}/respond")
@@ -472,6 +463,35 @@ public class ConcurrentDocs {
 
     @Tag(name = "Concurrent API")
     public interface PartyMemberDevice {
+
+        @Operation(
+                summary = "파티 등록 기기 목록 조회",
+                description = """
+                        파티에 등록된 모든 파티원의 기기 목록을 조회합니다.
+
+                        이 API는 아래 화면에서 사용합니다.
+                        - 파티 상세 화면 → 동시접속 관리 → 낯선 기기 신고 전 등록 기기 비교 화면
+                        - 낯선 기기 감지 신고 후 감지된 기기와 등록 기기를 대조하는 화면
+
+                        안내
+                        - 해당 파티의 파티장 또는 파티원만 조회할 수 있습니다.
+                        """,
+                responses = {
+                        @ApiResponse(
+                                responseCode = "200",
+                                description = "기기 목록 조회 성공",
+                                content = @Content(
+                                        array = @ArraySchema(schema = @Schema(implementation = PartyMemberDeviceResponse.class))
+                                )
+                        ),
+                        @ApiResponse(responseCode = "403", description = "CONCURRENT003 - 해당 파티의 멤버가 아닙니다.")
+                }
+        )
+        @GetMapping("/{partyId}")
+        ResponseEntity<List<PartyMemberDeviceResponse>> getDevices(
+                @Parameter(hidden = true) @Auth Accessor accessor,
+                @PathVariable Long partyId
+        );
 
         @Operation(
                 summary = "내 기기 수동 등록",

@@ -57,13 +57,4 @@ public class CredentialController implements ConcurrentDocs.Credential {
         }
     }
 
-    // 파티장 비밀번호 변경 후 파티원 재알림
-    @PostMapping("/{partyId}/notify-update")
-    public ResponseEntity<Void> notifyUpdate(
-            @Auth final Accessor accessor,
-            @PathVariable final Long partyId
-    ) {
-        credentialService.notifyCredentialsUpdated(partyId, accessor.getUserId());
-        return ResponseEntity.ok().build();
-    }
 }

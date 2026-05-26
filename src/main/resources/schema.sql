@@ -358,6 +358,7 @@ CREATE TABLE notification (
                               scheduled_at DATETIME NULL,
                               sent_at DATETIME NULL,
                               read_at DATETIME NULL,
+                              reference_id BIGINT NULL,
                               created_at DATETIME NOT NULL,
                               updated_at DATETIME NOT NULL
 );
@@ -476,6 +477,7 @@ CREATE TABLE IF NOT EXISTS device_detection_event (
     detected_at         DATETIME NOT NULL,
     status              VARCHAR(30) NOT NULL DEFAULT 'PENDING',
     notified_user_ids   TEXT,
+    responded_user_ids  TEXT NULL,
     response_count      INT NOT NULL DEFAULT 0,
     mine_count          INT NOT NULL DEFAULT 0,
     unknown_count       INT NOT NULL DEFAULT 0,
@@ -488,14 +490,15 @@ CREATE TABLE IF NOT EXISTS device_detection_event (
 CREATE TABLE IF NOT EXISTS party_member_device (
     id                  BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id             BIGINT NOT NULL,
-    party_id            BIGINT,
-    device_type         VARCHAR(20),
-    os                  VARCHAR(50),
-    browser             VARCHAR(50),
+    party_id            BIGINT NOT NULL,
+    device_type         VARCHAR(20) NOT NULL,
+    os                  VARCHAR(50) NOT NULL,
+    browser             VARCHAR(50) NOT NULL,
     ip_location         VARCHAR(100),
     is_vpn              TINYINT(1) NOT NULL DEFAULT 0,
     registration_method VARCHAR(20),
-    registered_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    registered_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_party_member_device UNIQUE (user_id, party_id, device_type, os, browser)
 );
 
 -- party 컬럼 추가 (2026.05.21 / kjh)

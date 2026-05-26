@@ -27,6 +27,7 @@ public class Notification {
     private LocalDateTime scheduledAt;
     private LocalDateTime sentAt;
     private LocalDateTime readAt;
+    private Long referenceId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

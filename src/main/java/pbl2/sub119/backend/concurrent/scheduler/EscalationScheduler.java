@@ -13,6 +13,7 @@ import pbl2.sub119.backend.concurrent.enumerated.DeviceDetectionStatus;
 import pbl2.sub119.backend.concurrent.mapper.ConcurrentIncidentMapper;
 import pbl2.sub119.backend.concurrent.mapper.DeviceDetectionMapper;
 import pbl2.sub119.backend.concurrent.service.EscalationService;
+import pbl2.sub119.backend.concurrent.service.IncidentService;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
 import pbl2.sub119.backend.notification.service.SmsMessageTemplateService;
@@ -31,6 +32,7 @@ public class EscalationScheduler {
     private final PartyMapper partyMapper;
     private final SubProductMapper subProductMapper;
     private final EscalationService escalationService;
+    private final IncidentService incidentService;
     private final NotificationCommandService notificationCommandService;
     private final SmsMessageTemplateService smsTemplate;
     private final WebMessageTemplateService webTemplate;
@@ -115,13 +117,16 @@ public class EscalationScheduler {
         }
     }
 
-    // 24시간 경과 PENDING 기기 감지 이벤트 → EXPIRED 처리
+    // 24시간 경과 PENDING 기기 감지 이벤트 → EXPIRED 처리, 아무도 내 기기라고 안 했으면 파티장 알림
     @Scheduled(fixedDelay = 900_000)
     public void expireDeviceAlerts() {
         final List<DeviceDetectionEvent> targets = deviceDetectionMapper.findExpiredPending(LocalDateTime.now());
 
         for (final DeviceDetectionEvent event : targets) {
             try {
+                if (event.getMineCount() == 0) {
+                    incidentService.processWarningFromDeviceDetection(event.getPartyId());
+                }
                 deviceDetectionMapper.updateStatus(event.getId(), DeviceDetectionStatus.EXPIRED);
                 log.info("기기 감지 이벤트 만료 처리. alertId={}, partyId={}", event.getId(), event.getPartyId());
             } catch (Exception e) {

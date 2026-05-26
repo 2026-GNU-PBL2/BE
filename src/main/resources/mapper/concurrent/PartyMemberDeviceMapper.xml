@@ -44,4 +44,29 @@
         LIMIT 1
     </select>
 
+    <resultMap id="partyMemberDeviceWithUserResultMap"
+               type="pbl2.sub119.backend.concurrent.dto.response.PartyMemberDeviceResponse">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="email" column="submate_email"/>
+        <result property="deviceType" column="device_type"/>
+        <result property="os" column="os"/>
+        <result property="browser" column="browser"/>
+        <result property="ipLocation" column="ip_location"/>
+        <result property="vpn" column="is_vpn"/>
+        <result property="registrationMethod" column="registration_method"/>
+        <result property="registeredAt" column="registered_at"/>
+    </resultMap>
+
+    <select id="findByPartyIdWithUserInfo" resultMap="partyMemberDeviceWithUserResultMap">
+        SELECT pmd.id, pmd.user_id, pmd.device_type, pmd.os, pmd.browser,
+               pmd.ip_location, pmd.is_vpn, pmd.registration_method, pmd.registered_at,
+               u.nickname, u.submate_email
+        FROM party_member_device pmd
+                 LEFT JOIN users u ON pmd.user_id = u.id
+        WHERE pmd.party_id = #{partyId}
+        ORDER BY pmd.registered_at DESC
+    </select>
+
 </mapper>

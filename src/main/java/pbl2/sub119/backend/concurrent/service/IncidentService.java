@@ -29,6 +29,9 @@ import pbl2.sub119.backend.party.common.entity.Party;
 import pbl2.sub119.backend.party.common.entity.PartyMember;
 import pbl2.sub119.backend.party.common.mapper.PartyMapper;
 import pbl2.sub119.backend.party.common.mapper.PartyMemberMapper;
+import pbl2.sub119.backend.party.provision.entity.PartyProvision;
+import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
+import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.subproduct.entity.SubProduct;
 import pbl2.sub119.backend.subproduct.enumerated.OperationType;
 import pbl2.sub119.backend.subproduct.mapper.SubProductMapper;
@@ -43,6 +46,7 @@ public class IncidentService {
     private final ConcurrentIncidentMapper incidentMapper;
     private final PartyWarningHistoryMapper warningHistoryMapper;
     private final UserViolationRecordMapper violationRecordMapper;
+    private final PartyProvisionMapper partyProvisionMapper;
     private final NotificationCommandService notificationCommandService;
     private final SmsMessageTemplateService smsTemplate;
     private final WebMessageTemplateService webTemplate;
@@ -65,12 +69,34 @@ public class IncidentService {
             throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_PARTY_MEMBER);
         }
 
-        final boolean hasPriorWarning = incidentMapper.existsByPartyIdAndStatus(partyId, IncidentStatus.FIRST_WARNING_SENT);
+        final boolean hasPriorWarning = incidentMapper.hasAnyPriorWarning(partyId);
 
         if (hasPriorWarning) {
             return processSecondWarning(party, product, reportedBy, reportType);
         } else {
             return processFirstWarning(party, product, reportedBy, reportType);
+        }
+    }
+
+    // 기기 감지 흐름(REPORTED_UNKNOWN / 만료)에서 호출 — 직접 신고와 동일한 경고 체계로 연결
+    @Transactional
+    public void processWarningFromDeviceDetection(final Long partyId) {
+        final Party party = partyMapper.findById(partyId);
+        if (party == null) {
+            return;
+        }
+
+        final SubProduct product = subProductMapper.findById(party.getProductId()).orElse(null);
+        if (product == null || product.getOperationType() != OperationType.ACCOUNT_SHARE) {
+            return;
+        }
+
+        final boolean hasPriorWarning = incidentMapper.hasAnyPriorWarning(partyId);
+
+        if (hasPriorWarning) {
+            processSecondWarning(party, product, null, DetectionSource.DEVICE_DETECTION.name());
+        } else {
+            processFirstWarning(party, product, null, DetectionSource.DEVICE_DETECTION.name());
         }
     }
 
@@ -92,6 +118,17 @@ public class IncidentService {
             throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_RESOLVABLE);
         }
 
+        // 인시던트 발생 이후 이용 재등록(setupProvision) 완료 여부 확인
+        final PartyProvision provision = partyProvisionMapper.findByPartyId(partyId);
+        final boolean provisionUpdated = provision != null
+                && provision.getUpdatedAt() != null
+                && provision.getUpdatedAt().isAfter(incident.getFirstWarnedAt())
+                && provision.getOperationStatus() != ProvisionStatus.WAITING
+                && provision.getOperationStatus() != ProvisionStatus.RESET_REQUIRED;
+        if (!provisionUpdated) {
+            throw new ConcurrentException(ErrorCode.CONCURRENT_PROVISION_NOT_UPDATED);
+        }
+
         incidentMapper.updateResolved(incidentId);
         partyMapper.updateWarningLevel(partyId, 0);
         partyMapper.updateDissolutionDate(partyId, null);
@@ -106,6 +143,9 @@ public class IncidentService {
             final Party party, final SubProduct product,
             final Long reportedBy, final String reportType) {
 
+        final DetectionSource source = reportedBy != null
+                ? DetectionSource.MEMBER_REPORT
+                : DetectionSource.DEVICE_DETECTION;
         final LocalDateTime now = LocalDateTime.now();
         final LocalDateTime hostDeadline = now.plusHours(24);
         final String productName = product.getServiceName();
@@ -113,7 +153,7 @@ public class IncidentService {
         final ConcurrentIncident incident = ConcurrentIncident.builder()
                 .partyId(party.getId())
                 .reportedBy(reportedBy)
-                .detectionSource(DetectionSource.MEMBER_REPORT)
+                .detectionSource(source)
                 .reportType(reportType)
                 .status(IncidentStatus.OPEN)
                 .build();
@@ -168,6 +208,9 @@ public class IncidentService {
             final Party party, final SubProduct product,
             final Long reportedBy, final String reportType) {
 
+        final DetectionSource source = reportedBy != null
+                ? DetectionSource.MEMBER_REPORT
+                : DetectionSource.DEVICE_DETECTION;
         final LocalDateTime now = LocalDateTime.now();
         final LocalDateTime hostDeadline = now.plusHours(12);
         final LocalDate dissolutionDate = LocalDate.now().plusDays(1);
@@ -176,7 +219,7 @@ public class IncidentService {
         final ConcurrentIncident incident = ConcurrentIncident.builder()
                 .partyId(party.getId())
                 .reportedBy(reportedBy)
-                .detectionSource(DetectionSource.MEMBER_REPORT)
+                .detectionSource(source)
                 .reportType(reportType)
                 .status(IncidentStatus.OPEN)
                 .build();

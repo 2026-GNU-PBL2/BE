@@ -1,5 +1,6 @@
 package pbl2.sub119.backend.party.provision.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pbl2.sub119.backend.auth.aop.Auth;
 import pbl2.sub119.backend.auth.entity.Accessor;
+import pbl2.sub119.backend.concurrent.service.DeviceCollectionHelper;
 import pbl2.sub119.backend.party.provision.controller.docs.PartyProvisionDocs;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionResetRequest;
 import pbl2.sub119.backend.party.provision.dto.request.PartyProvisionSetupRequest;
@@ -32,6 +34,8 @@ public class PartyProvisionController implements PartyProvisionDocs {
     private final PartyProvisionCommandService partyProvisionCommandService;
     private final PartyProvisionQueryService partyProvisionQueryService;
     private final PartyRecruitStatusQueryService partyRecruitStatusQueryService;
+    private final DeviceCollectionHelper deviceCollectionHelper;
+    private final HttpServletRequest httpServletRequest;
 
     // 파티 모집 완료 여부 조회
     @Override
@@ -77,12 +81,13 @@ public class PartyProvisionController implements PartyProvisionDocs {
         );
     }
 
-    // 파티원이 이용 완료 확인
+    // 파티원이 이용 완료 확인 — 이 시점에 기기 정보 수집 (해당 기기로 서비스를 이용했음을 명시적으로 확인)
     @Override
     public ResponseEntity<PartyProvisionConfirmResponse> confirmProvision(
             @Auth final Accessor accessor,
             @PathVariable final Long partyId
     ) {
+        deviceCollectionHelper.collectSilently(accessor.getUserId(), partyId, httpServletRequest);
         return ResponseEntity.ok(
                 partyProvisionCommandService.confirmProvision(accessor.getUserId(), partyId)
         );
@@ -99,12 +104,13 @@ public class PartyProvisionController implements PartyProvisionDocs {
         return ResponseEntity.ok().build();
     }
 
-    // 본인에게 필요한 이용 정보 조회
+    // 본인에게 필요한 이용 정보 조회 — 이 시점에 기기 정보 수집 (계정 정보를 이 기기에서 조회 = OTT 접속 전 시점)
     @Override
     public ResponseEntity<PartyProvisionMeResponse> getMyProvisionInfo(
             @Auth final Accessor accessor,
             @PathVariable final Long partyId
     ) {
+        deviceCollectionHelper.collectSilently(accessor.getUserId(), partyId, httpServletRequest);
         return ResponseEntity.ok(
                 partyProvisionQueryService.getMyProvisionInfo(accessor.getUserId(), partyId)
         );

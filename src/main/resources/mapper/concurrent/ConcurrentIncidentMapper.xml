@@ -48,6 +48,14 @@
         WHERE party_id = #{partyId} AND status = #{status}
     </select>
 
+    <!-- 1차 경고 이력 존재 여부 (조치 완료된 RESOLVED, 2차 경고 진행 중인 DISSOLUTION_SCHEDULED 포함) -->
+    <select id="hasAnyPriorWarning" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM concurrent_incident
+        WHERE party_id = #{partyId}
+          AND status IN ('FIRST_WARNING_SENT', 'DISSOLUTION_SCHEDULED', 'RESOLVED')
+    </select>
+
     <update id="updateStatus">
         UPDATE concurrent_incident
         SET status = #{status}, updated_at = NOW()

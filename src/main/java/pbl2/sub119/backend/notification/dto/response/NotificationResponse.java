@@ -14,6 +14,7 @@ public record NotificationResponse(
         NotificationStatus status,
         boolean isRead,
         LocalDateTime createdAt,
-        LocalDateTime readAt
+        LocalDateTime readAt,
+        Long referenceId
 ) {
 }

@@ -38,6 +38,7 @@ public class SmsMessageTemplateService {
             case CREDENTIALS_UPDATED -> "이용 정보 재등록 안내";
             case DEVICE_ALERT -> "기기 감지 확인 요청";
             case DEVICE_CHECK_REQUEST -> "기기 확인 요청";
+            case DEVICE_CONFIRMED_MINE -> "기기 확인 완료";
             case PARTY_DISSOLVED_FINAL -> "파티 해체 완료 안내";
         };
     }
@@ -224,6 +225,14 @@ public class SmsMessageTemplateService {
     public String deviceCheckRequest(final String device, final String location) {
         return String.format(
                 "[Submate] 낯선 기기가 감지됐어요.\n기기: %s / 위치: %s\n본인 기기인지 앱에서 확인해주세요.",
+                device, location
+        );
+    }
+
+    // 기기 파티원 본인 기기 확인 완료
+    public String deviceConfirmedMine(final String device, final String location) {
+        return String.format(
+                "[Submate] 감지된 기기가 파티원 기기로 확인됐어요.\n기기: %s / 위치: %s\n별도 조치는 필요하지 않아요.",
                 device, location
         );
     }
