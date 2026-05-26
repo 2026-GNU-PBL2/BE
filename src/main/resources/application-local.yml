@@ -59,3 +59,7 @@ oauth:
     token-uri: https://oauth2.googleapis.com/token
     user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
     client-secret: ${GOOGLE_CLIENT_SECRET}
+
+geoip:
+  ip-api:
+    base-url: http://ip-api.com

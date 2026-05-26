@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
@@ -52,6 +53,8 @@ public class DeviceCollectionService {
                     .vpn(isVpn)
                     .registrationMethod(RegistrationMethod.AUTO)
                     .build());
+        } catch (DuplicateKeyException e) {
+            // 동시 요청으로 UNIQUE 위반 — 이미 등록된 기기이므로 무시
         } catch (Exception e) {
             log.warn("기기 정보 수집 실패. userId={}, error={}", userId, e.getMessage());
         }

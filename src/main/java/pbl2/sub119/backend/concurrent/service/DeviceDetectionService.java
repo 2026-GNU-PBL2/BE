@@ -127,7 +127,7 @@ public class DeviceDetectionService {
         try {
             deviceDetectionMapper.updateRespondedUserIds(alertId, objectMapper.writeValueAsString(respondedIds));
         } catch (JsonProcessingException e) {
-            deviceDetectionMapper.updateRespondedUserIds(alertId, "[" + userId + "]");
+            throw new IllegalStateException("응답자 목록 직렬화 실패. alertId=" + alertId, e);
         }
 
         if (isMyDevice) {

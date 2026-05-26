@@ -124,12 +124,11 @@ public class EscalationScheduler {
 
         for (final DeviceDetectionEvent event : targets) {
             try {
-                deviceDetectionMapper.updateStatus(event.getId(), DeviceDetectionStatus.EXPIRED);
-                log.info("기기 감지 이벤트 만료 처리. alertId={}, partyId={}", event.getId(), event.getPartyId());
-
                 if (event.getMineCount() == 0) {
                     incidentService.processWarningFromDeviceDetection(event.getPartyId());
                 }
+                deviceDetectionMapper.updateStatus(event.getId(), DeviceDetectionStatus.EXPIRED);
+                log.info("기기 감지 이벤트 만료 처리. alertId={}, partyId={}", event.getId(), event.getPartyId());
             } catch (Exception e) {
                 log.error("기기 감지 이벤트 만료 처리 실패. alertId={}", event.getId(), e);
             }

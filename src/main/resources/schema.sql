@@ -497,7 +497,8 @@ CREATE TABLE IF NOT EXISTS party_member_device (
     ip_location         VARCHAR(100),
     is_vpn              TINYINT(1) NOT NULL DEFAULT 0,
     registration_method VARCHAR(20),
-    registered_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    registered_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_party_member_device UNIQUE (user_id, party_id, device_type, os, browser)
 );
 
 -- party 컬럼 추가 (2026.05.21 / kjh)
