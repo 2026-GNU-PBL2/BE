@@ -358,6 +358,7 @@ CREATE TABLE notification (
                               scheduled_at DATETIME NULL,
                               sent_at DATETIME NULL,
                               read_at DATETIME NULL,
+                              reference_id BIGINT NULL,
                               created_at DATETIME NOT NULL,
                               updated_at DATETIME NOT NULL
 );
@@ -476,6 +477,7 @@ CREATE TABLE IF NOT EXISTS device_detection_event (
     detected_at         DATETIME NOT NULL,
     status              VARCHAR(30) NOT NULL DEFAULT 'PENDING',
     notified_user_ids   TEXT,
+    responded_user_ids  TEXT NULL,
     response_count      INT NOT NULL DEFAULT 0,
     mine_count          INT NOT NULL DEFAULT 0,
     unknown_count       INT NOT NULL DEFAULT 0,

@@ -102,6 +102,10 @@ public class WebMessageTemplateService {
         return String.format("낯선 기기(%s)가 %s에서 감지됐어요. 본인 기기인지 확인하고 응답해주세요.", device, location);
     }
 
+    public String deviceConfirmedMine(final String device, final String location) {
+        return String.format("감지된 기기(%s, %s)가 파티원 기기로 확인됐어요. 별도 조치는 필요하지 않아요.", device, location);
+    }
+
     public String deviceAlert(final String device, final String location) {
         return String.format("새로운 기기(%s, %s)가 감지됐어요. 본인 기기인지 확인해주세요.", device, location);
     }

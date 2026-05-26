@@ -11,7 +11,8 @@
         <result property="detectedDevice" column="detected_device"/>
         <result property="detectedLocation" column="detected_location"/>
         <result property="detectedAt" column="detected_at"/>
-        <result property="status" column="status"/>
+        <result property="status" column="status"
+                javaType="pbl2.sub119.backend.concurrent.enumerated.DeviceDetectionStatus"/>
         <result property="notifiedUserIds" column="notified_user_ids"/>
         <result property="respondedUserIds" column="responded_user_ids"/>
         <result property="responseCount" column="response_count"/>
@@ -65,16 +66,16 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 중복 응답 방지: responded_user_ids에 userId가 없을 때만 추가, 영향 행 수로 중복 여부 판별 -->
-    <update id="markUserRespondedIfAbsent">
+    <!-- FOR UPDATE로 행 락을 걸고 Java에서 중복 체크 후 갱신 -->
+    <select id="findByIdForUpdate" resultMap="deviceDetectionResultMap">
+        SELECT * FROM device_detection_event WHERE id = #{id} FOR UPDATE
+    </select>
+
+    <update id="updateRespondedUserIds">
         UPDATE device_detection_event
-        SET responded_user_ids = JSON_ARRAY_APPEND(
-                COALESCE(responded_user_ids, JSON_ARRAY()), '$', CAST(#{userId} AS JSON)
-            ),
+        SET responded_user_ids = #{respondedUserIds},
             updated_at = NOW()
         WHERE id = #{id}
-          AND (responded_user_ids IS NULL
-               OR NOT JSON_CONTAINS(responded_user_ids, CAST(#{userId} AS JSON)))
     </update>
 
     <!-- 상태 전환 1회 보장: PENDING일 때만 업데이트 -->

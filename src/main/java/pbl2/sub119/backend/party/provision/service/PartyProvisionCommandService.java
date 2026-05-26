@@ -31,6 +31,7 @@ import pbl2.sub119.backend.party.provision.enumerated.ProvisionMemberStatus;
 import pbl2.sub119.backend.party.provision.enumerated.ProvisionStatus;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMapper;
 import pbl2.sub119.backend.subproduct.enumerated.OperationType;
+import pbl2.sub119.backend.concurrent.service.CredentialService;
 import pbl2.sub119.backend.party.provision.mapper.PartyProvisionMemberMapper;
 
 @Service
@@ -47,6 +48,7 @@ public class PartyProvisionCommandService {
     private final PartyProvisionMemberMapper partyProvisionMemberMapper;
     private final CryptoUtil cryptoUtil;
     private final ApplicationEventPublisher eventPublisher;
+    private final CredentialService credentialService;
 
     // 파티장이 provision 정보 최초 등록 또는 다시 저장
     public PartyProvisionSetupResponse setupProvision(
@@ -126,8 +128,15 @@ public class PartyProvisionCommandService {
             initializeMembers(existingProvision.getId(), partyId, party.getHostUserId(), now);
             publishProvisionRequiredEvent(partyId, existingProvision.getId(), party.getHostUserId(), request.provisionType());
         } else {
-            // 재등록: 기존 멤버 rows 리셋
+            // 재등록: 기존 멤버 rows 리셋 + 파티원에게 이용 정보 변경 알림 (비밀번호 변경 후 재등록 안내)
             resetMemberRows(existingProvision.getId(), partyId, party.getHostUserId(), now);
+            final Long hostUserId = userId;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    credentialService.notifyCredentialsUpdated(partyId, hostUserId);
+                }
+            });
         }
 
         publishProvisionSetupCompletedEvent(partyId);

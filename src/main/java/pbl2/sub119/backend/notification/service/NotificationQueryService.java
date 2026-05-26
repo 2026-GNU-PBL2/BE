@@ -56,7 +56,8 @@ public class NotificationQueryService {
                 n.getStatus(),
                 n.isRead(),
                 n.getCreatedAt(),
-                n.getReadAt()
+                n.getReadAt(),
+                n.getReferenceId()
         );
     }
 }

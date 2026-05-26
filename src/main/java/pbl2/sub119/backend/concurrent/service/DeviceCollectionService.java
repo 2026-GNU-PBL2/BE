@@ -1,12 +1,15 @@
 package pbl2.sub119.backend.concurrent.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.concurrent.dto.response.DeviceRegisterResult;
+import pbl2.sub119.backend.concurrent.dto.response.PartyMemberDeviceResponse;
 import pbl2.sub119.backend.concurrent.entity.PartyMemberDevice;
 import pbl2.sub119.backend.concurrent.enumerated.RegistrationMethod;
 import pbl2.sub119.backend.concurrent.exception.ConcurrentException;
@@ -32,6 +35,13 @@ public class DeviceCollectionService {
             final boolean isVpn
     ) {
         try {
+            final PartyMemberDevice existing = partyMemberDeviceMapper.findByUserIdAndPartyId(userId, partyId);
+            if (existing != null
+                    && Objects.equals(existing.getDeviceType(), deviceType)
+                    && Objects.equals(existing.getOs(), os)
+                    && Objects.equals(existing.getBrowser(), browser)) {
+                return;
+            }
             partyMemberDeviceMapper.insert(PartyMemberDevice.builder()
                     .userId(userId)
                     .partyId(partyId)
@@ -45,6 +55,14 @@ public class DeviceCollectionService {
         } catch (Exception e) {
             log.warn("기기 정보 수집 실패. userId={}, error={}", userId, e.getMessage());
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<PartyMemberDeviceResponse> getPartyDevices(final Long partyId, final Long requesterId) {
+        if (partyMemberMapper.findByPartyIdAndUserId(partyId, requesterId) == null) {
+            throw new ConcurrentException(ErrorCode.CONCURRENT_NOT_PARTY_MEMBER);
+        }
+        return partyMemberDeviceMapper.findByPartyIdWithUserInfo(partyId);
     }
 
     @Transactional

@@ -131,7 +131,8 @@ public enum ErrorCode {
     DEVICE_ALERT_NOT_FOUND(HttpStatus.NOT_FOUND, "CONCURRENT005", "기기 감지 알림을 찾을 수 없습니다."),
     DEVICE_ALERT_EXPIRED(HttpStatus.BAD_REQUEST, "CONCURRENT006", "만료된 기기 감지 알림입니다."),
     DEVICE_ALERT_ALREADY_RESPONDED(HttpStatus.BAD_REQUEST, "CONCURRENT007", "이미 응답한 기기 감지 알림입니다."),
-    CONCURRENT_NOT_HOST(HttpStatus.FORBIDDEN, "CONCURRENT008", "파티장만 수행할 수 있는 작업입니다.");
+    CONCURRENT_NOT_HOST(HttpStatus.FORBIDDEN, "CONCURRENT008", "파티장만 수행할 수 있는 작업입니다."),
+    CONCURRENT_PROVISION_NOT_UPDATED(HttpStatus.BAD_REQUEST, "CONCURRENT009", "이용 재등록을 먼저 완료해야 조치 완료 처리가 가능합니다.");
 
     private final HttpStatus status;
     private final String code;

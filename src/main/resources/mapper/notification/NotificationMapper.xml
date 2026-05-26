@@ -20,6 +20,7 @@
         <result property="scheduledAt" column="scheduled_at"/>
         <result property="sentAt" column="sent_at"/>
         <result property="readAt" column="read_at"/>
+        <result property="referenceId" column="reference_id"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -29,17 +30,17 @@
         INSERT INTO notification (
             user_id, party_id, type, title, content, web_content,
             status, is_read, scheduled_at, sent_at, read_at,
-            created_at, updated_at
+            reference_id, created_at, updated_at
         ) VALUES (
             #{userId}, #{partyId}, #{type}, #{title}, #{content}, #{webContent},
             #{status}, #{read}, #{scheduledAt}, #{sentAt}, #{readAt},
-            #{createdAt}, #{updatedAt}
+            #{referenceId}, #{createdAt}, #{updatedAt}
         )
     </insert>
 
     <select id="findByUserId" resultMap="notificationResultMap">
         SELECT id, user_id, party_id, type, title, content, web_content, status, is_read,
-               scheduled_at, sent_at, read_at, created_at, updated_at
+               scheduled_at, sent_at, read_at, reference_id, created_at, updated_at
         FROM notification
         WHERE user_id = #{userId}
         ORDER BY created_at DESC
@@ -81,7 +82,7 @@
 
     <select id="findPendingScheduledNotifications" resultMap="notificationResultMap">
         SELECT id, user_id, party_id, type, title, content, web_content, status, is_read,
-               scheduled_at, sent_at, read_at, created_at, updated_at
+               scheduled_at, sent_at, read_at, reference_id, created_at, updated_at
         FROM notification
         WHERE scheduled_at IS NOT NULL
           AND scheduled_at <![CDATA[<=]]> #{now}
@@ -92,7 +93,7 @@
 
     <select id="findPendingScheduledNotificationsForUpdate" resultMap="notificationResultMap">
         SELECT id, user_id, party_id, type, title, content, web_content, status, is_read,
-               scheduled_at, sent_at, read_at, created_at, updated_at
+               scheduled_at, sent_at, read_at, reference_id, created_at, updated_at
         FROM notification
         WHERE scheduled_at IS NOT NULL
           AND scheduled_at <![CDATA[<=]]> #{now}
