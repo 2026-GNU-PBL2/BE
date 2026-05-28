@@ -11,7 +11,6 @@ import pbl2.sub119.backend.common.error.ErrorCode;
 import pbl2.sub119.backend.concurrent.dto.response.IncidentResult;
 import pbl2.sub119.backend.concurrent.dto.response.ResolveResult;
 import pbl2.sub119.backend.concurrent.entity.ConcurrentIncident;
-import pbl2.sub119.backend.concurrent.entity.PartyWarningHistory;
 import pbl2.sub119.backend.concurrent.entity.UserViolationRecord;
 import pbl2.sub119.backend.concurrent.enumerated.DetectionSource;
 import pbl2.sub119.backend.concurrent.enumerated.IncidentStatus;
@@ -19,7 +18,6 @@ import pbl2.sub119.backend.concurrent.enumerated.ViolationType;
 import pbl2.sub119.backend.concurrent.enumerated.WarningLevel;
 import pbl2.sub119.backend.concurrent.exception.ConcurrentException;
 import pbl2.sub119.backend.concurrent.mapper.ConcurrentIncidentMapper;
-import pbl2.sub119.backend.concurrent.mapper.PartyWarningHistoryMapper;
 import pbl2.sub119.backend.concurrent.mapper.UserViolationRecordMapper;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
@@ -44,7 +42,6 @@ public class IncidentService {
     private final PartyMemberMapper partyMemberMapper;
     private final SubProductMapper subProductMapper;
     private final ConcurrentIncidentMapper incidentMapper;
-    private final PartyWarningHistoryMapper warningHistoryMapper;
     private final UserViolationRecordMapper violationRecordMapper;
     private final PartyProvisionMapper partyProvisionMapper;
     private final NotificationCommandService notificationCommandService;
@@ -160,12 +157,6 @@ public class IncidentService {
         incidentMapper.insert(incident);
         incidentMapper.updateFirstWarned(incident.getId(), now, hostDeadline);
 
-        warningHistoryMapper.insert(PartyWarningHistory.builder()
-                .partyId(party.getId())
-                .incidentId(incident.getId())
-                .level(WarningLevel.FIRST.name())
-                .build());
-
         partyMapper.updateWarningLevel(party.getId(), 1);
 
         final List<PartyMember> members = partyMemberMapper.findMembersByPartyId(party.getId());
@@ -227,25 +218,11 @@ public class IncidentService {
         incidentMapper.updateFirstWarned(incident.getId(), now, hostDeadline);
         incidentMapper.updateDissolutionDate(incident.getId(), dissolutionDate);
 
-        warningHistoryMapper.insert(PartyWarningHistory.builder()
-                .partyId(party.getId())
-                .incidentId(incident.getId())
-                .level(WarningLevel.SECOND.name())
-                .build());
-
         partyMapper.updateWarningLevel(party.getId(), 2);
         partyMapper.updateDissolutionDate(party.getId(), dissolutionDate);
 
         final List<PartyMember> members = partyMemberMapper.findMembersByPartyId(party.getId());
         for (final PartyMember member : members) {
-            violationRecordMapper.insert(UserViolationRecord.builder()
-                    .userId(member.getUserId())
-                    .partyId(party.getId())
-                    .incidentId(incident.getId())
-                    .violationType(ViolationType.FIRST_WARNING)
-                    .weight(BigDecimal.ONE)
-                    .build());
-
             notificationCommandService.notifyWithWebContent(
                     member.getUserId(), party.getId(),
                     NotificationType.PARTY_DISSOLVING,

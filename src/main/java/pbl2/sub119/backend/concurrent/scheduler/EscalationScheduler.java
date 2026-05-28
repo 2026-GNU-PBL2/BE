@@ -127,6 +127,7 @@ public class EscalationScheduler {
                 if (event.getMineCount() == 0) {
                     incidentService.processWarningFromDeviceDetection(event.getPartyId());
                 }
+                escalationService.recordNoResponseViolations(event);
                 deviceDetectionMapper.updateStatus(event.getId(), DeviceDetectionStatus.EXPIRED);
                 log.info("기기 감지 이벤트 만료 처리. alertId={}, partyId={}", event.getId(), event.getPartyId());
             } catch (Exception e) {
