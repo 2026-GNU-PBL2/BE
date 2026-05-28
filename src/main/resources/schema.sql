@@ -429,7 +429,7 @@ CREATE INDEX idx_pwr_status_created
 CREATE UNIQUE INDEX uk_pwr_internal_payout_ref
     ON point_withdraw_request(internal_payout_ref);
 
--- concurrent_incident (2026.05.21 / kjh)
+-- concurrent_incident (2026.05.21 / khj)
 CREATE TABLE IF NOT EXISTS concurrent_incident (
     id                 BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     party_id           BIGINT NOT NULL,
@@ -448,16 +448,7 @@ CREATE TABLE IF NOT EXISTS concurrent_incident (
     updated_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- party_warning_history (2026.05.21 / kjh)
-CREATE TABLE IF NOT EXISTS party_warning_history (
-    id          BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    party_id    BIGINT NOT NULL,
-    incident_id BIGINT NOT NULL,
-    level       VARCHAR(10) NOT NULL,
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- user_violation_record (2026.05.21 / kjh)
+-- user_violation_record (2026.05.21 / khj)
 CREATE TABLE IF NOT EXISTS user_violation_record (
     id             BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id        BIGINT NOT NULL,
@@ -468,7 +459,7 @@ CREATE TABLE IF NOT EXISTS user_violation_record (
     created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- device_detection_event (2026.05.21 / kjh)
+-- device_detection_event (2026.05.21 / khj)
 CREATE TABLE IF NOT EXISTS device_detection_event (
     id                  BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     party_id            BIGINT NOT NULL,
@@ -486,7 +477,7 @@ CREATE TABLE IF NOT EXISTS device_detection_event (
     updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- party_member_device (2026.05.21 / kjh)
+-- party_member_device (2026.05.21 / khj)
 CREATE TABLE IF NOT EXISTS party_member_device (
     id                  BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id             BIGINT NOT NULL,
@@ -501,6 +492,6 @@ CREATE TABLE IF NOT EXISTS party_member_device (
     CONSTRAINT uk_party_member_device UNIQUE (user_id, party_id, device_type, os, browser)
 );
 
--- party 컬럼 추가 (2026.05.21 / kjh)
+-- party 컬럼 추가 (2026.05.21 / khj)
 ALTER TABLE party ADD COLUMN IF NOT EXISTS dissolution_date DATE NULL;
 ALTER TABLE party ADD COLUMN IF NOT EXISTS warning_level   TINYINT NOT NULL DEFAULT 0;

@@ -1,13 +1,18 @@
 package pbl2.sub119.backend.concurrent.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.common.enumerated.PartyMemberStatus;
+import pbl2.sub119.backend.concurrent.entity.DeviceDetectionEvent;
 import pbl2.sub119.backend.concurrent.entity.UserViolationRecord;
 import pbl2.sub119.backend.concurrent.enumerated.IncidentStatus;
 import pbl2.sub119.backend.concurrent.enumerated.ViolationType;
@@ -37,6 +42,7 @@ public class EscalationService {
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final ConcurrentIncidentMapper incidentMapper;
     private final UserViolationRecordMapper violationRecordMapper;
+    private final ObjectMapper objectMapper;
     private final NotificationCommandService notificationCommandService;
     private final SmsMessageTemplateService smsTemplate;
     private final WebMessageTemplateService webTemplate;
@@ -103,5 +109,33 @@ public class EscalationService {
         partyMapper.updateWarningLevel(partyId, 0);
 
         log.info("동시접속 위반으로 파티 해체 완료. partyId={}", partyId);
+    }
+
+    @Transactional
+    public void recordNoResponseViolations(final DeviceDetectionEvent event) {
+        final List<Long> notifiedIds = parseUserIds(event.getNotifiedUserIds());
+        final List<Long> respondedIds = parseUserIds(event.getRespondedUserIds());
+
+        for (final Long userId : notifiedIds) {
+            if (!respondedIds.contains(userId)) {
+                violationRecordMapper.insert(UserViolationRecord.builder()
+                        .userId(userId)
+                        .partyId(event.getPartyId())
+                        .violationType(ViolationType.DEVICE_ALERT_NO_RESPONSE)
+                        .weight(BigDecimal.ONE)
+                        .build());
+            }
+        }
+    }
+
+    private List<Long> parseUserIds(final String json) {
+        if (json == null || json.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<Long>>() {});
+        } catch (JsonProcessingException e) {
+            return new ArrayList<>();
+        }
     }
 }
