@@ -143,4 +143,53 @@
         ORDER BY id ASC
     </select>
 
+    <!--
+        fail-fast 복구: Phase1에서 선점(PROCESSING)했으나 PG 미호출 멤버를 PAYMENT_PENDING으로 복원.
+        WHERE status='PROCESSING' 조건으로 이미 PAID/FAILED 상태 멤버에게는 영향 없음.
+        기존 순차 루프에서는 이 멤버들이 자동으로 PAYMENT_PENDING에 남았으므로, 동작을 명시적으로 복원.
+    -->
+    <update id="resetProcessingToPaymentPending">
+        UPDATE party_cycle_member_payment
+        SET status     = 'PAYMENT_PENDING',
+            updated_at = NOW()
+        WHERE party_cycle_id  = #{partyCycleId}
+          AND status          = 'PROCESSING'
+          AND party_member_id IN
+          <foreach collection="memberIds" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </update>
+
+    <!--
+        성능 개선: N회 개별 insertIfAbsent → 1회 배치 INSERT IGNORE
+        멱등성: INSERT IGNORE로 idempotency_key 유니크 제약 위반 시 무시 (기존 insertIfAbsent와 동일)
+        주의: payments 리스트가 비어 있으면 호출하지 말 것 (빈 VALUES 절은 SQL 오류)
+    -->
+    <insert id="batchInsertIfAbsent" parameterType="list">
+        INSERT IGNORE INTO party_cycle_member_payment (
+            party_cycle_id,
+            party_id,
+            party_member_id,
+            user_id,
+            amount,
+            status,
+            idempotency_key,
+            created_at,
+            updated_at
+        ) VALUES
+        <foreach collection="payments" item="p" separator=",">
+            (
+                #{p.partyCycleId},
+                #{p.partyId},
+                #{p.partyMemberId},
+                #{p.userId},
+                #{p.amount},
+                #{p.status},
+                #{p.idempotencyKey},
+                #{p.createdAt},
+                #{p.updatedAt}
+            )
+        </foreach>
+    </insert>
+
 </mapper>

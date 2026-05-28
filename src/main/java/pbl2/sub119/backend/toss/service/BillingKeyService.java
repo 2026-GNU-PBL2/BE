@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pbl2.sub119.backend.auth.entity.Accessor;
 import pbl2.sub119.backend.common.enumerated.BillingKeyStatus;
 import pbl2.sub119.backend.common.error.ErrorCode;
-import pbl2.sub119.backend.toss.client.TossPaymentClient;
+import pbl2.sub119.backend.toss.client.PaymentGatewayClient;
 import pbl2.sub119.backend.toss.dto.request.BillingKeyIssueRequest;
 import pbl2.sub119.backend.toss.dto.request.TossBillingAuthRequest;
 import pbl2.sub119.backend.toss.dto.response.BillingKeyInfoResponse;
@@ -23,7 +23,7 @@ import pbl2.sub119.backend.toss.mapper.BillingKeyMapper;
 @RequiredArgsConstructor
 public class BillingKeyService {
 
-    private final TossPaymentClient tossPaymentClient;
+    private final PaymentGatewayClient paymentGatewayClient;
     private final BillingKeyMapper billingKeyMapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -37,7 +37,7 @@ public class BillingKeyService {
 
         String customerKey = "submate-" + userId;
 
-        TossBillingAuthResponse response = tossPaymentClient.issueBillingKey(
+        TossBillingAuthResponse response = paymentGatewayClient.issueBillingKey(
                 new TossBillingAuthRequest(request.authKey(), customerKey)
         );
 
@@ -74,7 +74,7 @@ public class BillingKeyService {
 
         log.info("빌링키 변경 요청. userId={}, customerKey={}", userId, customerKey);
 
-        TossBillingAuthResponse response = tossPaymentClient.issueBillingKey(
+        TossBillingAuthResponse response = paymentGatewayClient.issueBillingKey(
                 new TossBillingAuthRequest(request.authKey(), customerKey)
         );
 
