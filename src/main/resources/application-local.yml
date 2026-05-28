@@ -4,6 +4,12 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      connection-timeout: 5000
+      validation-timeout: 2000
+      leak-detection-threshold: 20000
 
   h2:
     console:
@@ -63,3 +69,15 @@ oauth:
 geoip:
   ip-api:
     base-url: http://ip-api.com
+
+payment:
+  provider: stub
+  stub:
+    delay-ms: 120
+    fail-rate: 0.0
+
+server:
+  tomcat:
+    threads:
+      max: 200
+    accept-count: 500

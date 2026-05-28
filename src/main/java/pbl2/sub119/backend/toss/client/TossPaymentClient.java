@@ -2,6 +2,7 @@ package pbl2.sub119.backend.toss.client;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -19,7 +20,8 @@ import java.util.Base64;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TossPaymentClient {
+@ConditionalOnProperty(prefix = "payment", name = "provider", havingValue = "toss", matchIfMissing = true)
+public class TossPaymentClient implements PaymentGatewayClient {
 
     private final TossPaymentProperties tossPaymentProperties;
     private final WebClient webClient;
@@ -29,6 +31,7 @@ public class TossPaymentClient {
         return "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes());
     }
 
+    @Override
     public TossBillingAuthResponse issueBillingKey(TossBillingAuthRequest request) {
         validateBillingAuthRequest(request);
 
@@ -49,6 +52,7 @@ public class TossPaymentClient {
         }
     }
 
+    @Override
     public TossBillingPaymentResponse executeBillingPayment(
             String billingKey,
             TossBillingPaymentRequest request,
