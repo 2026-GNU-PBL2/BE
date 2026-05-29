@@ -12,6 +12,7 @@ import pbl2.sub119.backend.concurrent.entity.DeviceDetectionEvent;
 import pbl2.sub119.backend.concurrent.enumerated.DeviceDetectionStatus;
 import pbl2.sub119.backend.concurrent.mapper.ConcurrentIncidentMapper;
 import pbl2.sub119.backend.concurrent.mapper.DeviceDetectionMapper;
+import pbl2.sub119.backend.concurrent.mapper.DeviceDetectionResponseMapper;
 import pbl2.sub119.backend.concurrent.service.EscalationService;
 import pbl2.sub119.backend.concurrent.service.IncidentService;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
@@ -29,6 +30,7 @@ public class EscalationScheduler {
 
     private final ConcurrentIncidentMapper incidentMapper;
     private final DeviceDetectionMapper deviceDetectionMapper;
+    private final DeviceDetectionResponseMapper deviceDetectionResponseMapper;
     private final PartyMapper partyMapper;
     private final SubProductMapper subProductMapper;
     private final EscalationService escalationService;
@@ -124,7 +126,7 @@ public class EscalationScheduler {
 
         for (final DeviceDetectionEvent event : targets) {
             try {
-                if (event.getMineCount() == 0) {
+                if (deviceDetectionResponseMapper.countMineByEventId(event.getId()) == 0) {
                     incidentService.processWarningFromDeviceDetection(event.getPartyId());
                 }
                 escalationService.recordNoResponseViolations(event);

@@ -468,13 +468,24 @@ CREATE TABLE IF NOT EXISTS device_detection_event (
     detected_at         DATETIME NOT NULL,
     status              VARCHAR(30) NOT NULL DEFAULT 'PENDING',
     notified_user_ids   TEXT,
-    responded_user_ids  TEXT NULL,
-    response_count      INT NOT NULL DEFAULT 0,
-    mine_count          INT NOT NULL DEFAULT 0,
-    unknown_count       INT NOT NULL DEFAULT 0,
     expires_at          DATETIME NOT NULL,
     created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+ALTER TABLE device_detection_event DROP COLUMN IF EXISTS responded_user_ids;
+ALTER TABLE device_detection_event DROP COLUMN IF EXISTS response_count;
+ALTER TABLE device_detection_event DROP COLUMN IF EXISTS mine_count;
+ALTER TABLE device_detection_event DROP COLUMN IF EXISTS unknown_count;
+
+-- device_detection_response (2026.05.29 / khj)
+CREATE TABLE IF NOT EXISTS device_detection_response (
+    id                  BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    detection_event_id  BIGINT NOT NULL,
+    user_id             BIGINT NOT NULL,
+    mine                TINYINT(1) NOT NULL DEFAULT 0,
+    responded_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_device_response UNIQUE (detection_event_id, user_id)
 );
 
 -- party_member_device (2026.05.21 / khj)
