@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +16,7 @@ import pbl2.sub119.backend.concurrent.entity.UserViolationRecord;
 import pbl2.sub119.backend.concurrent.enumerated.IncidentStatus;
 import pbl2.sub119.backend.concurrent.enumerated.ViolationType;
 import pbl2.sub119.backend.concurrent.mapper.ConcurrentIncidentMapper;
+import pbl2.sub119.backend.concurrent.mapper.DeviceDetectionResponseMapper;
 import pbl2.sub119.backend.concurrent.mapper.UserViolationRecordMapper;
 import pbl2.sub119.backend.notification.enumerated.NotificationType;
 import pbl2.sub119.backend.notification.service.NotificationCommandService;
@@ -42,6 +42,7 @@ public class EscalationService {
     private final MatchWaitingQueueMapper matchWaitingQueueMapper;
     private final ConcurrentIncidentMapper incidentMapper;
     private final UserViolationRecordMapper violationRecordMapper;
+    private final DeviceDetectionResponseMapper deviceDetectionResponseMapper;
     private final ObjectMapper objectMapper;
     private final NotificationCommandService notificationCommandService;
     private final SmsMessageTemplateService smsTemplate;
@@ -113,8 +114,8 @@ public class EscalationService {
 
     @Transactional
     public void recordNoResponseViolations(final DeviceDetectionEvent event) {
-        final List<Long> notifiedIds = parseUserIds(event.getNotifiedUserIds());
-        final List<Long> respondedIds = parseUserIds(event.getRespondedUserIds());
+        final List<Long> notifiedIds = parseNotifiedUserIds(event.getNotifiedUserIds());
+        final List<Long> respondedIds = deviceDetectionResponseMapper.findRespondedUserIdsByEventId(event.getId());
 
         for (final Long userId : notifiedIds) {
             if (!respondedIds.contains(userId)) {
@@ -128,14 +129,14 @@ public class EscalationService {
         }
     }
 
-    private List<Long> parseUserIds(final String json) {
+    private List<Long> parseNotifiedUserIds(final String json) {
         if (json == null || json.isBlank()) {
-            return new ArrayList<>();
+            return List.of();
         }
         try {
             return objectMapper.readValue(json, new TypeReference<List<Long>>() {});
         } catch (JsonProcessingException e) {
-            return new ArrayList<>();
+            return List.of();
         }
     }
 }

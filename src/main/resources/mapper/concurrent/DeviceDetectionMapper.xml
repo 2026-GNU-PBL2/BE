@@ -14,10 +14,6 @@
         <result property="status" column="status"
                 javaType="pbl2.sub119.backend.concurrent.enumerated.DeviceDetectionStatus"/>
         <result property="notifiedUserIds" column="notified_user_ids"/>
-        <result property="respondedUserIds" column="responded_user_ids"/>
-        <result property="responseCount" column="response_count"/>
-        <result property="mineCount" column="mine_count"/>
-        <result property="unknownCount" column="unknown_count"/>
         <result property="expiresAt" column="expires_at"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
@@ -48,35 +44,10 @@
         WHERE id = #{id}
     </update>
 
-    <update id="incrementMineCount">
-        UPDATE device_detection_event
-        SET mine_count = mine_count + 1, response_count = response_count + 1, updated_at = NOW()
-        WHERE id = #{id}
-    </update>
-
-    <update id="incrementUnknownCount">
-        UPDATE device_detection_event
-        SET unknown_count = unknown_count + 1, response_count = response_count + 1, updated_at = NOW()
-        WHERE id = #{id}
-    </update>
-
-    <update id="incrementResponseCount">
-        UPDATE device_detection_event
-        SET response_count = response_count + 1, updated_at = NOW()
-        WHERE id = #{id}
-    </update>
-
-    <!-- FOR UPDATE로 행 락을 걸고 Java에서 중복 체크 후 갱신 -->
+    <!-- FOR UPDATE로 행 락을 걸고 DB UNIQUE 제약으로 중복 응답 방지 -->
     <select id="findByIdForUpdate" resultMap="deviceDetectionResultMap">
         SELECT * FROM device_detection_event WHERE id = #{id} FOR UPDATE
     </select>
-
-    <update id="updateRespondedUserIds">
-        UPDATE device_detection_event
-        SET responded_user_ids = #{respondedUserIds},
-            updated_at = NOW()
-        WHERE id = #{id}
-    </update>
 
     <!-- 상태 전환 1회 보장: PENDING일 때만 업데이트 -->
     <update id="updateStatusIfPending">

@@ -20,15 +20,7 @@ public interface DeviceDetectionMapper {
             @Param("status") DeviceDetectionStatus status
     );
 
-    void incrementMineCount(@Param("id") Long id);
-
-    void incrementUnknownCount(@Param("id") Long id);
-
-    void incrementResponseCount(@Param("id") Long id);
-
     DeviceDetectionEvent findByIdForUpdate(@Param("id") Long id);
-
-    void updateRespondedUserIds(@Param("id") Long id, @Param("respondedUserIds") String respondedUserIds);
 
     // 상태 전환 1회 보장: PENDING 상태일 때만 업데이트, 영향 행 수 반환
     int updateStatusIfPending(@Param("id") Long id, @Param("status") DeviceDetectionStatus status);

@@ -22,10 +22,6 @@ public class DeviceDetectionEvent {
     private LocalDateTime detectedAt;
     private DeviceDetectionStatus status;
     private String notifiedUserIds;   // TEXT 컬럼, "[1,2,3]" JSON 배열 문자열
-    private String respondedUserIds;  // TEXT 컬럼, 응답 완료 유저 ID JSON 배열
-    private int responseCount;
-    private int mineCount;
-    private int unknownCount;
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
