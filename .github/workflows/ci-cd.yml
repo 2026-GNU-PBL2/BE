@@ -9,6 +9,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    env:
+      AWS_REGION: ap-northeast-2
+      AWS_ACCOUNT_ID: "010426081761"
+      ECR_REPOSITORY: submate-backend
+      ECR_REGISTRY: 010426081761.dkr.ecr.ap-northeast-2.amazonaws.com
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,75 +32,84 @@ jobs:
       - name: Build with Gradle
         env:
           SPRING_PROFILES_ACTIVE: prod
+
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
           KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           KAKAO_REDIRECT_URI: ${{ secrets.KAKAO_REDIRECT_URI }}
+
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
           NAVER_REDIRECT_URI: ${{ secrets.NAVER_REDIRECT_URI }}
+
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           GOOGLE_REDIRECT_URI: ${{ secrets.GOOGLE_REDIRECT_URI }}
+
           KFTC_CLIENT_ID: ${{ secrets.KFTC_CLIENT_ID }}
           KFTC_CLIENT_SECRET: ${{ secrets.KFTC_CLIENT_SECRET }}
           KFTC_REDIRECT_URL: ${{ secrets.KFTC_REDIRECT_URL }}
           KFTC_USE_ORG_CODE: ${{ secrets.KFTC_USE_ORG_CODE }}
           KFTC_BASE_URL: ${{ secrets.KFTC_BASE_URL }}
+
+          TOSS_SECRET_KEY: ${{ secrets.TOSS_SECRET_KEY }}
+          CRYPTO_AES_SECRET_KEY: ${{ secrets.CRYPTO_AES_SECRET_KEY }}
+
+          FRONTEND_BASE_URL: ${{ secrets.FRONTEND_BASE_URL }}
+
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_S3_ACCESS_KEY: ${{ secrets.AWS_S3_ACCESS_KEY }}
+          AWS_S3_SECRET_KEY: ${{ secrets.AWS_S3_SECRET_KEY }}
+
+          SOLAPI_API_KEY: ${{ secrets.SOLAPI_API_KEY }}
+          SOLAPI_API_SECRET: ${{ secrets.SOLAPI_API_SECRET }}
+          SOLAPI_SENDER_NUMBER: ${{ secrets.SOLAPI_SENDER_NUMBER }}
         run: ./gradlew clean build -x test
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_GITHUB_ACTIONS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_GITHUB_ACTIONS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create image metadata
+        id: meta
+        run: |
+          IMAGE_TAG=prod-$(date +%Y%m%d%H%M)-${GITHUB_SHA::7}
+          IMAGE_URI=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
+
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+
+          echo "IMAGE_TAG=${IMAGE_TAG}"
+          echo "IMAGE_URI=${IMAGE_URI}"
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION \
+            | docker login --username AWS --password-stdin $ECR_REGISTRY
 
       - name: Build Docker image
-        run: docker build -t kawaiikoala/submate:latest .
+        run: |
+          docker build \
+            -t ${{ steps.meta.outputs.image_uri }} \
+            .
 
-      - name: Push Docker image
-        run: docker push kawaiikoala/submate:latest
+      - name: Push Docker image to ECR
+        run: docker push ${{ steps.meta.outputs.image_uri }}
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
+          username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
+          port: 22
           script: |
-            cd ~/submate || { mkdir -p ~/submate && cd ~/submate; }
-
-            docker-compose down 2>/dev/null || true
-
-            rm -f docker-compose.yml
-
-            curl -O https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.yml
-
-            cat <<EOF > .env
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-            DB_URL=${{ secrets.DB_URL }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
-            KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
-            KAKAO_REDIRECT_URI=${{ secrets.KAKAO_REDIRECT_URI }}
-            NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}
-            NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}
-            NAVER_REDIRECT_URI=${{ secrets.NAVER_REDIRECT_URI }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
-            KFTC_CLIENT_ID=${{ secrets.KFTC_CLIENT_ID }}
-            KFTC_CLIENT_SECRET=${{ secrets.KFTC_CLIENT_SECRET }}
-            KFTC_REDIRECT_URL=${{ secrets.KFTC_REDIRECT_URL }}
-            KFTC_USE_ORG_CODE=${{ secrets.KFTC_USE_ORG_CODE }}
-            KFTC_BASE_URL=${{ secrets.KFTC_BASE_URL }}
-            EOF
-
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-            docker-compose pull
-            docker-compose up -d --remove-orphans
+            /opt/submate/scripts/deploy.sh "${{ steps.meta.outputs.image_uri }}"
