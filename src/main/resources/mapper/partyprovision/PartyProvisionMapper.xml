@@ -189,7 +189,7 @@
         WHERE po.operation_status != 'ACTIVE'
         AND po.operation_started_at IS NULL
         AND p.operation_status != 'TERMINATED'
-        AND po.created_at <![CDATA[<=]]> DATEADD('HOUR', -24, CURRENT_TIMESTAMP)
+        AND po.created_at <![CDATA[<=]]> TIMESTAMPADD(HOUR, -24, CURRENT_TIMESTAMP)
     </select>
 
     <!--
@@ -219,7 +219,7 @@
                 WHERE n.party_id = po.party_id
                   AND n.user_id = p.host_user_id
                   AND n.type = 'HOST_PROVISION_REMINDER'
-            ) <![CDATA[<=]]> DATEADD('HOUR', -#{reminderIntervalHours}, NOW())
+            ) <![CDATA[<=]]> TIMESTAMPADD(HOUR, -#{reminderIntervalHours}, NOW())
           )
     </select>
 

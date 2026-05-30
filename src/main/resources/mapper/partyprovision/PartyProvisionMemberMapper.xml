@@ -239,7 +239,7 @@
                  INNER JOIN party p ON p.id = pom.party_id
         WHERE pom.member_status = 'REQUIRED'
           AND pom.invite_sent_at IS NOT NULL
-          AND pom.invite_sent_at <![CDATA[<=]]> DATEADD('HOUR', -#{thresholdHours}, NOW())
+          AND pom.invite_sent_at <![CDATA[<=]]> TIMESTAMPADD(HOUR, -#{thresholdHours}, NOW())
           AND pom.penalty_applied = FALSE
           AND p.operation_status != 'TERMINATED'
     </select>
