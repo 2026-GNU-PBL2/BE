@@ -28,6 +28,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final PhoneVerificationService phoneVerificationService;
 
+    @Transactional
     public void requestPhoneVerification(final Long userId, final String phoneNumber) {
         validatePhoneNumberDuplication(userId, phoneNumber);
         phoneVerificationService.sendOtp(userId, phoneNumber);
