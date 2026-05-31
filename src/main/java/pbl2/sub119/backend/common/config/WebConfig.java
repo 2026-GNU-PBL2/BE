@@ -29,11 +29,17 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(final CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOrigins(
+                        "https://www.submate.cloud",
+                        "https://submate.cloud",
+                        "http://localhost:3000",
+                        "http://localhost:5173"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders(HttpHeaders.LOCATION, HttpHeaders.AUTHORIZATION)
                 .allowCredentials(true)
-                .exposedHeaders(HttpHeaders.LOCATION);
-        WebMvcConfigurer.super.addCorsMappings(registry);
+                .maxAge(3600);
     }
 
     @Override
