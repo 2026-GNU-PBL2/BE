@@ -51,3 +51,9 @@ toss:
 
 payment:
   provider: toss
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  sender-number: ${SOLAPI_SENDER_NUMBER}
+  enabled: true
