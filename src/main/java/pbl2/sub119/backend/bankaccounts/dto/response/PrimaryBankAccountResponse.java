@@ -50,4 +50,19 @@ public class PrimaryBankAccountResponse {
                 bankAccount.getVerificationStatus()
         );
     }
+
+    public static PrimaryBankAccountResponse notRegistered() {
+        return new PrimaryBankAccountResponse(
+                null,   // id
+                null,   // fintechUseNum
+                null,   // bankName
+                null,   // accountAlias
+                null,   // accountNumMasked
+                null,   // accountType
+                false,  // isPrimary
+                null    // verificationStatus
+        );
+    }
+
+
 }
