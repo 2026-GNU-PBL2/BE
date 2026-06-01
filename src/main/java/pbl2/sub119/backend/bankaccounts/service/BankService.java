@@ -185,9 +185,11 @@ public class BankService {
     @Transactional(readOnly = true)
     public PrimaryBankAccountResponse getPrimaryAccount(Long userId) {
         BankAccount primary = bankMapper.findPrimaryByUserId(userId);
+
         if (primary == null) {
-            throw new BusinessException(BANK_PRIMARY_ACCOUNT_NOT_FOUND);
+            return PrimaryBankAccountResponse.notRegistered();
         }
+
         return PrimaryBankAccountResponse.from(primary);
     }
 
