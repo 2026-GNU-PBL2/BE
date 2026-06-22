@@ -1,22 +1,54 @@
 # SubMate Backend
 
+```md
+# SubMate Backend
+
 <div align="center">
-  <img src="./docs/images/submate-logo.png" width="300" alt="SubMate Logo" />
+  <img src="./docs/images/logo/submate-logo.png" width="300" alt="SubMate Logo" />
 </div>
 
 <br/>
 
 <div align="center">
 
-![Java](https://img.shields.io/badge/Java-21-007396?style=for-the-badge\&logo=openjdk\&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-6DB33F?style=for-the-badge\&logo=springboot\&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge\&logo=mysql\&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-Cache%20%2F%20State-DC382D?style=for-the-badge\&logo=redis\&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge\&logo=docker\&logoColor=white)
-![AWS](https://img.shields.io/badge/AWS-ECR%20%2F%20EC2%20%2F%20S3-232F3E?style=for-the-badge\&logo=amazonaws\&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?style=for-the-badge\&logo=githubactions\&logoColor=white)
+### Language & Framework
+
+![Java](https://img.shields.io/badge/Java-21-007396?style=for-the-badge&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Spring Web](https://img.shields.io/badge/Spring%20Web-REST%20API-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
+![MyBatis](https://img.shields.io/badge/MyBatis-SQL%20Mapper-000000?style=for-the-badge)
+
+<br/>
+
+### Database & State Store
+
+![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![H2](https://img.shields.io/badge/H2-Local%20DB-09476B?style=for-the-badge)
+![Redis](https://img.shields.io/badge/Redis-Cache%20%2F%20State-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+<br/>
+
+### Infra & DevOps
+
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![AWS ECR](https://img.shields.io/badge/AWS%20ECR-Image%20Registry-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)
+![AWS EC2](https://img.shields.io/badge/AWS%20EC2-Deploy-FF9900?style=for-the-badge&logo=amazonec2&logoColor=white)
+![AWS S3](https://img.shields.io/badge/AWS%20S3-File%20Storage-569A31?style=for-the-badge&logo=amazons3&logoColor=white)
+
+<br/>
+
+### External API & Monitoring
+
+![Toss Payments](https://img.shields.io/badge/Toss%20Payments-Billing-0064FF?style=for-the-badge)
+![KFTC Open Banking](https://img.shields.io/badge/KFTC-Open%20Banking-003478?style=for-the-badge)
+![Solapi](https://img.shields.io/badge/Solapi-SMS-00C73C?style=for-the-badge)
+![Prometheus](https://img.shields.io/badge/Prometheus-Metrics-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 
 </div>
+```
+
 
 ---
 
@@ -41,15 +73,15 @@ SubMate 백엔드는 사용자가 구독 상품을 선택해 파티를 만들거
 ## 2. 프로젝트 정보
 
 | 항목          | 내용                          |
-| ----------- | --------------------------- |
+| ----------- |-----------------------------|
 | 프로젝트명       | SubMate                     |
 | 서비스 유형      | OTT / 구독 서비스 공동 이용 플랫폼      |
 | Backend     | Spring Boot API Server      |
 | 배포 환경       | AWS EC2, Docker Compose     |
 | API 문서      | `/swagger-ui/index.html`    |
 | 운영 Profile  | `prod`                      |
-| 개발 기간       | `YYYY.MM ~ YYYY.MM`         |
-| Repository  | `GitHub Repository URL`     |
+| 개발 기간       | `2026.04 ~ 2026.06`         |
+| Repository  | `https://github.com/2026-GNU-PBL2/BE`     |
 | Backend API | `https://api.submate.cloud` |
 
 ---
@@ -186,7 +218,7 @@ SubMate 백엔드는 사용자가 구독 상품을 선택해 파티를 만들거
 > 아래 이미지는 SubMate 백엔드 서버의 전체 인프라 및 요청 흐름을 나타냅니다.
 
 <div align="center">
-  <img src="./docs/images/server-architecture.png" width="800" alt="Server Architecture" />
+  <img src="./docs/images/architecture/server-architecture.png" width="800" alt="Server Architecture" />
 </div>
 
 ### 아키텍처 구성 요약
@@ -203,7 +235,7 @@ SubMate 백엔드는 사용자가 구독 상품을 선택해 파티를 만들거
 > main 브랜치에 push되면 GitHub Actions가 빌드, 이미지 생성, ECR Push, EC2 배포 스크립트 실행을 자동으로 수행합니다.
 
 <div align="center">
-  <img src="./docs/images/cicd-pipeline.png" width="800" alt="CI/CD Pipeline" />
+  <img src="./docs/images/architecture/cicd-pipeline.png" width="800" alt="CI/CD Pipeline" />
 </div>
 
 ### 배포 흐름
@@ -222,22 +254,7 @@ SubMate 백엔드는 사용자가 구독 상품을 선택해 파티를 만들거
 
 ---
 
-## 8. 모니터링
-
-<div align="center">
-  <img src="./docs/images/monitoring.png" width="800" alt="Monitoring" />
-</div>
-
-### 모니터링 구성
-
-* Spring Actuator를 통해 애플리케이션 Health Check 및 Metrics Endpoint 제공
-* Prometheus가 Actuator Metrics 수집
-* cAdvisor가 컨테이너 CPU, Memory, Network, Disk 사용량 수집
-* Grafana Dashboard에서 애플리케이션 및 컨테이너 지표 시각화
-
----
-
-## 9. API 문서
+## 8. API 문서
 
 상세 API 명세는 Swagger UI를 통해 확인할 수 있습니다.
 
@@ -253,7 +270,7 @@ https://api.submate.cloud/swagger-ui/index.html
 
 ---
 
-## 10. API 명세 요약
+## 9. API 명세 요약
 
 <details>
 <summary>Auth / User API</summary>
@@ -385,103 +402,7 @@ https://api.submate.cloud/swagger-ui/index.html
 
 ---
 
-## 11. 프로젝트 실행 방법
-
-### 11.1 요구 사항
-
-| 항목             | 버전         |
-| -------------- | ---------- |
-| Java           | 21         |
-| Gradle         | Wrapper 사용 |
-| Docker         | 25.x 이상 권장 |
-| Docker Compose | v2 이상 권장   |
-| MySQL          | 8.x        |
-| Redis          | 7.x        |
-
----
-
-### 11.2 Repository Clone
-
-```bash
-git clone https://github.com/{organization-or-user}/{repository-name}.git
-cd {repository-name}
-```
-
----
-
-### 11.3 환경 변수 설정
-
-프로젝트 루트에 `.env` 또는 실행 환경별 설정 파일을 구성합니다.
-
-```bash
-SPRING_PROFILES_ACTIVE=local
-
-DB_URL=jdbc:mysql://localhost:3306/submate
-DB_USERNAME=root
-DB_PASSWORD=password
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-JWT_SECRET=your-jwt-secret
-
-TOSS_SECRET_KEY=your-toss-secret-key
-TOSS_CLIENT_KEY=your-toss-client-key
-
-KFTC_CLIENT_ID=your-kftc-client-id
-KFTC_CLIENT_SECRET=your-kftc-client-secret
-
-AWS_ACCESS_KEY=your-aws-access-key
-AWS_SECRET_KEY=your-aws-secret-key
-AWS_S3_BUCKET=your-s3-bucket
-
-SOLAPI_API_KEY=your-solapi-api-key
-SOLAPI_API_SECRET=your-solapi-api-secret
-```
-
-> 실제 운영 Secret, DB Password, API Key는 GitHub에 커밋하지 않습니다.
-> 공개 Repository에는 `.env.example`만 제공하는 것을 권장합니다.
-
----
-
-### 11.4 Local 실행
-
-```bash
-./gradlew clean build
-./gradlew bootRun
-```
-
-또는 Profile을 지정해 실행합니다.
-
-```bash
-./gradlew bootRun --args='--spring.profiles.active=local'
-```
-
----
-
-### 11.5 Docker Compose 실행
-
-```bash
-docker compose up -d --build
-```
-
-컨테이너 상태 확인:
-
-```bash
-docker compose ps
-```
-
-로그 확인:
-
-```bash
-docker compose logs -f app
-```
-
----
-
-## 12. 디렉토리 구조
-
-> 실제 프로젝트 구조에 맞게 일부 패키지명은 수정이 필요합니다.
+## 10. 디렉토리 구조
 
 ```text
 src
@@ -517,15 +438,15 @@ src
 
 ---
 
-## 13. ERD
+## 11. ERD
 
 <div align="center">
-  <img src="./docs/images/erd.png" width="800" alt="ERD" />
+  <img src="./docs/images/erd/erd.png" width="800" alt="ERD" />
 </div>
 
 ---
 
-## 14. 운영 환경
+## 12. 운영 환경
 
 ### Runtime
 
@@ -553,39 +474,177 @@ EC2
 
 ---
 
-## 15. Trouble Shooting / 개선 경험
+## 13. Trouble Shooting / 개선 경험
 
-### 15.1 외부 PG 호출과 트랜잭션 분리
+### 13.1 결제 처리 성능 및 정합성 개선
 
-초기 결제 처리에서는 결제 상태 변경, 외부 PG 호출, 결과 저장이 하나의 흐름에 강하게 묶여 있었습니다.
-이 경우 외부 PG 응답 지연이나 실패가 발생하면 DB 트랜잭션 시간이 길어지고, 결제 재시도와 상태 복구가 어려워질 수 있었습니다.
+기존 결제 구조는 **결제 요청 이후 외부 PG 호출과 결제 결과 저장이 하나의 동기 흐름에 강하게 묶여 있는 구조**였습니다.  
+이로 인해 PG 응답을 기다리는 동안 **HTTP 요청 스레드와 DB 트랜잭션이 길게 점유**될 수 있었고, 고부하 상황에서 **p95 / p99 응답 시간이 증가**하는 문제가 발생했습니다.
 
-이를 개선하기 위해 결제 대상을 먼저 계산하고, 결제 상태를 `PENDING`에서 `PROCESSING`으로 선점한 뒤 외부 PG를 호출하도록 흐름을 분리했습니다.
-결제 성공 시에만 최종 상태를 확정하고, 실패 시에는 실패 상태 기록 및 관리자 재처리가 가능하도록 구성했습니다.
+이를 개선하기 위해 결제 실행 구조를 **`@Async paymentExecutor + 3-Phase Transaction`** 구조로 리팩토링했습니다.  
+결제 요청 트랜잭션이 커밋된 이후 **`PaymentExecutionRequestedEvent`** 를 발행하고, 실제 PG 결제 호출은 결제 전용 executor에서 비동기로 처리하도록 분리했습니다.
 
-### 15.2 반복 결제 실패 재시도
+| 구분 | 기존 구조 | 개선 구조 |
+| --- | --- | --- |
+| 실행 방식 | 동기 처리 | `@Async` 기반 비동기 처리 |
+| 실행 스레드 | HTTP 요청 스레드 | `paymentExecutor` 워커 스레드 |
+| 트랜잭션 범위 | PG 호출까지 포함한 긴 TX | DB 변경 구간만 짧은 TX |
+| PG 호출 위치 | Transaction 내부 | Transaction 외부 |
+| DB 커넥션 점유 | PG 대기 중에도 점유 가능 | PG 대기 중 미점유 |
+| 정합성 처리 | 단일 흐름 기반 | CAS + 멱등 처리 + 실패 복구 |
 
-반복 결제 실패 건은 관리자 페이지에서 확인할 수 있도록 분리했습니다.
-관리자는 실패한 파티 사이클 결제를 재시도할 수 있으며, 서버는 재시도 시 기존 결제 상태를 기준으로 중복 결제를 방지합니다.
+#### 기존 구조
 
-### 15.3 정산 포인트와 출금 요청 분리
+```text
+retry()
+ → 커밋 후 이벤트 발행
+ → 같은 HTTP 요청 스레드에서 결제 실행
+ → 단일 Transaction 안에서 PG 호출 및 결과 저장
+```
 
-정산 완료 금액은 바로 외부 계좌로 송금하지 않고, 내부 정산 포인트로 먼저 적립됩니다.
-이후 사용자가 출금 요청을 생성하면 관리자가 요청을 검토한 뒤 승인 또는 거절할 수 있습니다.
+#### 개선 구조
+
+```text
+retry()
+ → DB Transaction Commit
+ → PaymentExecutionRequestedEvent 발행
+ → @Async("paymentExecutor")
+ → 결제 전용 executor queue에 작업 적재
+ → AutoPaymentService.execute() 비동기 실행
+```
+
+#### 3-Phase 처리 구조
+
+| Phase | Transaction | 역할 |
+| --- | --- | --- |
+| Phase 1 | 짧은 TX | 결제 사이클 선점, 멤버 결제 row 생성, 멤버별 `PROCESSING` 선점 |
+| Phase 2 | 없음 | 트랜잭션 밖에서 외부 PG API 호출 |
+| Phase 3 | 짧은 TX | 결제 결과 저장, 사이클 상태 전환, 미처리 멤버 복구 |
+
+이 구조를 통해 **외부 PG 호출 구간에서는 DB 커넥션과 락을 점유하지 않도록 개선**했습니다.
 
 ---
 
-## 16. 팀원 소개
+### 13.2 CAS 기반 중복 결제 방지
 
-| 이름  | 역할                | 담당 영역               | GitHub                                       |
-| --- | ----------------- | ------------------- | -------------------------------------------- |
-| 김용환 | Backend           | 파티, 결제, 정산, 배포, 인프라 | [@love123159](https://github.com/love123159) |
-| 팀원명 | Frontend          | 화면 구현, API 연동       | [@github-id](https://github.com/github-id)   |
-| 팀원명 | Frontend / Design | UI/UX, 서비스 기획       | [@github-id](https://github.com/github-id)   |
+비동기 구조로 변경하면서도 결제 정합성을 유지하기 위해 상태 전이에 **CAS 방식의 조건부 update**를 적용했습니다.
+
+| 적용 대상 | 상태 전이 | 목적 |
+| --- | --- | --- |
+| 결제 사이클 | `PAYMENT_PENDING -> PROCESSING` | 동일 cycle 중복 실행 방지 |
+| 멤버별 결제 | `PAYMENT_PENDING -> PROCESSING` | 동일 멤버 중복 결제 방지 |
+| 실패 처리 | `PROCESSING -> FAILED` | 이미 변경된 상태 덮어쓰기 방지 |
+
+결제 사이클은 `PAYMENT_PENDING -> PROCESSING` 상태 전이 시 현재 상태 조건을 함께 확인합니다.  
+update 결과가 1건이면 해당 실행자가 결제 사이클을 선점한 것이고, 0건이면 이미 다른 실행자가 처리 중인 것으로 판단하여 중복 실행을 방지합니다.
+
+```sql
+UPDATE party_cycle
+SET status = 'PROCESSING',
+    updated_at = NOW()
+WHERE id = #{partyCycleId}
+  AND status = 'PAYMENT_PENDING'
+```
+
+멤버별 결제도 동일하게 `PAYMENT_PENDING -> PROCESSING` 상태 전이에 CAS를 적용하여 같은 멤버에 대한 중복 결제를 방지했습니다.
+
+```sql
+UPDATE party_cycle_member_payment
+SET status = 'PROCESSING',
+    updated_at = NOW()
+WHERE party_cycle_id = #{partyCycleId}
+  AND party_member_id = #{partyMemberId}
+  AND status = 'PAYMENT_PENDING'
+```
+
+결제 row 생성은 **`INSERT IGNORE` 기반 batch insert**로 처리하여 이미 생성된 멤버 결제 row가 있더라도 중복 생성되지 않도록 멱등성을 확보했습니다.
 
 ---
 
-## 17. 참고 문서
+### 13.3 Executor Queue 기반 결제 실행 분리
+
+결제 실행은 Kafka나 RabbitMQ 같은 외부 메시지 큐가 아니라, Spring `@Async`와 `ThreadPoolTaskExecutor`의 **인메모리 작업 큐**를 사용했습니다.
+
+```java
+@Async("paymentExecutor")
+@EventListener
+public void handle(PaymentExecutionRequestedEvent event) {
+    autoPaymentService.execute(event.partyId(), event.partyCycleId());
+}
+```
+
+`paymentExecutor`는 결제 실행 전용 스레드풀로 분리했습니다.
+
+| 설정 | 값 |
+| --- | --- |
+| `corePoolSize` | 40 |
+| `maxPoolSize` | 80 |
+| `queueCapacity` | 200 |
+| `RejectedExecutionHandler` | `CallerRunsPolicy` |
+
+이를 통해 HTTP 요청 스레드는 PG 호출 완료를 기다리지 않고 빠르게 반환됩니다.  
+또한 queue가 포화될 경우 `CallerRunsPolicy`를 통해 호출 스레드가 직접 실행하도록 하여 작업이 무한히 적재되는 상황을 방지했습니다.
+
+---
+
+### 13.4 Fail-fast 상황의 미처리 멤버 복구
+
+기존 구조에서는 멤버 결제 row를 `PROCESSING`으로 선점한 뒤 첫 번째 PG 호출이 실패하면 fail-fast로 후속 PG 호출이 중단되었습니다.  
+이 경우 실제 PG 호출이 수행되지 않은 멤버도 `PROCESSING` 상태로 남아 재시도 대상에서 제외될 수 있는 문제가 있었습니다.
+
+```text
+멤버 전체 PROCESSING 선점
+ → 첫 PG 실패
+ → fail-fast로 후속 PG 호출 중단
+ → PG 미호출 멤버도 PROCESSING 상태로 잔존
+ → retry 시 CAS 실패
+ → 재청구 누락 가능
+```
+
+이를 해결하기 위해 Phase 3 실패 처리에서 PG 호출 결과가 없는 멤버를 `PAYMENT_PENDING`으로 복구했습니다.
+
+| 대상 | 처리 |
+| --- | --- |
+| PG 호출 성공 멤버 | `PAID` 처리 |
+| PG 호출 실패 멤버 | `FAILED` 처리 |
+| PG 호출 전 fail-fast로 중단된 멤버 | `PROCESSING -> PAYMENT_PENDING` 복구 |
+
+이를 통해 실패 이후에도 미처리 멤버가 다음 retry에서 다시 결제 대상이 될 수 있도록 보장했습니다.
+
+---
+
+### 13.5 리팩토링 결과
+
+| 지표 | 리팩토링 전 | 리팩토링 후 | 변화 |
+| --- | --- | --- | --- |
+| 총 요청 수 | 119,595건 | 126,362건 | 증가 |
+| RPS | 199.22 | 258.38 | 약 30% 증가 |
+| 실패율 | 0% | 0% | 유지 |
+| Median | 270ms | 91ms | 약 66% 감소 |
+| p95 | 1800ms | 520ms | 약 71% 감소 |
+| p99 | 3400ms | 1300ms | 약 62% 감소 |
+| 평균 응답 | 543.53ms | 162.87ms | 약 70% 감소 |
+| Max | 15542ms | 2828ms | 약 82% 감소 |
+
+리팩토링 결과, 결제/정산 API의 처리량은 증가했고 Median, p95, p99 응답 시간이 모두 감소했습니다.  
+특히 p95 응답 시간이 **1800ms에서 520ms로 감소**하여 결제/정산 도메인의 tail latency 병목이 완화되었습니다.
+
+> 기존 동기 이벤트 + 단일 긴 트랜잭션 구조를 **`@Async paymentExecutor + 3-Phase TX`** 구조로 변경했습니다.  
+> 외부 PG 호출 구간을 트랜잭션 밖으로 분리하여 DB 커넥션 점유를 줄였고, **CAS 상태 전이와 멱등 insert, fail-fast 복구 로직**을 통해 비동기 구조에서도 결제 정합성을 유지했습니다.
+
+---
+
+## 14. 팀원 소개
+
+| 이름  | 역할                   | 담당 영역           | GitHub                                |
+|-----|----------------------|-----------------|---------------------------------------|
+| 김용환 | Backend / Infra / PM | 자동결제, 정산, 메일    | [@lifeisgood7](https://github.com/lifeisgood7) |
+| 김하진 | Backend              | 파티, 파티운영, 낯선기기 신고 | [@lilyloper](https://github.com/lilyloper)     |
+| 박성우 | Frontend / Design    | UI/UX           | [@arkeongoo](https://github.com/arkeongoo) |
+
+---
+
+## 15. 참고 문서
 
 * API 문서: `/swagger-ui/index.html`
 * 서버 아키텍처: `./docs/images/server-architecture.png`
@@ -595,7 +654,7 @@ EC2
 
 ---
 
-## 18. 보안 주의 사항
+## 16. 보안 주의 사항
 
 본 프로젝트는 결제, 계좌, 인증, 정산 정보를 다루므로 다음 정보를 Repository에 포함하지 않습니다.
 
