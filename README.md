@@ -1,8 +1,5 @@
 # SubMate Backend
 
-```md
-# SubMate Backend
-
 <div align="center">
   <img src="./docs/images/logo/submate-logo.png" width="300" alt="SubMate Logo" />
 </div>
