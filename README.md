@@ -663,3 +663,10 @@ public void handle(PaymentExecutionRequestedEvent event) {
 * 사용자 개인정보 및 실제 결제 데이터
 
 환경 변수 예시는 `.env.example`로만 관리하고, 실제 운영 Secret은 GitHub Actions Secrets 또는 서버 내부 환경 변수로 관리합니다.
+
+## 참고 문서
+
+| 문서                                                | 설명 |
+|---------------------------------------------------| --- |
+| [Submate 명세서](./docs/pdf/submate-api-spec.pdf)    | SubMate 상세 명세 |
+| [프로젝트 발표 자료](./docs/pdf/submate-presentation.pdf) | 프로젝트 구조, 주요 기능, 시연 흐름 정리 |
