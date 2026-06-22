@@ -1,7 +1,7 @@
 # SubMate Backend
 
 <div align="center">
-  <img src="docs/images/logo/submate-logo2.png" width="300" alt="SubMate Logo" />
+  <img src="docs/images/logo/submate-logo.png" width="300" alt="SubMate Logo" />
 </div>
 
 <br/>
