@@ -44,8 +44,6 @@
 ![Grafana](https://img.shields.io/badge/Grafana-Dashboard-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 
 </div>
-```
-
 
 ---
 
